@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aprueba · Consola de administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#1A365D;--oro:#F5B041;--fondo:#F8FAFC;--texto:#1E293B;--exito:#10B981;--error:#EF4444;
+  --bg:var(--fondo);--panel:#ffffff;--ink:var(--texto);--muted:#64748B;--line:#E2E8F0;--soft:#F1F5F9;
+  --brand:var(--azul);--cta:var(--oro);--cta-ink:var(--azul);--accent:var(--exito);--warn:#F59E0B;--danger:var(--error);
+  --chip:#EEF4FF;--shadow:0 8px 24px rgba(26,54,93,.08);
+  --side:#0F2742;--side-ink:#E8EEF7;--side-mut:rgba(232,238,247,.6);--side-act:rgba(255,255,255,.12);
+  --ok:#10B981;--ok-bg:rgba(16,185,129,.13);--deg:#F59E0B;--deg-bg:rgba(245,158,11,.14);--down:#EF4444;--down-bg:rgba(239,68,68,.12);
+  --bronze:#CD7F32;--silver:#94A3B8;--gold:#F5B041;--diamond:#38BDF8;--platinum:#A78BFA;
+}
+.dark{
+  --bg:#0B1220;--panel:#131C2E;--ink:#E2E8F0;--muted:#94A3B8;--line:#1E2D45;--soft:#1A2540;
+  --brand:#2D5A9E;--cta:#F5B041;--cta-ink:#1A365D;--accent:#34D399;--danger:#F87171;--chip:#1A2C4A;
+  --shadow:0 8px 24px rgba(0,0,0,.5);--side:#0A1424;--side-ink:#E2E8F0;--side-mut:rgba(226,232,240,.55);--side-act:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);font-family:'Inter',system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.5;transition:background .25s}
+h1,h2,h3,.h,.logo,.kpi-val{font-family:'Montserrat',sans-serif}
+.app{display:flex;min-height:100vh}
+.sidebar{width:248px;background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;transition:transform .25s}
+.side-logo{display:flex;align-items:center;gap:9px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:18px;padding:18px 18px 6px}
+.side-logo small{display:block;font-size:10px;font-weight:600;color:var(--side-mut);letter-spacing:.05em;font-family:'Inter'}
+.nav{flex:1;padding:6px 12px;overflow-y:auto}
+.nav-sec{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--side-mut);font-weight:700;padding:14px 10px 6px;font-family:'Montserrat',sans-serif}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--side-ink);cursor:pointer;margin-bottom:2px;border-left:3px solid transparent;transition:background .15s}
+.nav-item:hover{background:var(--side-act)}
+.nav-item.act{background:var(--side-act);border-left-color:var(--cta)}
+.nav-item .ico{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .badge{margin-left:auto;font-size:9px;font-weight:800;background:var(--down);color:#fff;border-radius:10px;padding:1px 7px}
+.side-foot{padding:12px;border-top:1px solid rgba(255,255,255,.08)}
+.side-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px}
+.side-avatar{width:34px;height:34px;border-radius:50%;background:var(--cta);color:#1A365D;display:grid;place-items:center;font-weight:800;font-family:'Montserrat';flex-shrink:0}
+.side-user .nm{font-size:13px;font-weight:700}.side-user .rl{font-size:11px;color:var(--side-mut)}
+.main-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.hamb{display:none;background:var(--soft);border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:9px;font-size:18px;cursor:pointer}
+.page-title{font-family:'Montserrat';font-weight:800;font-size:18px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.ctl{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 10px;font-size:12px;cursor:pointer;font-family:'Inter'}
+.content{padding:22px;max-width:1280px;width:100%}
+.h{font-size:18px;font-weight:700;margin-bottom:4px}
+.sub{color:var(--muted);font-size:13px}
+.note{font-size:11.5px;color:var(--muted);line-height:1.5}
+.section-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--muted);margin:22px 0 8px;font-family:'Montserrat'}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none;background:var(--soft)}
+.flex{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap{flex-wrap:wrap}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.kpi .lbl{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.kpi .kpi-val{font-size:27px;font-weight:800;color:var(--ink);margin-top:6px;line-height:1.1}
+.kpi .dl{font-size:11px;font-weight:700;margin-top:4px}
+.dl.up{color:var(--ok)}.dl.dn{color:var(--down)}
+.tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--chip);color:var(--muted);display:inline-block}
+.tag.g{background:var(--ok-bg);color:#059669}.tag.w{background:var(--deg-bg);color:#B45309}.tag.d{background:var(--down-bg);color:#DC2626}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+.dot.ok{background:var(--ok);box-shadow:0 0 0 3px var(--ok-bg)}.dot.deg{background:var(--deg);box-shadow:0 0 0 3px var(--deg-bg)}.dot.down{background:var(--down);box-shadow:0 0 0 3px var(--down-bg)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);font-family:'Montserrat'}
+td{padding:11px 10px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+.tbl-wrap{overflow-x:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--cta);color:var(--cta-ink);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat'}
+.btn.sec{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:12px}
+input,select{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;color:var(--ink);font-family:'Inter';outline:none}
+input:focus,select:focus{border-color:var(--brand)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Montserrat';flex-shrink:0}
+.svc-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.bar{height:7px;border-radius:5px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--brand);border-radius:5px}
+/* plan builder */
+.builder{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
+.feat{display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-top:8px;cursor:grab;font-size:12.5px;font-weight:600;transition:border-color .15s,box-shadow .15s}
+.feat:hover{border-color:var(--brand)}
+.feat.dragging{opacity:.4}
+.feat .fi{font-size:15px;width:18px;text-align:center}
+.plan-cols{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px}
+.plan-col{flex:1;min-width:210px;border:1px solid var(--line);border-radius:14px;background:var(--panel);display:flex;flex-direction:column}
+.plan-head{padding:14px;border-bottom:1px solid var(--line);border-radius:14px 14px 0 0}
+.plan-head .pname{font-weight:800;font-family:'Montserrat';font-size:14px}
+.plan-head .pprice{font-size:22px;font-weight:800;font-family:'Montserrat';margin-top:4px}
+.dropzone{flex:1;padding:12px;min-height:120px;transition:background .15s}
+.dropzone.over{background:rgba(26,54,93,.06);outline:2px dashed var(--brand);outline-offset:-6px;border-radius:10px}
+.pfeat{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:var(--soft);margin-bottom:7px;font-size:12px;font-weight:600}
+.pfeat .x{margin-left:auto;cursor:pointer;color:var(--muted);font-weight:800}
+.pfeat .x:hover{color:var(--danger)}
+.limits{padding:12px;border-top:1px solid var(--line)}
+.limit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.limit-row label{font-size:11.5px;color:var(--muted)}
+.limit-row input{width:74px;text-align:center;padding:6px}
+.empty-hint{font-size:11px;color:var(--muted);text-align:center;padding:18px 8px;border:1px dashed var(--line);border-radius:10px}
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25}
+@media(max-width:1080px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}.span4,.span3{grid-column:span 2}}
+@media(max-width:860px){.sidebar{position:fixed;z-index:30;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.3)}.sidebar.open{transform:translateX(0)}.hamb{display:grid;place-items:center}.scrim.open{display:block}.builder{grid-template-columns:1fr}}
+@media(max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr}.span2,.span3,.span4{grid-column:span 1}.content{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-logo">
+      <svg width="26" height="26" viewBox="0 0 30 30" fill="none"><polygon points="3,27 9,6 13,6 8,27" fill="#fff"/><polygon points="27,27 21,6 17,6 22,27" fill="#fff"/><rect x="7" y="14" width="16" height="4" rx="1" fill="#fff"/><rect x="12" y="14" width="6" height="10" rx="1" fill="#F5B041"/><polygon points="15,5 12,10 18,10" fill="#F5B041"/></svg>
+      <div>Aprueba<small id="consoleLbl">Consola de negocio</small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot"><div class="side-user"><div class="side-avatar">AD</div><div><div class="nm">Admin</div><div class="rl" id="roleLbl">Gerencia</div></div></div></div>
+  </aside>
+  <div class="scrim" id="scrim" onclick="toggleSidebar(false)"></div>
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="hamb" onclick="toggleSidebar(true)">☰</button>
+      <div class="page-title" id="pageTitle"></div>
+      <div class="tb-right">
+        <select class="ctl" id="rangeSel"><option>30d</option><option>7d</option><option>90d</option><option>12m</option></select>
+        <select class="ctl" id="langSel" onchange="setLang(this.value)"><option value="es">🌐 ES</option><option value="en">🌐 EN</option></select>
+        <button class="ctl" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      </div>
+    </header>
+    <main class="content" id="main"></main>
+  </div>
+</div>
+<script>
+// ── STATE ──
+const APP={lang:'es',dark:false,view:'resumen',
+  data:{
+    downloads:128540,downloadsMonth:8200,dau:6420,mau:24800,
+    converted:3180,convRate:12.8,mrr:14250,benefitsRedeemed:1920,badgesIssued:512340,
+    sponsorsActive:6,sponsorRevenue:9600,
+    dlByMonth:[14200,16800,15300,19400,21100,24800],
+    months:['Ene','Feb','Mar','Abr','May','Jun'],
+    revByPlan:[{label:'1 prueba',value:4650,color:'var(--brand)'},{label:'Todas',value:9600,color:'var(--cta)'}],
+    badgesByType:[{t:'bronze',n:402000},{t:'silver',n:78400},{t:'gold',n:24300},{t:'diamond',n:6100},{t:'platinum',n:1540}],
+    funnel:[{label:'Descargas',value:128540},{label:'Registrados',value:61200},{label:'Activos (MAU)',value:24800},{label:'Convertidos',value:3180}]
+  },
+  sponsors:[
+    {name:'Preuniversitario Pedro de V.',tier:'Gold',monthly:3200,offered:4,redeemed:640,status:'ok'},
+    {name:'Librería Antártica',tier:'Silver',monthly:1800,offered:2,redeemed:410,status:'ok'},
+    {name:'Banco Estudiantil',tier:'Gold',monthly:2400,offered:3,redeemed:520,status:'ok'},
+    {name:'Café Cultura',tier:'Bronze',monthly:900,offered:1,redeemed:180,status:'deg'},
+    {name:'EdiTextos PAES',tier:'Silver',monthly:1300,offered:2,redeemed:170,status:'ok'}
+  ],
+  platforms:[
+    {os:'iOS · App Store',ic:'',ver:'2.4.1',available:true,downloads:58200,updated:'28 may'},
+    {os:'Android · Google Play',ic:'▶',ver:'2.4.0',available:true,downloads:70340,updated:'30 may'},
+    {os:'Web App (PWA)',ic:'🌐',ver:'1.9.3',available:true,downloads:0,updated:'02 jun'}
+  ],
+  services:[
+    {key:'svc_login',state:'ok',uptime:'99.98%',lat:'118 ms'},
+    {key:'svc_badges',state:'ok',uptime:'99.95%',lat:'90 ms'},
+    {key:'svc_questions',state:'deg',uptime:'99.40%',lat:'410 ms'},
+    {key:'svc_payments',state:'ok',uptime:'100%',lat:'160 ms'},
+    {key:'svc_notif',state:'down',uptime:'97.10%',lat:'—'}
+  ],
+  containers:[
+    {n:'api-gateway',state:'ok',cpu:34,mem:51,region:'us-east'},
+    {n:'auth-svc',state:'ok',cpu:22,mem:40,region:'us-east'},
+    {n:'content-svc',state:'deg',cpu:78,mem:69,region:'us-east'},
+    {n:'badge-worker',state:'ok',cpu:18,mem:33,region:'us-east'},
+    {n:'db-primary',state:'ok',cpu:46,mem:72,region:'us-east'},
+    {n:'notif-worker',state:'down',cpu:0,mem:0,region:'us-east'},
+    {n:'redis-cache',state:'ok',cpu:12,mem:28,region:'us-east'},
+    {n:'cdn-edge',state:'ok',cpu:8,mem:14,region:'global'}
+  ],
+  users:[
+    {n:'Camila Rojas',e:'camila@correo.cl',plan:'all',state:'active',last:'hoy',badges:412,country:'🇨🇱'},
+    {n:'Juan López',e:'juan@correo.cl',plan:'uni',state:'active',last:'hoy',badges:188,country:'🇨🇱'},
+    {n:'Andrea Muñoz',e:'andrea@correo.cl',plan:'free',state:'active',last:'ayer',badges:54,country:'🇨🇱'},
+    {n:'Tomás Gana',e:'tomas@correo.cl',plan:'free',state:'suspended',last:'12 may',badges:31,country:'🇵🇪'},
+    {n:'María Vidal',e:'maria@correo.cl',plan:'all',state:'active',last:'hoy',badges:276,country:'🇨🇱'},
+    {n:'Diego Soto',e:'diego@correo.cl',plan:'uni',state:'churned',last:'02 abr',badges:140,country:'🇨🇱'}
+  ],
+  tickets:[
+    {id:'#1042',subj:'No puedo iniciar sesión con Google',user:'Camila Rojas',pri:'high',state:'open',age:'2 h'},
+    {id:'#1041',subj:'Cobro duplicado plan anual',user:'María Vidal',pri:'high',state:'progress',age:'5 h'},
+    {id:'#1038',subj:'Badge no asignado tras acierto',user:'Juan López',pri:'med',state:'progress',age:'1 d'},
+    {id:'#1035',subj:'No cargan preguntas de Ciencias',user:'Andrea Muñoz',pri:'med',state:'open',age:'1 d'},
+    {id:'#1029',subj:'Solicito cambiar correo de cuenta',user:'Diego Soto',pri:'low',state:'closed',age:'4 d'}
+  ],
+  features:[
+    {id:'f1',ic:'♾️'},{id:'f2',ic:'📝'},{id:'f3',ic:'📖'},{id:'f4',ic:'⚑'},{id:'f5',ic:'👥'},
+    {id:'f6',ic:'📊'},{id:'f7',ic:'🎁'},{id:'f8',ic:'🚫'},{id:'f9',ic:'⬇️'},{id:'f10',ic:'⭐'}
+  ],
+  plans:[
+    {id:'free',nameKey:'pl_free',price:0,color:'#64748B',features:['f3'],limits:{qDay:20,groups:1,tests:1},badges:{login:1,purchase:0,correct:1}},
+    {id:'uni',nameKey:'pl_uni',price:1,color:'#1A365D',features:['f1','f3','f4'],limits:{qDay:0,groups:3,tests:1},badges:{login:1,purchase:5,correct:1}},
+    {id:'all',nameKey:'pl_all',price:5,color:'#F5B041',features:['f1','f2','f3','f4','f5','f6','f7','f8'],limits:{qDay:0,groups:0,tests:99},badges:{login:2,purchase:10,correct:2}}
+  ]
+};
+
+// ── i18n ──
+const T={es:{
+  console:'Consola de negocio',role:'Gerencia',
+  nav_grp1:'Negocio',nav_grp2:'Plataforma',
+  nav_resumen:'Resumen',nav_comercial:'Comercial',nav_sponsors:'Sponsors',nav_operativa:'Operativa',nav_usuarios:'Usuarios y soporte',nav_planes:'Planes y productos',
+  // KPIs
+  k_downloads:'Descargas totales',k_dau:'Usuarios activos (DAU)',k_mau:'Activos mensuales (MAU)',k_converted:'Convertidos a pago',k_mrr:'Recaudación mensual',k_benefits:'Beneficios cobrados',k_badges:'Badges emitidos',k_sponsors:'Sponsors activos',k_sponsor_rev:'Recaudación sponsors',
+  this_month:'este mes',vs_prev:'vs. mes previo',health:'Estado del sistema',all_ok:'Operativo',see_detail:'Ver detalle',
+  // comercial
+  c_downloads_trend:'Descargas por mes',c_funnel:'Embudo de conversión',c_rev_plan:'Recaudación por plan',c_badges_type:'Badges emitidos por tipo',c_rev_total:'Total',
+  conv_of_mau:'de MAU convertidos',
+  tier_bronze:'Bronce',tier_silver:'Plata',tier_gold:'Oro',tier_diamond:'Diamante',tier_platinum:'Platino',
+  // sponsors
+  s_intro:'Marcas que financian beneficios para los alumnos.',s_table:'Detalle de sponsors',sp_name:'Sponsor',sp_tier:'Nivel',sp_monthly:'Aporte mensual',sp_offered:'Beneficios ofrecidos',sp_redeemed:'Beneficios cobrados',sp_status:'Estado',s_rev_chart:'Aporte mensual por sponsor',s_add:'Agregar sponsor',
+  // operativa
+  o_stores:'Disponibilidad en tiendas',o_platform:'Plataforma',o_version:'Versión',o_available:'Descargable',o_dl:'Descargas',o_updated:'Actualizado',yes:'Sí',no:'No',
+  o_services:'Estado de servicios',o_uptime:'Uptime',o_latency:'Latencia',
+  svc_login:'Inicio de sesión',svc_badges:'Asignación de badges',svc_questions:'Entrega de preguntas',svc_payments:'Pagos',svc_notif:'Notificaciones',
+  o_containers:'Contenedores y servicios',o_cpu:'CPU',o_mem:'Memoria',o_region:'Región',
+  st_ok:'Operativo',st_deg:'Degradado',st_down:'Caído',st_run:'En ejecución',st_stop:'Detenido',
+  // usuarios
+  u_total:'Usuarios totales',u_active:'Activos',u_suspended:'Suspendidos',u_tickets:'Tickets abiertos',
+  u_search:'Buscar usuario por nombre o correo…',u_table:'Usuarios',u_name:'Usuario',u_plan:'Plan',u_state:'Estado',u_last:'Última actividad',u_badges:'Badges',
+  us_active:'Activo',us_suspended:'Suspendido',us_churned:'Dado de baja',
+  t_table:'Tickets de soporte',t_id:'ID',t_subj:'Asunto',t_user:'Usuario',t_pri:'Prioridad',t_state:'Estado',t_age:'Antigüedad',
+  pri_high:'Alta',pri_med:'Media',pri_low:'Baja',ts_open:'Abierto',ts_progress:'En curso',ts_closed:'Cerrado',
+  // planes
+  p_intro:'Arrastra funcionalidades hacia un plan y ajusta sus límites de uso.',p_catalog:'Catálogo de funcionalidades',p_drag_hint:'Arrastra a un plan →',p_add_plan:'+ Nuevo plan',p_empty:'Suelta funcionalidades aquí',p_limits:'Límites de uso',p_save:'Guardar cambios',
+  lim_qday:'Preguntas / día',lim_groups:'Grupos máx.',lim_tests:'Pruebas incluidas',unlimited:'∞',
+  p_badges:'Badges por acción',bdg_login:'Login diario',bdg_purchase:'Compra del plan',bdg_correct:'Por respuesta correcta diaria',badges_unit:'badges',
+  pl_free:'Gratis',pl_uni:'1 prueba ilimitada',pl_all:'Todas las pruebas',pl_new:'Plan nuevo',mo:'/mes',free_price:'Gratis',
+  feat_f1:'Preguntas ilimitadas',feat_f2:'Modo facsímil (ensayos)',feat_f3:'Explicaciones paso a paso',feat_f4:'Recorrección de preguntas',feat_f5:'Grupos de estudio',feat_f6:'Estadísticas avanzadas',feat_f7:'Beneficios de sponsors',feat_f8:'Sin anuncios',feat_f9:'Descarga offline',feat_f10:'Soporte prioritario'
+},en:{
+  console:'Business console',role:'Management',
+  nav_grp1:'Business',nav_grp2:'Platform',
+  nav_resumen:'Overview',nav_comercial:'Commercial',nav_sponsors:'Sponsors',nav_operativa:'Operations',nav_usuarios:'Users & support',nav_planes:'Plans & products',
+  k_downloads:'Total downloads',k_dau:'Active users (DAU)',k_mau:'Monthly active (MAU)',k_converted:'Converted to paid',k_mrr:'Monthly revenue',k_benefits:'Benefits redeemed',k_badges:'Badges issued',k_sponsors:'Active sponsors',k_sponsor_rev:'Sponsor revenue',
+  this_month:'this month',vs_prev:'vs. prev month',health:'System health',all_ok:'Operational',see_detail:'See detail',
+  c_downloads_trend:'Downloads per month',c_funnel:'Conversion funnel',c_rev_plan:'Revenue by plan',c_badges_type:'Badges issued by type',c_rev_total:'Total',
+  conv_of_mau:'of MAU converted',
+  tier_bronze:'Bronze',tier_silver:'Silver',tier_gold:'Gold',tier_diamond:'Diamond',tier_platinum:'Platinum',
+  s_intro:'Brands funding student benefits.',s_table:'Sponsor detail',sp_name:'Sponsor',sp_tier:'Tier',sp_monthly:'Monthly fee',sp_offered:'Benefits offered',sp_redeemed:'Benefits redeemed',sp_status:'Status',s_rev_chart:'Monthly fee by sponsor',s_add:'Add sponsor',
+  o_stores:'Store availability',o_platform:'Platform',o_version:'Version',o_available:'Downloadable',o_dl:'Downloads',o_updated:'Updated',yes:'Yes',no:'No',
+  o_services:'Service status',o_uptime:'Uptime',o_latency:'Latency',
+  svc_login:'Login',svc_badges:'Badge assignment',svc_questions:'Question delivery',svc_payments:'Payments',svc_notif:'Notifications',
+  o_containers:'Containers & services',o_cpu:'CPU',o_mem:'Memory',o_region:'Region',
+  st_ok:'Operational',st_deg:'Degraded',st_down:'Down',st_run:'Running',st_stop:'Stopped',
+  u_total:'Total users',u_active:'Active',u_suspended:'Suspended',u_tickets:'Open tickets',
+  u_search:'Search user by name or email…',u_table:'Users',u_name:'User',u_plan:'Plan',u_state:'Status',u_last:'Last activity',u_badges:'Badges',
+  us_active:'Active',us_suspended:'Suspended',us_churned:'Churned',
+  t_table:'Support tickets',t_id:'ID',t_subj:'Subject',t_user:'User',t_pri:'Priority',t_state:'Status',t_age:'Age',
+  pri_high:'High',pri_med:'Medium',pri_low:'Low',ts_open:'Open',ts_progress:'In progress',ts_closed:'Closed',
+  p_intro:'Drag features onto a plan and tune its usage limits.',p_catalog:'Feature catalog',p_drag_hint:'Drag to a plan →',p_add_plan:'+ New plan',p_empty:'Drop features here',p_limits:'Usage limits',p_save:'Save changes',
+  lim_qday:'Questions / day',lim_groups:'Max groups',lim_tests:'Tests included',unlimited:'∞',
+  p_badges:'Badges per action',bdg_login:'Daily login',bdg_purchase:'Plan purchase',bdg_correct:'Per daily correct answer',badges_unit:'badges',
+  pl_free:'Free',pl_uni:'1 test unlimited',pl_all:'All tests',pl_new:'New plan',mo:'/mo',free_price:'Free',
+  feat_f1:'Unlimited questions',feat_f2:'Facsimile mode (mocks)',feat_f3:'Step-by-step explanations',feat_f4:'Question correction requests',feat_f5:'Study groups',feat_f6:'Advanced stats',feat_f7:'Sponsor benefits',feat_f8:'No ads',feat_f9:'Offline download',feat_f10:'Priority support'
+}};
+function L(k){return (T[APP.lang]&&T[APP.lang][k])||k;}
+function fmt(n){return n.toLocaleString(APP.lang==='es'?'es-CL':'en-US');}
+
+// ── chart helpers (inline SVG) ──
+function svgLine(vals,labels){const w=300,h=96,pad=8;const max=Math.max(...vals),min=Math.min(...vals),rng=(max-min)||1;
+  const step=(w-pad*2)/(vals.length-1);const pts=vals.map((v,i)=>[pad+i*step,h-18-((v-min)/rng)*(h-30)]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=d+` L${pts[pts.length-1][0].toFixed(1)} ${h-18} L${pad} ${h-18} Z`;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+    <path d="${area}" fill="var(--brand)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="var(--brand)"/>`).join('')}
+    ${labels.map((l,i)=>`<text x="${(pad+i*step).toFixed(1)}" y="${h-4}" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Inter">${l}</text>`).join('')}
+  </svg>`;}
+function svgBars(data){const w=300,h=140,bottom=20;const max=Math.max(...data.map(d=>d.value))||1;const n=data.length,slot=w/n,bw=Math.min(40,slot*0.5);
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+   ${data.map((d,i)=>{const bh=(d.value/max)*(h-bottom-14);const x=slot*i+slot/2-bw/2;const y=h-bottom-bh;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw}" height="${bh.toFixed(1)}" rx="5" fill="${d.color||'var(--brand)'}"/>
+     <text x="${(slot*i+slot/2).toFixed(1)}" y="${(y-4).toFixed(1)}" font-size="8.5" fill="var(--ink)" text-anchor="middle" font-family="Montserrat" font-weight="700">${d.disp||fmt(d.value)}</text>
+     <text x="${(slot*i+slot/2).toFixed(1)}" y="${h-5}" font-size="8.5" fill="var(--muted)" text-anchor="middle" font-family="Inter">${d.label}</text>`;}).join('')}
+  </svg>`;}
+function svgDonut(pct){const r=40,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<svg viewBox="0 0 104 104" width="116" height="116"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--line)" stroke-width="12"/>
+   <circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 52 52)"/>
+   <text x="52" y="50" font-size="19" font-weight="800" fill="var(--ink)" text-anchor="middle" font-family="Montserrat">${pct}%</text>
+   <text x="52" y="67" font-size="8" fill="var(--muted)" text-anchor="middle" font-family="Inter">conv.</text></svg>`;}
+function svgHBars(data){const w=300,rowH=30,labW=130,max=Math.max(...data.map(d=>d.value))||1,h=data.length*rowH+4;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+   ${data.map((d,i)=>{const bw=(d.value/max)*(w-labW-46);const y=i*rowH+5;
+    return `<text x="0" y="${y+14}" font-size="10" fill="var(--ink)" font-family="Inter">${d.label}</text>
+     <rect x="${labW}" y="${y+4}" width="${Math.max(3,bw).toFixed(1)}" height="14" rx="4" fill="${d.color||'var(--brand)'}"/>
+     <text x="${(labW+Math.max(3,bw)+5).toFixed(1)}" y="${y+15}" font-size="9" fill="var(--muted)" font-family="Inter">${d.disp}</text>`;}).join('')}
+  </svg>`;}
+function svgFunnel(data){const w=300,rowH=34,max=data[0].value,h=data.length*rowH+4;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+   ${data.map((d,i)=>{const bw=(d.value/max)*(w-10);const x=(w-bw)/2;const y=i*rowH+4;const op=1-i*0.16;
+    return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${rowH-9}" rx="5" fill="var(--brand)" opacity="${op.toFixed(2)}"/>
+     <text x="${(w/2).toFixed(1)}" y="${y+17}" font-size="10" fill="#fff" text-anchor="middle" font-family="Inter" font-weight="600">${d.label}: ${fmt(d.value)}</text>`;}).join('')}
+  </svg>`;}
+
+// ── components ──
+const COIN={bronze:'🥉',silver:'🥈',gold:'🥇',diamond:'💎',platinum:'⬡'};
+function kpi(labelKey,val,delta,up,ic){return `<div class="kpi"><div class="lbl">${ic||''} ${L(labelKey)}</div><div class="kpi-val">${val}</div>${delta?`<div class="dl ${up?'up':'dn'}">${up?'▲':'▼'} ${delta}</div>`:''}</div>`;}
+function statusPill(state){const m={ok:['dot ok','st_ok','g'],deg:['dot deg','st_deg','w'],down:['dot down','st_down','d']}[state];return `<span class="tag ${m[2]}"><span class="${m[0]}" style="margin-right:5px"></span>${L(m[1])}</span>`;}
+const NAV=[['resumen','📊'],['comercial','💰'],['sponsors','🤝'],['operativa','🛠️'],['usuarios','👥'],['planes','🧩']];
+
+// ── VIEWS ──
+const V={};
+
+V.resumen=()=>{const d=APP.data;const downs=APP.services.filter(s=>s.state!=='ok').length;
+  return `
+  <div class="grid g4">
+    ${kpi('k_downloads',fmt(d.downloads),fmt(d.downloadsMonth)+' '+L('this_month'),true,'⬇️')}
+    ${kpi('k_mau',fmt(d.mau),'6.4% '+L('vs_prev'),true,'👤')}
+    ${kpi('k_converted',fmt(d.converted),d.convRate+'% '+L('conv_of_mau'),true,'⭐')}
+    ${kpi('k_mrr','$'+fmt(d.mrr),'9.1% '+L('vs_prev'),true,'💰')}
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card span2"><div class="flex between"><b>${L('c_downloads_trend')}</b><span class="note">${L('this_month')}: ${fmt(d.downloadsMonth)}</span></div>${svgLine(d.dlByMonth,d.months)}</div>
+    <div class="card"><b>${L('c_funnel')}</b><div style="display:flex;justify-content:center;margin-top:8px">${svgDonut(d.convRate)}</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><div class="flex between" style="margin-bottom:10px"><b>${L('health')}</b><span class="tag ${downs?'w':'g'}">${downs?downs+' ⚠':L('all_ok')}</span></div>
+      ${APP.services.map(s=>`<div class="flex between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${L(s.key)}</span>${statusPill(s.state)}</div>`).join('')}
+      <div style="text-align:right;margin-top:8px"><span class="note" style="color:var(--brand);cursor:pointer;font-weight:700" onclick="go('operativa')">${L('see_detail')} →</span></div></div>
+    <div class="card"><b>${L('c_rev_plan')}</b>${svgBars(d.revByPlan.map(r=>({label:r.label,value:r.value,color:r.color,disp:'$'+fmt(r.value)})))}
+      <div class="divider"></div>
+      <div class="grid g2"><div>${kpi('k_sponsors',fmt(d.sponsorsActive),null,null,'🤝')}</div><div>${kpi('k_badges',fmt(d.badgesIssued),null,null,'🏅')}</div></div></div>
+  </div>`;
+};
+
+V.comercial=()=>{const d=APP.data;
+  return `
+  <div class="grid g4">
+    ${kpi('k_downloads',fmt(d.downloads),fmt(d.downloadsMonth)+' '+L('this_month'),true,'⬇️')}
+    ${kpi('k_dau',fmt(d.dau),null,null,'👤')}
+    ${kpi('k_mau',fmt(d.mau),'6.4% '+L('vs_prev'),true,'📈')}
+    ${kpi('k_converted',fmt(d.converted),d.convRate+'%',true,'⭐')}
+    ${kpi('k_mrr','$'+fmt(d.mrr),'9.1% '+L('vs_prev'),true,'💰')}
+    ${kpi('k_benefits',fmt(d.benefitsRedeemed),null,null,'🎁')}
+    ${kpi('k_badges',fmt(d.badgesIssued),null,null,'🏅')}
+    ${kpi('k_sponsors',fmt(d.sponsorsActive),null,null,'🤝')}
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><b>${L('c_downloads_trend')}</b>${svgLine(d.dlByMonth,d.months)}</div>
+    <div class="card"><b>${L('c_funnel')}</b>${svgFunnel(d.funnel)}</div>
+    <div class="card"><b>${L('c_rev_plan')}</b>${svgBars(d.revByPlan.map(r=>({label:r.label,value:r.value,color:r.color,disp:'$'+fmt(r.value)})))}
+      <div class="flex between note" style="margin-top:6px"><span>${L('c_rev_total')}</span><b style="color:var(--ink)">$${fmt(d.mrr)}${L('mo')}</b></div></div>
+    <div class="card"><b>${L('c_badges_type')}</b>${svgHBars(d.badgesByType.map(b=>({label:COIN[b.t]+' '+L('tier_'+b.t),value:b.n,disp:fmt(b.n),color:'var(--'+b.t+')'})))}</div>
+  </div>`;
+};
+
+V.sponsors=()=>{const sp=APP.sponsors;const totRev=sp.reduce((a,s)=>a+s.monthly,0);const totRed=sp.reduce((a,s)=>a+s.redeemed,0);
+  return `<p class="sub" style="margin-bottom:14px">${L('s_intro')}</p>
+  <div class="grid g3">
+    ${kpi('k_sponsors',fmt(sp.length),null,null,'🤝')}
+    ${kpi('k_sponsor_rev','$'+fmt(totRev)+L('mo'),null,null,'💰')}
+    ${kpi('k_benefits',fmt(totRed),null,null,'🎁')}
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card span2"><div class="flex between" style="margin-bottom:6px"><b>${L('s_table')}</b><button class="btn sm">${L('s_add')}</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>${L('sp_name')}</th><th>${L('sp_tier')}</th><th>${L('sp_monthly')}</th><th>${L('sp_offered')}</th><th>${L('sp_redeemed')}</th><th>${L('sp_status')}</th></tr></thead><tbody>
+      ${sp.map(s=>`<tr><td><b>${s.name}</b></td><td><span class="tag">${s.tier}</span></td><td>$${fmt(s.monthly)}</td><td>${s.offered}</td><td>${fmt(s.redeemed)}</td><td>${statusPill(s.status)}</td></tr>`).join('')}
+      </tbody></table></div></div>
+    <div class="card span2"><b>${L('s_rev_chart')}</b>${svgHBars(sp.map(s=>({label:s.name.length>18?s.name.slice(0,17)+'…':s.name,value:s.monthly,disp:'$'+fmt(s.monthly)})))}</div>
+  </div>`;
+};
+
+V.operativa=()=>{
+  return `
+  <div class="card"><b>${L('o_stores')}</b>
+    <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>${L('o_platform')}</th><th>${L('o_version')}</th><th>${L('o_available')}</th><th>${L('o_dl')}</th><th>${L('o_updated')}</th></tr></thead><tbody>
+    ${APP.platforms.map(p=>`<tr><td><b>${p.ic} ${p.os}</b></td><td><span class="tag">v${p.ver}</span></td><td>${p.available?`<span class="tag g">${L('yes')}</span>`:`<span class="tag d">${L('no')}</span>`}</td><td>${p.downloads?fmt(p.downloads):'—'}</td><td class="note">${p.updated}</td></tr>`).join('')}
+    </tbody></table></div></div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><b>${L('o_services')}</b>
+      ${APP.services.map(s=>`<div class="svc-row"><span class="dot ${s.state==='ok'?'ok':s.state==='deg'?'deg':'down'}"></span><div style="flex:1"><div style="font-weight:600;font-size:13px">${L(s.key)}</div><div class="note">${L('o_uptime')} ${s.uptime} · ${L('o_latency')} ${s.lat}</div></div>${statusPill(s.state)}</div>`).join('')}</div>
+    <div class="card"><b>${L('o_containers')}</b>
+      <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th></th><th>${L('o_cpu')}</th><th>${L('o_mem')}</th><th>${L('o_region')}</th></tr></thead><tbody>
+      ${APP.containers.map(c=>`<tr><td><span class="dot ${c.state==='ok'?'ok':c.state==='deg'?'deg':'down'}" style="margin-right:7px"></span><b style="font-size:12.5px">${c.n}</b><div class="note">${c.state==='down'?L('st_stop'):L('st_run')}</div></td>
+        <td style="min-width:70px"><div class="note">${c.cpu}%</div><div class="bar"><i style="width:${c.cpu}%;background:${c.cpu>75?'var(--down)':'var(--brand)'}"></i></div></td>
+        <td style="min-width:70px"><div class="note">${c.mem}%</div><div class="bar"><i style="width:${c.mem}%;background:${c.mem>80?'var(--down)':'var(--accent)'}"></i></div></td>
+        <td class="note">${c.region}</td></tr>`).join('')}
+      </tbody></table></div></div>
+  </div>`;
+};
+
+V.usuarios=()=>{const u=APP.users;const act=u.filter(x=>x.state==='active').length;const sus=u.filter(x=>x.state==='suspended').length;const openT=APP.tickets.filter(t=>t.state!=='closed').length;
+  const stMap={active:['g','us_active'],suspended:['w','us_suspended'],churned:['d','us_churned']};
+  const priMap={high:'d',med:'w',low:''};const tsMap={open:['d','ts_open'],progress:['w','ts_progress'],closed:['g','ts_closed']};
+  return `
+  <div class="grid g4">
+    ${kpi('u_total',fmt(u.length===6?24800:u.length),null,null,'👥')}
+    ${kpi('u_active',fmt(act),null,null,'🟢')}
+    ${kpi('u_suspended',fmt(sus),null,null,'⛔')}
+    ${kpi('u_tickets',fmt(openT),null,null,'🎫')}
+  </div>
+  <div class="card" style="margin-top:16px"><div class="flex between wrap" style="gap:8px;margin-bottom:8px"><b>${L('u_table')}</b><input style="max-width:300px;width:100%" placeholder="${L('u_search')}"></div>
+    <div class="tbl-wrap"><table><thead><tr><th>${L('u_name')}</th><th>${L('u_plan')}</th><th>${L('u_state')}</th><th>${L('u_last')}</th><th>${L('u_badges')}</th></tr></thead><tbody>
+    ${u.map(x=>`<tr><td><div class="flex"><div class="avatar">${x.n.split(' ').map(p=>p[0]).join('').slice(0,2)}</div><div><b style="font-size:13px">${x.country} ${x.n}</b><div class="note">${x.e}</div></div></div></td>
+      <td><span class="tag">${L('pl_'+(x.plan==='free'?'free':x.plan==='uni'?'uni':'all'))}</span></td>
+      <td><span class="tag ${stMap[x.state][0]}">${L(stMap[x.state][1])}</span></td>
+      <td class="note">${x.last}</td><td><b>${fmt(x.badges)}</b> 🏅</td></tr>`).join('')}
+    </tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><b>${L('t_table')}</b>
+    <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>${L('t_id')}</th><th>${L('t_subj')}</th><th>${L('t_user')}</th><th>${L('t_pri')}</th><th>${L('t_state')}</th><th>${L('t_age')}</th></tr></thead><tbody>
+    ${APP.tickets.map(t=>`<tr><td class="note">${t.id}</td><td><b style="font-size:13px">${t.subj}</b></td><td>${t.user}</td>
+      <td><span class="tag ${priMap[t.pri]}">${L('pri_'+t.pri)}</span></td><td><span class="tag ${tsMap[t.state][0]}">${L(tsMap[t.state][1])}</span></td><td class="note">${t.age}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+};
+
+V.planes=()=>{
+  const limLabel=v=>v===0?L('unlimited'):v;
+  const catalog=APP.features.map(f=>`<div class="feat" draggable="true" ondragstart="dragStart(event,'${f.id}')" ondragend="dragEnd(event)"><span class="fi">${f.ic}</span>${L('feat_'+f.id)}</div>`).join('');
+  const planCol=p=>{
+    const fObj=id=>APP.features.find(f=>f.id===id);
+    const feats=p.features.map(id=>{const f=fObj(id);return f?`<div class="pfeat"><span>${f.ic}</span>${L('feat_'+id)}<span class="x" onclick="removeFeat('${p.id}','${id}')">✕</span></div>`:'';}).join('');
+    const priceTxt=p.price===0?L('free_price'):'$'+p.price+L('mo');
+    return `<div class="plan-col">
+      <div class="plan-head" style="border-top:4px solid ${p.color};border-radius:14px 14px 0 0"><div class="pname">${L(p.nameKey)}</div><div class="pprice" style="color:${p.color}">${priceTxt}</div></div>
+      <div class="dropzone" id="dz_${p.id}" ondragover="dragOver(event,'${p.id}')" ondragleave="dragLeave(event,'${p.id}')" ondrop="dropFeat(event,'${p.id}')">
+        ${feats||`<div class="empty-hint">${L('p_empty')}</div>`}
+      </div>
+      <div class="limits"><div class="section-label" style="margin:0 0 2px">${L('p_limits')}</div>
+        <div class="limit-row"><label>${L('lim_qday')}</label><input type="number" value="${p.limits.qDay}" onchange="setLimit('${p.id}','qDay',this.value)"><\/div>
+        <div class="limit-row"><label>${L('lim_groups')}</label><input type="number" value="${p.limits.groups}" onchange="setLimit('${p.id}','groups',this.value)"><\/div>
+        <div class="limit-row"><label>${L('lim_tests')}</label><input type="number" value="${p.limits.tests}" onchange="setLimit('${p.id}','tests',this.value)"><\/div>
+        <div class="note" style="margin-top:8px">0 = ${L('unlimited')}</div>
+      </div>
+      <div class="limits"><div class="section-label" style="margin:0 0 2px">🏅 ${L('p_badges')}</div>
+        <div class="limit-row"><label>${L('bdg_login')}</label><input type="number" min="0" value="${p.badges.login}" onchange="setBadge('${p.id}','login',this.value)"><\/div>
+        <div class="limit-row"><label>${L('bdg_purchase')}</label><input type="number" min="0" value="${p.badges.purchase}" onchange="setBadge('${p.id}','purchase',this.value)"><\/div>
+        <div class="limit-row"><label>${L('bdg_correct')}</label><input type="number" min="0" value="${p.badges.correct}" onchange="setBadge('${p.id}','correct',this.value)"><\/div>
+        <div class="note" style="margin-top:8px">${L('badges_unit')} / ${APP.lang==='es'?'acción':'action'}</div>
+      </div>
+    </div>`;
+  };
+  return `<p class="sub" style="margin-bottom:6px">${L('p_intro')}</p>
+  <div class="builder">
+    <div class="card" style="position:sticky;top:78px"><b>${L('p_catalog')}</b><div class="note">${L('p_drag_hint')}</div>${catalog}</div>
+    <div>
+      <div class="flex between" style="margin-bottom:10px"><span></span><div class="flex" style="gap:8px"><button class="btn sec sm" onclick="addPlan()">${L('p_add_plan')}</button><button class="btn sm" onclick="savePlans()">${L('p_save')}</button></div></div>
+      <div class="plan-cols" id="planCols">${APP.plans.map(planCol).join('')}</div>
+    </div>
+  </div>`;
+};
+
+// ── plan builder actions ──
+let DRAG=null;
+function dragStart(e,fid){DRAG=fid;e.dataTransfer.effectAllowed='copy';try{e.dataTransfer.setData('text/plain',fid);}catch(x){}e.target.classList.add('dragging');}
+function dragEnd(e){e.target.classList.remove('dragging');DRAG=null;}
+function dragOver(e,pid){e.preventDefault();const z=document.getElementById('dz_'+pid);if(z)z.classList.add('over');}
+function dragLeave(e,pid){const z=document.getElementById('dz_'+pid);if(z)z.classList.remove('over');}
+function dropFeat(e,pid){e.preventDefault();let fid=DRAG;try{fid=e.dataTransfer.getData('text/plain')||DRAG;}catch(x){}
+  const p=APP.plans.find(x=>x.id===pid);if(p&&fid&&!p.features.includes(fid))p.features.push(fid);render();}
+function removeFeat(pid,fid){const p=APP.plans.find(x=>x.id===pid);if(p)p.features=p.features.filter(f=>f!==fid);render();}
+function setLimit(pid,key,val){const p=APP.plans.find(x=>x.id===pid);if(p)p.limits[key]=Math.max(0,parseInt(val||0,10));}
+function setBadge(pid,key,val){const p=APP.plans.find(x=>x.id===pid);if(p)p.badges[key]=Math.max(0,parseInt(val||0,10));}
+function addPlan(){APP.plans.push({id:'p'+Date.now(),nameKey:'pl_new',price:3,color:'#6366F1',features:[],limits:{qDay:0,groups:0,tests:1},badges:{login:1,purchase:0,correct:1}});render();}
+function savePlans(){alert(APP.lang==='es'?'Cambios guardados (demo)':'Changes saved (demo)');}
+
+// ── nav / render ──
+function go(v){APP.view=v;toggleSidebar(false);render();}
+function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('scrim').classList.toggle('open',open);}
+function setLang(l){APP.lang=l;document.getElementById('langSel').value=l;document.documentElement.lang=l;render();}
+function toggleTheme(){APP.dark=!APP.dark;document.body.classList.toggle('dark',APP.dark);document.getElementById('themeBtn').textContent=APP.dark?'☀️':'🌙';render();}
+function renderNav(){
+  document.getElementById('nav').innerHTML=
+    `<div class="nav-sec">${L('nav_grp1')}</div>`+NAV.slice(0,3).map(([id,ic])=>navItem(id,ic)).join('')+
+    `<div class="nav-sec">${L('nav_grp2')}</div>`+NAV.slice(3).map(([id,ic])=>navItem(id,ic)).join('');
+}
+function navItem(id,ic){
+  let badge='';
+  if(id==='operativa'){const n=APP.services.filter(s=>s.state==='down').length;if(n)badge=`<span class="badge">${n}</span>`;}
+  if(id==='usuarios'){const n=APP.tickets.filter(t=>t.state!=='closed').length;if(n)badge=`<span class="badge" style="background:var(--cta);color:#1A365D">${n}</span>`;}
+  return `<div class="nav-item ${APP.view===id?'act':''}" onclick="go('${id}')"><span class="ico">${ic}</span>${L('nav_'+id)}${badge}</div>`;
+}
+function render(){
+  renderNav();
+  document.getElementById('pageTitle').textContent=L('nav_'+APP.view);
+  document.getElementById('consoleLbl').textContent=L('console');
+  document.getElementById('roleLbl').textContent=L('role');
+  document.getElementById('main').innerHTML=(V[APP.view]||V.resumen)();
+}
+render();
+</script>
+</body>
+</html>
