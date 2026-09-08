@@ -7,6 +7,14 @@ Implementación de la **consola web de administración** de Aprueba a partir del
 - **Backend:** Node.js + Express + **Firebase Admin SDK (Firestore)**. JWT con roles (`admin`, `finance`, `ops`, `support`) y MFA.
 - Reusa el **mismo contrato de API** que la app Flutter (envelope `{data,error,meta}`, rutas `/api/v1`, JWT con claims `sub/role/plan`).
 
+## Estado del despliegue
+
+- **Repo:** GitHub, organización `Aprueba-Administracion`, público.
+- **Base de datos:** proyecto Firebase real `aprueba-admin` (Firestore) — ya sembrado con datos de prueba (planes, usuarios, sponsors, tickets, métricas, etc. vía `npm run seed`), no el emulador.
+- **Hosting:** desplegado en Vercel (frontend estático + backend como función serverless, ver sección de despliegue más abajo). Cada integrante del equipo conectó su propia cuenta de Vercel al mismo repo, así que cada push a `main` dispara un deploy automático en los proyectos de ambos.
+  - Deploy de referencia: https://aprueba-admin-web-neon.vercel.app
+- **Último check:** login y datos verificados funcionando en producción con los usuarios de prueba de la tabla de abajo.
+
 ## Estructura
 ```
 api/       Función serverless de Vercel (reexporta backend/src/app.js)
