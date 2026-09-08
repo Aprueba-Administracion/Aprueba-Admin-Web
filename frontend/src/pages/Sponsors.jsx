@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import {
   Kpi, Card, StatusPill, Loading, HBars, ErrorBox, EmptyState, Modal, Confirm,
-  Field, FormGrid, Select, TagInput, Toast, useToast,
+  Field, FormGrid, Select, Toast, useToast,
 } from '../components/ui.jsx';
 
-// Catálogos del backend (routes/sponsors.js).
 const TIERS = ['Bronze', 'Silver', 'Gold'];
 const STATUSES = ['ok', 'deg', 'down'];
 
@@ -33,26 +32,25 @@ export default function Sponsors({ ctx }) {
     } catch (e) { t.err(e.message); } finally { setBusy(false); }
   };
 
-  const save = (form, sponsor) => {
+  const saveBasics = (form, sponsor) => {
     if (!form.name.trim()) { t.err(L('required_field')); return; }
     if (sponsor) {
-      // PATCH acepta el total de beneficios, no el listado.
       run(() => api.patch(`/sponsors/${sponsor.id}`, {
-        name: form.name.trim(),
-        tier: form.tier,
-        monthlyFee: Number(form.monthlyFee || 0),
-        status: form.status,
-        benefitsOffered: Number(form.benefitsOffered || 0),
+        name: form.name.trim(), tier: form.tier, monthlyFee: Number(form.monthlyFee || 0), status: form.status,
       }), L('saved_ok'));
     } else {
-      // POST deriva benefitsOffered de la longitud del array `benefits`.
       run(() => api.post('/sponsors', {
-        name: form.name.trim(),
-        tier: form.tier,
-        monthlyFee: Number(form.monthlyFee || 0),
-        benefits: form.benefits,
+        name: form.name.trim(), tier: form.tier, monthlyFee: Number(form.monthlyFee || 0), benefits: [],
       }), L('created_ok'));
     }
+  };
+
+  const saveBenefits = (sponsor, benefits) => {
+    run(() => api.put(`/sponsors/${sponsor.id}/benefits`, { benefits }), L('saved_ok'));
+  };
+
+  const redeem = (sponsor, benefit) => {
+    run(() => api.post(`/sponsors/${sponsor.id}/benefits/${benefit.id}/redeem`, { cantidad: 1 }), L('saved_ok'));
   };
 
   if (err && !rows) return <Card><ErrorBox msg={err} onRetry={load} L={L} /></Card>;
@@ -87,10 +85,11 @@ export default function Sponsors({ ctx }) {
                   <td><b>{s.name}</b></td>
                   <td><span className="tag">{s.tier}</span></td>
                   <td>${fmt(s.monthlyFee)}</td>
-                  <td>{s.benefitsOffered ?? 0}</td>
-                  <td>{fmt(s.benefitsRedeemed)}</td>
+                  <td>{fmt(s.benefitsOffered ?? 0)}</td>
+                  <td>{fmt(s.benefitsRedeemed ?? 0)}</td>
                   <td><StatusPill state={s.status} L={L} /></td>
                   <td><div className="row-acts">
+                    <button className="btn sec sm" onClick={() => setDialog({ kind: 'benefits', sponsor: s })}>{L('s_benefits')}</button>
                     <button className="btn sec sm" onClick={() => setDialog({ kind: 'form', sponsor: s })}>{L('edit')}</button>
                     <button className="btn dgr sm" onClick={() => setDialog({ kind: 'delete', sponsor: s })}>🗑</button>
                   </div></td>
@@ -114,7 +113,12 @@ export default function Sponsors({ ctx }) {
 
       {dialog?.kind === 'form' && (
         <SponsorForm sponsor={dialog.sponsor} ctx={ctx} busy={busy}
-          onClose={() => setDialog(null)} onSave={save} />
+          onClose={() => setDialog(null)} onSave={saveBasics} />
+      )}
+
+      {dialog?.kind === 'benefits' && (
+        <BenefitsPanel sponsor={dialog.sponsor} ctx={ctx} busy={busy}
+          onClose={() => setDialog(null)} onSave={saveBenefits} onRedeem={redeem} />
       )}
 
       {dialog?.kind === 'delete' && (
@@ -128,15 +132,12 @@ export default function Sponsors({ ctx }) {
   );
 }
 
+// Alta/edición de datos básicos del sponsor (sin beneficios: eso vive en BenefitsPanel).
 function SponsorForm({ sponsor, ctx, busy, onClose, onSave }) {
   const { L } = ctx;
   const [f, setF] = useState(() => ({
-    name: sponsor?.name || '',
-    tier: sponsor?.tier || 'Bronze',
-    monthlyFee: sponsor?.monthlyFee ?? '',
-    status: sponsor?.status || 'ok',
-    benefitsOffered: sponsor?.benefitsOffered ?? 0,
-    benefits: sponsor?.benefits || [],
+    name: sponsor?.name || '', tier: sponsor?.tier || 'Bronze',
+    monthlyFee: sponsor?.monthlyFee ?? '', status: sponsor?.status || 'ok',
   }));
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
 
@@ -154,21 +155,53 @@ function SponsorForm({ sponsor, ctx, busy, onClose, onSave }) {
         <Field label={`${L('sp_monthly')} (USD)`}>
           <input type="number" min="0" value={f.monthlyFee} onChange={(e) => set('monthlyFee')(e.target.value)} />
         </Field>
-        {sponsor ? (
-          <>
-            <Field label={L('sp_status')}>
-              <Select value={f.status} onChange={set('status')} options={STATUSES.map((x) => ({ value: x, label: L(`st_${x}`) }))} />
-            </Field>
-            <Field label={L('s_offered_num')} hint={L('s_offered_hint')}>
-              <input type="number" min="0" value={f.benefitsOffered} onChange={(e) => set('benefitsOffered')(e.target.value)} />
-            </Field>
-          </>
-        ) : (
-          <Field wide label={L('s_benefits')} hint={L('s_benefits_hint')}>
-            <TagInput value={f.benefits} onChange={set('benefits')} placeholder="Descuento 20 %…" />
+        {sponsor && (
+          <Field label={L('sp_status')}>
+            <Select value={f.status} onChange={set('status')} options={STATUSES.map((x) => ({ value: x, label: L(`st_${x}`) }))} />
           </Field>
         )}
       </FormGrid>
+    </Modal>
+  );
+}
+
+// Catálogo de beneficios de un sponsor: nombre, costo en platino, stock, y
+// lo ya canjeado. Se guarda todo junto con "Guardar catálogo"; canjear un
+// beneficio es una acción aparte (conciliación real, inmediata).
+function BenefitsPanel({ sponsor, ctx, busy, onClose, onSave, onRedeem }) {
+  const { L } = ctx;
+  const [items, setItems] = useState(() => (sponsor.benefits || []).map((b) => ({ ...b })));
+
+  const update = (i, k, v) => setItems((arr) => arr.map((b, idx) => (idx === i ? { ...b, [k]: v } : b)));
+  const remove = (i) => setItems((arr) => arr.filter((_, idx) => idx !== i));
+  const add = () => setItems((arr) => [...arr, { name: '', costPlatino: 0, stock: 0, redeemed: 0 }]);
+
+  return (
+    <Modal busy={busy} title={`${L('s_benefits')} — ${sponsor.name}`} onClose={onClose}
+      footer={<>
+        <button className="btn sec" onClick={onClose} disabled={busy}>{L('cancel')}</button>
+        <button className="btn" onClick={() => onSave(sponsor, items)} disabled={busy}>{busy ? '…' : L('save')}</button>
+      </>}>
+      {items.length === 0 && <p className="sub">{L('s_no_sponsors')}</p>}
+      {items.map((b, i) => (
+        <div key={b.id || i} className="flex wrap" style={{ gap: 8, marginBottom: 10, alignItems: 'flex-end' }}>
+          <Field label="Nombre"><input value={b.name} onChange={(e) => update(i, 'name', e.target.value)} /></Field>
+          <Field label="Costo (platino)">
+            <input type="number" min="0" value={b.costPlatino} onChange={(e) => update(i, 'costPlatino', e.target.value)} />
+          </Field>
+          <Field label="Stock">
+            <input type="number" min="0" value={b.stock} onChange={(e) => update(i, 'stock', e.target.value)} />
+          </Field>
+          <Field label="Canjeados"><input value={b.redeemed || 0} disabled /></Field>
+          {b.id && (
+            <button className="btn sec sm" disabled={busy || b.stock <= 0} onClick={() => onRedeem(sponsor, b)}>
+              Canjear 1
+            </button>
+          )}
+          <button className="btn dgr sm" onClick={() => remove(i)}>🗑</button>
+        </div>
+      ))}
+      <button className="btn sec sm" onClick={add}>+ Agregar beneficio</button>
     </Modal>
   );
 }
