@@ -326,6 +326,101 @@ export function HBars({ data = [] }) {
   );
 }
 
+export const CAT_COLORS = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)'];
+
+// Barras horizontales interactivas: resalta la fila y muestra un tooltip con
+// el valor exacto y el % del total al pasar el mouse.
+export function HBarsInteractive({ data = [] }) {
+  const [hover, setHover] = useState(null);
+  const w = 300, rowH = 32, labW = 130;
+  const max = Math.max(...data.map((d) => d.value), 0) || 1;
+  const total = data.reduce((a, d) => a + d.value, 0) || 1;
+  const h = data.length * rowH + 4;
+  const hd = hover != null ? data[hover] : null;
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h}>
+        {data.map((d, i) => {
+          const bw = (d.value / max) * (w - labW - 46);
+          const y = i * rowH + 5;
+          const active = hover === i;
+          return (
+            <g key={i} style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+              <rect x="0" y={y - 3} width={w} height={rowH - 2} rx="6" fill={active ? 'var(--soft)' : 'transparent'} />
+              <text x="0" y={y + 14} fontSize="10" fill="var(--ink)" fontFamily="Inter" fontWeight={active ? 700 : 400}>{d.label}</text>
+              <rect x={labW} y={y + 4} width={Math.max(3, bw).toFixed(1)} height="14" rx="4"
+                fill={d.color || 'var(--brand)'} opacity={active ? 1 : 0.85} />
+              <text x={(labW + Math.max(3, bw) + 5).toFixed(1)} y={y + 15} fontSize="9" fill="var(--muted)" fontFamily="Inter">{d.disp}</text>
+            </g>
+          );
+        })}
+      </svg>
+      {hd && (
+        <div className="chart-tip" style={{ top: hover * rowH + 2, left: `${(labW / w) * 100}%` }}>
+          <b>{hd.label}</b>
+          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% del total</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Donut multi-serie interactivo: total al centro, resalta segmento (sin cambiar
+// su grosor — solo atenúa los demás) y leyenda siempre visible.
+export function DonutMulti({ data = [], centerLabel }) {
+  const [hover, setHover] = useState(null);
+  const total = data.reduce((a, d) => a + (d.value || 0), 0) || 1;
+  const r = 40, c = 2 * Math.PI * r;
+  let acc = 0;
+  const segs = data.map((d, i) => {
+    const frac = (d.value || 0) / total;
+    const seg = { ...d, i, dash: frac * c, offset: acc * c };
+    acc += frac;
+    return seg;
+  });
+  return (
+    <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+      <svg viewBox="0 0 104 104" width="140" height="140">
+        <circle cx="52" cy="52" r={r} fill="none" stroke="var(--line)" strokeWidth="14" />
+        {segs.map((s) => {
+          const dim = hover != null && hover !== s.i;
+          return (
+            <circle key={s.i} cx="52" cy="52" r={r} fill="none" stroke={s.color || 'var(--brand)'}
+              strokeWidth="14"
+              strokeDasharray={`${s.dash.toFixed(1)} ${(c - s.dash).toFixed(1)}`}
+              strokeDashoffset={(-s.offset).toFixed(1)} transform="rotate(-90 52 52)"
+              opacity={dim ? 0.28 : 1}
+              style={{
+                cursor: 'pointer',
+                transition: 'opacity .15s, filter .15s',
+                filter: hover === s.i ? 'drop-shadow(0 0 3px rgba(0,0,0,.35))' : 'none',
+              }}
+              onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)} />
+          );
+        })}
+        <text x="52" y="49" fontSize="13" fontWeight="800" fill="var(--ink)" textAnchor="middle" fontFamily="Montserrat">
+          {hover != null ? segs[hover].disp : (centerLabel ?? '')}
+        </text>
+        <text x="52" y="63" fontSize="6.5" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">
+          {hover != null ? segs[hover].label : 'total'}
+        </text>
+      </svg>
+      <div className="chart-legend">
+        {segs.map((s) => (
+          <div key={s.i} className={`chart-legend-item ${hover === s.i ? 'hover' : ''}`}
+            style={{ opacity: hover != null && hover !== s.i ? 0.45 : 1, transition: 'opacity .15s' }}
+            onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)}>
+            <span className="dot" style={{ background: s.color || 'var(--brand)' }} />
+            <span>{s.label}</span>
+            <b>{s.disp}</b>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Funnel({ data = [] }) {
   const w = 300, rowH = 34, max = data[0]?.value || 1, h = data.length * rowH + 4;
   return (
