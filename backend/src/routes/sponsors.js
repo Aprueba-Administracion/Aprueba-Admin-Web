@@ -22,6 +22,7 @@ function normalizeBenefits(input = [], previous = []) {
         costPlatino: Math.max(0, Number(b.costPlatino) || 0),
         stock: Math.max(0, Number(b.stock) || 0),
         redeemed: prev ? prev.redeemed : 0,
+        expiresAt: b.expiresAt || null,
       };
     })
     .filter((b) => b.name);

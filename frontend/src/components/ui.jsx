@@ -19,7 +19,11 @@ const STATE_MAP = {
 };
 export function StatusPill({ state, L }) {
   const m = STATE_MAP[state] || STATE_MAP.ok;
-  return <span className={`tag ${m[2]}`}><span className={m[0]} style={{ marginRight: 5 }} />{L(m[1])}</span>;
+  return (
+    <span className={`tag ${m[2]}`} style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+      <span className={m[0]} style={{ marginRight: 5, flexShrink: 0 }} />{L(m[1])}
+    </span>
+  );
 }
 
 export function Loading({ L }) { return <div className="center">{L('loading')}</div>; }
@@ -407,16 +411,16 @@ export function DonutMulti({ data = [], centerLabel }) {
         </text>
       </svg>
       <div className="chart-legend">
-        {segs.map((s) => (
-          <div key={s.i} className={`chart-legend-item ${hover === s.i ? 'hover' : ''}`}
-            style={{ opacity: hover != null && hover !== s.i ? 0.45 : 1, transition: 'opacity .15s' }}
-            onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)}>
-            <span className="dot" style={{ background: s.color || 'var(--brand)' }} />
-            <span>{s.label}</span>
-            <b>{s.disp}</b>
-          </div>
-        ))}
-      </div>
+  {segs.map((s) => (
+    <div key={s.i} className={`chart-legend-item ${hover === s.i ? 'hover' : ''}`}
+      onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)}>
+      <span className="dot" style={{ background: s.color || 'var(--brand)' }} />
+      <span>{s.label}</span>
+      <span className="pct">{Math.round(((s.value || 0) / total) * 100)}%</span>
+      <b>{s.disp}</b>
+    </div>
+  ))}
+</div>
     </div>
   );
 }
@@ -438,4 +442,64 @@ export function Funnel({ data = [] }) {
   );
 }
 
+
+// ── Iconos de línea (reemplazan los emojis de acciones) ──
+export function IconEdit({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+export function IconTrash({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" /><path d="M14 11v6" />
+    </svg>
+  );
+}
+
 export const COIN = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎', platinum: '⬡' };
+export function IconUsers({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+export function IconWallet({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1" />
+      <path d="M16 12h5v4h-5a2 2 0 0 1 0-4Z" />
+    </svg>
+  );
+}
+
+export function IconGift({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="18" height="4" />
+      <path d="M12 8v13" /><path d="M19 12v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7" />
+      <path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8" />
+      <path d="M16.5 8a2.5 2.5 0 0 0 0-5C14 3 12 8 12 8" />
+    </svg>
+  );
+}
+
+export function IconZap({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
