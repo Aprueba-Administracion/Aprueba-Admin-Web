@@ -12,6 +12,7 @@ import Users from './pages/Users.jsx';
 import Tutors from './pages/Tutors.jsx';
 import Content from './pages/Content.jsx';
 import Plans from './pages/Plans.jsx';
+import Audit from './pages/Audit.jsx';
 
 // Definición de las vistas: ruta, etiqueta, icono y roles que pueden verlas.
 // Los roles replican el `requireRole` del backend para no ofrecer pantallas que
@@ -25,6 +26,7 @@ export const VIEWS = [
   { id: 'tutores', path: '/tutores', ic: '🎓', group: 2, roles: ['support'], el: Tutors },
   { id: 'contenido', path: '/contenido', ic: '📚', group: 2, roles: ['admin'], el: Content },
   { id: 'planes', path: '/planes', ic: '🧩', group: 2, roles: ['admin'], el: Plans },
+  { id: 'auditoria', path: '/auditoria', ic: '🧾', group: 2, roles: ['admin'], el: Audit },
 ];
 
 export default function App() {

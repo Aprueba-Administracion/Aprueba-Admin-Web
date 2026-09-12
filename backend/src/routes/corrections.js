@@ -3,6 +3,7 @@ import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, getDoc, patchDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 const CONFIRM_REWARD = { tier: 'bronze', amount: 250 };
@@ -36,6 +37,7 @@ r.patch('/corrections/:id', requireRole('support'), wrap(async (req, res) => {
     }
     rewardGranted = { userId: cor.userId, ...CONFIRM_REWARD };
   }
+  await logAudit(req, resolution, `corrections/${req.params.id}`, { rewardGranted });
   return ok(res, { id: req.params.id, state: resolution, rewardGranted });
 }));
 

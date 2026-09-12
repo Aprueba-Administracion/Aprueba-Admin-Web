@@ -3,6 +3,7 @@ import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, getDoc, patchDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -41,6 +42,7 @@ r.patch('/users/:id', requireRole('support'), wrap(async (req, res) => {
   patch.auditedAt = new Date().toISOString();
   const u = await patchDoc(COL.users, req.params.id, patch);
   if (!u) return fail(res, 404, 'NOT_FOUND', 'Usuario no encontrado');
+  await logAudit(req, 'update', `users/${req.params.id}`, patch);
   return ok(res, u);
 }));
 

@@ -15,6 +15,7 @@ export const COL = {
   services: 'services',
   containers: 'containers',
   metrics: 'metrics', // documentos: overview, commercial
+  auditLog: 'auditLog', // bitácora de acciones administrativas sensibles
   // Marketplace de tutores (lo consume en modo lectura el API del alumno).
   tutors: 'tutors',
   tutorReviews: 'tutorReviews',

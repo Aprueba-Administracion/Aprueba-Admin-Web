@@ -3,6 +3,7 @@ import { ok, created, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, addDoc, patchDoc, getDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -24,6 +25,7 @@ r.post('/questions', requireRole('admin'), wrap(async (req, res) => {
     statement: b.statement, options: b.options, correctAnswer: b.correctAnswer || 'A',
     explanation: b.explanation || '', requiredSkill: b.requiredSkill || '', status: 'draft',
   });
+  await logAudit(req, 'create', `questions/${doc.id}`);
   return created(res, { id: doc.id, status: doc.status });
 }));
 
@@ -33,6 +35,7 @@ r.put('/questions/:id', requireRole('admin'), wrap(async (req, res) => {
   for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
   const doc = await patchDoc(COL.questions, req.params.id, patch);
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Pregunta no encontrada');
+  await logAudit(req, 'update', `questions/${req.params.id}`, { status: patch.status });
   return ok(res, doc);
 }));
 
@@ -51,6 +54,7 @@ r.post('/questions/import', requireRole('admin'), wrap(async (req, res) => {
       imported++;
     } catch (e) { errors.push({ index: i, message: e.message }); }
   }
+  await logAudit(req, 'import', `questions${testId ? `/${testId}` : ''}`, { imported, errors: errors.length });
   return created(res, { imported, skipped: items.length - imported - errors.length, errors });
 }));
 

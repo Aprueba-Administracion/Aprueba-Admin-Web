@@ -93,6 +93,10 @@ const containers = [
   { id: 'cdn-edge', name: 'cdn-edge', state: 'ok', cpu: 8, mem: 14, region: 'global' },
 ];
 
+const tutors = [
+  { id: 'tut_1', name: 'Constanza Morales', initials: 'CM', avatarColor: '#1A365D', textColor: '#FFFFFF', subjects: ['m1', 'b1'], subjectsLabel: { es: 'Matemática · Biología', en: 'Math · Biology' }, modes: ['online', 'in_person'], modesLabel: { es: 'Online y Presencial', en: 'Online & In-Person' }, pricePerHour: 15000, currency: 'CLP', country: 'CL', languages: ['es'], bio: { es: 'Licenciada en Ciencias con 5 años de experiencia preparando la PAES.', en: 'Science graduate with 5 years of experience tutoring PAES.'}, yearsExperience: 5, verified: true, featured: true, online: false, rating: 5.0, reviewCount: 1, ratingSeed: { teaching: 5, punctuality: 5, mastery: 5 }, reviewCountSeed: 1, contact: { email: 'constanza@aprueba.cl', phone: '+56912345678' }, contactSharingDefault: true, status: 'active', createdAt: new Date().toISOString(), },
+];
+
 const metrics = {
   overview: {
     downloads: { total: 128540, month: 8200, deltaPct: 6.8 },
@@ -145,6 +149,7 @@ async function run() {
   await seedCollection(COL.platforms, platforms);
   await seedCollection(COL.services, services);
   await seedCollection(COL.containers, containers);
+  await seedCollection(COL.tutors, tutors);
   await db.collection(COL.metrics).doc('overview').set(metrics.overview);
   await db.collection(COL.metrics).doc('commercial').set(metrics.commercial);
   console.log('  ✓ metrics: 2 docs (overview, commercial)');

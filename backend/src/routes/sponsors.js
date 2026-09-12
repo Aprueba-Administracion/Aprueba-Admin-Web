@@ -3,6 +3,7 @@ import { ok, created, noContent, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, addDoc, patchDoc, deleteDoc, getDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 const TIERS = ['Bronze', 'Silver', 'Gold'];
@@ -49,6 +50,7 @@ r.post('/sponsors', requireRole('finance'), wrap(async (req, res) => {
     benefits: normalized, status: 'ok',
     ...totals(normalized),
   });
+  await logAudit(req, 'create', `sponsors/${doc.id}`, { name: doc.name });
   return created(res, doc);
 }));
 
@@ -58,6 +60,7 @@ r.patch('/sponsors/:id', requireRole('finance'), wrap(async (req, res) => {
   for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
   const doc = await patchDoc(COL.sponsors, req.params.id, patch);
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Sponsor no encontrado');
+  await logAudit(req, 'update', `sponsors/${req.params.id}`, patch);
   return ok(res, doc);
 }));
 
@@ -70,6 +73,7 @@ r.put('/sponsors/:id/benefits', requireRole('finance'), wrap(async (req, res) =>
     benefits: normalized,
     ...totals(normalized),
   });
+  await logAudit(req, 'update', `sponsors/${req.params.id}/benefits`, { count: normalized.length });
   return ok(res, doc);
 }));
 
@@ -89,6 +93,7 @@ r.post('/sponsors/:id/benefits/:benefitId/redeem', requireRole('finance'), wrap(
     redeemed: benefits[idx].redeemed + cantidad,
   };
   const doc = await patchDoc(COL.sponsors, req.params.id, { benefits, ...totals(benefits) });
+  await logAudit(req, 'redeem', `sponsors/${req.params.id}/benefits/${req.params.benefitId}`, { cantidad });
   return ok(res, doc);
 }));
 
@@ -96,6 +101,7 @@ r.delete('/sponsors/:id', requireRole('finance'), wrap(async (req, res) => {
   const doc = await getDoc(COL.sponsors, req.params.id);
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Sponsor no encontrado');
   await deleteDoc(COL.sponsors, req.params.id);
+  await logAudit(req, 'delete', `sponsors/${req.params.id}`, { name: doc.name });
   return noContent(res);
 }));
 

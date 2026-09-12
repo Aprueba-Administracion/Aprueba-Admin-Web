@@ -6,6 +6,7 @@ import { ok, created, noContent, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, addDoc, patchDoc, deleteDoc, getDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -125,6 +126,7 @@ r.post('/tutors', requireRole('support'), wrap(async (req, res) => {
     status: b.status || 'active',
     createdAt: new Date().toISOString(),
   });
+  await logAudit(req, 'create', `tutors/${doc.id}`, { name: doc.name });
   return created(res, doc);
 }));
 
@@ -141,6 +143,7 @@ r.put('/tutors/:id', requireRole('support'), wrap(async (req, res) => {
   for (const k of allowed) if (k in (req.body || {})) patch[k] = req.body[k];
   const doc = await patchDoc(COL.tutors, req.params.id, patch);
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Tutor no encontrado');
+  await logAudit(req, 'update', `tutors/${req.params.id}`, patch);
   // Si cambió el histórico, hay que recalcular la reputación publicada.
   if ('ratingSeed' in patch || 'reviewCountSeed' in patch) {
     return ok(res, await refreshRatingCache(doc.id));
@@ -159,6 +162,7 @@ r.patch('/tutors/:id/verification', requireRole('support'), wrap(async (req, res
     verifiedBy: verified ? req.user.id : null,
   });
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Tutor no encontrado');
+  await logAudit(req, verified ? 'verify' : 'unverify', `tutors/${req.params.id}`, { note: note || null });
   return ok(res, { id: doc.id, verified: doc.verified, verifiedAt: doc.verifiedAt });
 }));
 
@@ -168,9 +172,11 @@ r.delete('/tutors/:id', requireRole('admin'), wrap(async (req, res) => {
   if (!tutor) return fail(res, 404, 'NOT_FOUND', 'Tutor no encontrado');
   if (req.query.hard === 'true') {
     await deleteDoc(COL.tutors, tutor.id);
+    await logAudit(req, 'delete', `tutors/${tutor.id}`, { name: tutor.name });
     return noContent(res);
   }
   const doc = await patchDoc(COL.tutors, tutor.id, { status: 'paused', featured: false });
+  await logAudit(req, 'pause', `tutors/${tutor.id}`, { name: tutor.name });
   return ok(res, { id: doc.id, status: doc.status });
 }));
 
@@ -180,6 +186,7 @@ r.delete('/tutors/:id/reviews/:reviewId', requireRole('support'), wrap(async (re
   if (!review || review.tutorId !== req.params.id) return fail(res, 404, 'NOT_FOUND', 'Reseña no encontrada');
   await deleteDoc(COL.tutorReviews, review.id);
   await refreshRatingCache(review.tutorId);
+  await logAudit(req, 'delete', `tutors/${req.params.id}/reviews/${req.params.reviewId}`);
   return noContent(res);
 }));
 

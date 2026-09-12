@@ -3,6 +3,7 @@ import { ok, created, noContent, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, addDoc, patchDoc, setDoc, getDoc, deleteDoc, countActiveSubscriptions } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -38,6 +39,7 @@ r.post('/plans', requireRole('admin'), wrap(async (req, res) => {
     limits: normLimits(b.limits),
     badges: normBadges(b.badges),
   });
+  await logAudit(req, 'create', `plans/${doc.id}`, { name: doc.name });
   return created(res, doc);
 }));
 
@@ -56,6 +58,7 @@ r.put('/plans/:id', requireRole('admin'), wrap(async (req, res) => {
   };
   const doc = await setDoc(COL.plans, req.params.id, next);
   // Nota: un cambio de price se sincronizaría aquí con los precios de Stripe.
+  await logAudit(req, 'update', `plans/${req.params.id}`, { name: next.name, price: next.price });
   return ok(res, doc);
 }));
 
@@ -66,6 +69,7 @@ r.delete('/plans/:id', requireRole('admin'), wrap(async (req, res) => {
   const active = await countActiveSubscriptions(req.params.id);
   if (active > 0) return fail(res, 409, 'PLAN_HAS_SUBSCRIPTIONS', `No se puede eliminar: ${active} suscripciones activas`);
   await deleteDoc(COL.plans, req.params.id);
+  await logAudit(req, 'delete', `plans/${req.params.id}`, { name: doc.name });
   return noContent(res);
 }));
 

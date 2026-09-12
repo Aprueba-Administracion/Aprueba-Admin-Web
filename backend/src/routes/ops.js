@@ -3,6 +3,7 @@ import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, getDoc, patchDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -27,6 +28,7 @@ r.post('/containers/:name/restart', requireRole('ops'), wrap(async (req, res) =>
   if (!doc) return fail(res, 404, 'NOT_FOUND', 'Contenedor no encontrado');
   // Acción operativa simulada: marca como reiniciándose.
   await patchDoc(COL.containers, req.params.name, { state: 'ok', cpu: 5, mem: 12 });
+  await logAudit(req, 'restart', `containers/${req.params.name}`);
   return ok(res, { name: req.params.name, action: 'restart', status: 'scheduled' }, 202);
 }));
 

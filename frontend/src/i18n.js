@@ -4,7 +4,7 @@ export const T = {
   es: {
     console:'Consola de negocio', role_admin:'Gerencia', role_finance:'Finanzas', role_ops:'Operaciones', role_support:'Soporte',
     nav_grp1:'Negocio', nav_grp2:'Plataforma',
-    nav_resumen:'Resumen', nav_comercial:'Comercial', nav_sponsors:'Sponsors', nav_operativa:'Operativa', nav_usuarios:'Usuarios y soporte', nav_tutores:'Tutores', nav_contenido:'Contenido', nav_planes:'Planes y productos',
+    nav_resumen:'Resumen', nav_comercial:'Comercial', nav_sponsors:'Sponsors', nav_operativa:'Operativa', nav_usuarios:'Usuarios y soporte', nav_tutores:'Tutores', nav_contenido:'Contenido', nav_planes:'Planes y productos', nav_auditoria:'Bitácora de auditoría',
 
     // ── genéricos ──
     save:'Guardar', cancel:'Cancelar', close:'Cerrar', create:'Crear', edit:'Editar', del:'Eliminar', view:'Ver',
@@ -126,11 +126,16 @@ export const T = {
     login_title:'Consola de administración', login_email:'Correo', login_pass:'Contraseña', login_otp:'Código MFA (si aplica)', login_btn:'Ingresar',
     login_hint:'Usuarios de prueba — admin@aprueba.cl / admin123 (MFA 123456) · finance@aprueba.cl / finance123 (MFA 123456) · ops@aprueba.cl / ops123 · support@aprueba.cl / support123',
     logout:'Cerrar sesión', loading:'Cargando…', no_access:'No tienes permiso para esta vista (rol insuficiente).', restarted:'Reinicio programado',
+
+    // ── auditoría ──
+    au_intro:'Registro de acciones administrativas sensibles: quién hizo qué, sobre qué recurso y cuándo.',
+    au_table:'Bitácora', au_date:'Fecha', au_actor:'Realizado por', au_action:'Acción', au_resource:'Recurso', au_detail:'Detalle',
+    au_filter_action:'Acción', au_filter_resource:'Recurso (prefijo)', au_no_rows:'No hay registros con esos filtros.',
   },
   en: {
     console:'Business console', role_admin:'Management', role_finance:'Finance', role_ops:'Operations', role_support:'Support',
     nav_grp1:'Business', nav_grp2:'Platform',
-    nav_resumen:'Overview', nav_comercial:'Commercial', nav_sponsors:'Sponsors', nav_operativa:'Operations', nav_usuarios:'Users & support', nav_tutores:'Tutors', nav_contenido:'Content', nav_planes:'Plans & products',
+    nav_resumen:'Overview', nav_comercial:'Commercial', nav_sponsors:'Sponsors', nav_operativa:'Operations', nav_usuarios:'Users & support', nav_tutores:'Tutors', nav_contenido:'Content', nav_planes:'Plans & products', nav_auditoria:'Audit log',
 
     save:'Save', cancel:'Cancel', close:'Close', create:'Create', edit:'Edit', del:'Delete', view:'View',
     apply:'Apply', retry:'Retry', clear_filters:'Clear filters', filter_all:'All', required_field:'Required field',
@@ -244,6 +249,11 @@ export const T = {
     login_title:'Admin console', login_email:'Email', login_pass:'Password', login_otp:'MFA code (if required)', login_btn:'Sign in',
     login_hint:'Test users — admin@aprueba.cl / admin123 (MFA 123456) · finance@aprueba.cl / finance123 (MFA 123456) · ops@aprueba.cl / ops123 · support@aprueba.cl / support123',
     logout:'Sign out', loading:'Loading…', no_access:'You do not have permission for this view (insufficient role).', restarted:'Restart scheduled',
+
+    // ── audit log ──
+    au_intro:'Log of sensitive administrative actions: who did what, on which resource, and when.',
+    au_table:'Audit log', au_date:'Date', au_actor:'Performed by', au_action:'Action', au_resource:'Resource', au_detail:'Detail',
+    au_filter_action:'Action', au_filter_resource:'Resource (prefix)', au_no_rows:'No entries match those filters.',
   },
 };
 

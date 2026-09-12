@@ -13,6 +13,7 @@ import correctionsRoutes from './routes/corrections.js';
 import questionsRoutes from './routes/questions.js';
 import plansRoutes from './routes/plans.js';
 import tutorsRoutes from './routes/tutors.js';
+import auditRoutes from './routes/audit.js';
 
 // App de Express, sin `listen`: la usa tanto `index.js` (desarrollo local)
 // como `api/index.js` (función serverless de Vercel en producción).
@@ -38,6 +39,7 @@ admin.use(correctionsRoutes);
 admin.use(questionsRoutes);
 admin.use(plansRoutes);
 admin.use(tutorsRoutes);
+admin.use(auditRoutes);
 app.use('/api/v1/admin', admin);
 
 app.use(notFound);

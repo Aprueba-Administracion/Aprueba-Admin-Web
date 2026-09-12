@@ -3,6 +3,7 @@ import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { COL, listAll, patchDoc } from '../data/repo.js';
+import { logAudit } from '../lib/audit.js';
 
 const r = Router();
 
@@ -20,6 +21,7 @@ r.patch('/tickets/:id', requireRole('support'), wrap(async (req, res) => {
   if (req.body?.reply) patch.lastReply = req.body.reply;
   const t = await patchDoc(COL.tickets, req.params.id, patch);
   if (!t) return fail(res, 404, 'NOT_FOUND', 'Ticket no encontrado');
+  await logAudit(req, 'update', `tickets/${req.params.id}`, patch);
   return ok(res, t);
 }));
 
