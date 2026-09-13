@@ -14,6 +14,54 @@ export function Card({ children, className = '', style }) {
   return <div className={`card ${className}`} style={style}>{children}</div>;
 }
 
+// KPI con tendencia: valor + variación a la izquierda, mini-sparkline decorativo
+// e ícono circular a la derecha (usado en el panel lateral de Comercial).
+export function KpiTrend({ ic, label, value, delta, up = true, spark = [] }) {
+  const path = useMemo(() => {
+    if (spark.length < 2) return null;
+    const w = 54, h = 22;
+    const max = Math.max(...spark), min = Math.min(...spark), rng = (max - min) || 1;
+    const step = w / (spark.length - 1);
+    return spark.map((v, i) => [i * step, h - 2 - ((v - min) / rng) * (h - 4)])
+      .map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  }, [spark]);
+  return (
+    <div className="card kpi-trend">
+      <div className="kt-txt">
+        <div className="lbl">{label}</div>
+        <div className="kpi-val">{value}</div>
+        {delta && <div className={`dl ${up ? 'up' : 'dn'}`}>{up ? '▲' : '▼'} {delta}</div>}
+      </div>
+      <div className="kt-side">
+        {path && <svg width="54" height="22" viewBox="0 0 54 22"><path d={path} fill="none" stroke="var(--brand)" strokeWidth="1.6" opacity=".5" /></svg>}
+        <span className="kt-ic">{ic}</span>
+      </div>
+    </div>
+  );
+}
+
+// Barras mensuales compactas (sin etiquetas de valor), con el último mes resaltado.
+export function MiniMonthBars({ vals = [], labels = [] }) {
+  const w = 240, h = 92, bottom = 16;
+  const max = Math.max(...vals, 0) || 1;
+  const n = vals.length || 1, slot = w / n, bw = Math.min(28, slot * 0.5);
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h}>
+      {vals.map((v, i) => {
+        const bh = (v / max) * (h - bottom - 6);
+        const x = slot * i + slot / 2 - bw / 2, y = h - bottom - bh;
+        const last = i === vals.length - 1;
+        return (
+          <g key={i}>
+            <rect x={x.toFixed(1)} y={y.toFixed(1)} width={bw} height={bh.toFixed(1)} rx="5" fill="var(--brand)" opacity={last ? 1 : 0.28} />
+            <text x={(slot * i + slot / 2).toFixed(1)} y={h - 3} fontSize="9" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">{labels[i]}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 const STATE_MAP = {
   ok: ['dot ok', 'st_ok', 'g'], deg: ['dot deg', 'st_deg', 'w'], down: ['dot down', 'st_down', 'd'],
 };
@@ -299,6 +347,45 @@ export function Bars({ data = [] }) {
   );
 }
 
+// Barras verticales interactivas ("columnas"): resalta la barra bajo el mouse
+// y muestra un tooltip con el valor exacto y el % del total.
+export function BarsInteractive({ data = [] }) {
+  const [hover, setHover] = useState(null);
+  const w = 300, h = 150, bottom = 22;
+  const max = Math.max(...data.map((d) => d.value), 0) || 1;
+  const total = data.reduce((a, d) => a + (d.value || 0), 0) || 1;
+  const n = data.length || 1, slot = w / n, bw = Math.min(46, slot * 0.5);
+  const hd = hover != null ? data[hover] : null;
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h}>
+        {data.map((d, i) => {
+          const bh = (d.value / max) * (h - bottom - 18);
+          const x = slot * i + slot / 2 - bw / 2; const y = h - bottom - bh;
+          const active = hover === i;
+          return (
+            <g key={i} style={{ cursor: 'pointer' }} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+              <rect x={(slot * i).toFixed(1)} y="0" width={slot.toFixed(1)} height={h} fill="transparent" />
+              <rect x={x.toFixed(1)} y={y.toFixed(1)} width={bw} height={bh.toFixed(1)} rx="6"
+                fill={d.color || 'var(--brand)'} opacity={active ? 1 : 0.85}
+                stroke={active ? 'var(--ink)' : 'none'} strokeWidth={active ? 1.5 : 0}
+                style={{ transition: 'opacity .15s' }} />
+              <text x={(slot * i + slot / 2).toFixed(1)} y={(y - 6).toFixed(1)} fontSize="9.5" fill="var(--ink)" textAnchor="middle" fontFamily="Montserrat" fontWeight="700">{d.disp}</text>
+              <text x={(slot * i + slot / 2).toFixed(1)} y={h - 6} fontSize="9.5" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">{d.label}</text>
+            </g>
+          );
+        })}
+      </svg>
+      {hd && (
+        <div className="chart-tip" style={{ top: 6, left: `${((hover + 0.5) / data.length) * 100}%` }}>
+          <b>{hd.label}</b>
+          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% del total</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Donut({ pct }) {
   const r = 40, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
   return (
@@ -336,7 +423,7 @@ export const CAT_COLORS = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', '
 // el valor exacto y el % del total al pasar el mouse.
 export function HBarsInteractive({ data = [] }) {
   const [hover, setHover] = useState(null);
-  const w = 300, rowH = 32, labW = 130;
+  const w = 340, rowH = 42, labW = 150;
   const max = Math.max(...data.map((d) => d.value), 0) || 1;
   const total = data.reduce((a, d) => a + d.value, 0) || 1;
   const h = data.length * rowH + 4;
@@ -345,23 +432,23 @@ export function HBarsInteractive({ data = [] }) {
     <div style={{ position: 'relative' }}>
       <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h}>
         {data.map((d, i) => {
-          const bw = (d.value / max) * (w - labW - 46);
-          const y = i * rowH + 5;
+          const bw = (d.value / max) * (w - labW - 56);
+          const y = i * rowH + 6;
           const active = hover === i;
           return (
             <g key={i} style={{ cursor: 'pointer' }}
               onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
-              <rect x="0" y={y - 3} width={w} height={rowH - 2} rx="6" fill={active ? 'var(--soft)' : 'transparent'} />
-              <text x="0" y={y + 14} fontSize="10" fill="var(--ink)" fontFamily="Inter" fontWeight={active ? 700 : 400}>{d.label}</text>
-              <rect x={labW} y={y + 4} width={Math.max(3, bw).toFixed(1)} height="14" rx="4"
+              <rect x="0" y={y - 4} width={w} height={rowH - 4} rx="8" fill={active ? 'var(--soft)' : 'transparent'} />
+              <text x="0" y={y + 18} fontSize="13" fill="var(--ink)" fontFamily="Inter" fontWeight={active ? 700 : 500}>{d.label}</text>
+              <rect x={labW} y={y + 6} width={Math.max(4, bw).toFixed(1)} height="20" rx="6"
                 fill={d.color || 'var(--brand)'} opacity={active ? 1 : 0.85} />
-              <text x={(labW + Math.max(3, bw) + 5).toFixed(1)} y={y + 15} fontSize="9" fill="var(--muted)" fontFamily="Inter">{d.disp}</text>
+              <text x={(labW + Math.max(4, bw) + 8).toFixed(1)} y={y + 20} fontSize="12" fontWeight="700" fill="var(--ink)" fontFamily="Montserrat">{d.disp}</text>
             </g>
           );
         })}
       </svg>
       {hd && (
-        <div className="chart-tip" style={{ top: hover * rowH + 2, left: `${(labW / w) * 100}%` }}>
+        <div className="chart-tip" style={{ top: hover * rowH + 4, left: `${(labW / w) * 100}%` }}>
           <b>{hd.label}</b>
           <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% del total</span>
         </div>
@@ -425,20 +512,151 @@ export function DonutMulti({ data = [], centerLabel }) {
   );
 }
 
-export function Funnel({ data = [] }) {
-  const w = 300, rowH = 34, max = data[0]?.value || 1, h = data.length * rowH + 4;
+// Redondea el máximo del eje Y a un valor "lindo" (1/2/2.5/5/10 × 10^n) y
+// devuelve los cortes intermedios, para que el gráfico tenga un grid legible
+// en vez de marcas con decimales raros.
+function niceAxis(rawMax, nIntervals = 4) {
+  if (rawMax <= 0) return { niceMax: 1, values: [0, 1] };
+  const rough = rawMax / nIntervals;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const n = rough / mag;
+  let s;
+  if (n <= 1) s = 1;
+  else if (n <= 2) s = 2;
+  else if (n <= 2.5) s = 2.5;
+  else if (n <= 5) s = 5;
+  else s = 10;
+  const step = s * mag;
+  const niceMax = step * nIntervals;
+  const values = [];
+  for (let i = 0; i <= nIntervals; i++) values.push(i * step);
+  return { niceMax, values };
+}
+
+// Formato compacto para las etiquetas del eje Y (20k, 2.5k, 0…).
+function compactNum(v) {
+  if (v === 0) return '0';
+  const abs = Math.abs(v);
+  if (abs >= 1e6) return (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 1) + 'M';
+  if (abs >= 1e3) return (v / 1e3).toFixed(v % 1e3 === 0 ? 0 : 1) + 'k';
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+// Línea/área interactiva: al pasar el mouse por un punto lo resalta, traza una
+// guía vertical y muestra un tooltip con la etiqueta y el valor exacto.
+// Incluye grid + etiquetas del eje Y (niceAxis) para que se lea igual que un
+// gráfico "de verdad" en vez de una silueta sin escala.
+export function LineChartInteractive({ vals = [], labels = [], format }) {
+  const [hover, setHover] = useState(null);
+  const path = useMemo(() => {
+    const w = 600, h = 220, padL = 40, padR = 12, padT = 12, padB = 28;
+    if (vals.length < 2) return { empty: true, w, h };
+    const rawMax = Math.max(...vals, 0);
+    const { niceMax, values: yValues } = niceAxis(rawMax, 4);
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const step = innerW / (vals.length - 1);
+    const pts = vals.map((v, i) => [padL + i * step, h - padB - (v / niceMax) * innerH]);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const area = d + ` L${pts[pts.length - 1][0].toFixed(1)} ${h - padB} L${padL} ${h - padB} Z`;
+    const yTicks = yValues.map((v) => ({ v, y: h - padB - (v / niceMax) * innerH }));
+    return { d, area, pts, w, h, padL, padR, padT, padB, step, yTicks };
+  }, [vals]);
+  if (path.empty) return <svg viewBox={`0 0 ${path.w} ${path.h}`} width="100%" height={path.h} />;
+  const { d, area, pts, w, h, padL, padR, padT, padB, step, yTicks } = path;
+  const hv = hover != null ? { x: pts[hover][0], y: pts[hover][1], val: vals[hover], lab: labels[hover] } : null;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h}>
-      {data.map((d, i) => {
-        const bw = (d.value / max) * (w - 10); const x = (w - bw) / 2; const y = i * rowH + 4; const op = 1 - i * 0.16;
-        return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} onMouseLeave={() => setHover(null)}>
+        {yTicks.map((t, i) => (
           <g key={i}>
-            <rect x={x.toFixed(1)} y={y} width={bw.toFixed(1)} height={rowH - 9} rx="5" fill="var(--brand)" opacity={op.toFixed(2)} />
-            <text x={(w / 2).toFixed(1)} y={y + 17} fontSize="10" fill="#fff" textAnchor="middle" fontFamily="Inter" fontWeight="600">{d.label}</text>
+            <line x1={padL} y1={t.y.toFixed(1)} x2={(w - padR).toFixed(1)} y2={t.y.toFixed(1)}
+              stroke="var(--line)" strokeWidth="1" strokeDasharray={i === 0 ? '0' : '3 5'} opacity={i === 0 ? 1 : 0.6} />
+            <text x={padL - 6} y={(t.y + 3).toFixed(1)} fontSize="9" fill="var(--muted)" textAnchor="end" fontFamily="Inter">{compactNum(t.v)}</text>
           </g>
+        ))}
+        <path d={area} fill="var(--brand)" opacity=".12" />
+        <path d={d} fill="none" stroke="var(--brand)" strokeWidth="2.5" strokeLinejoin="round" />
+        {hv && <line x1={hv.x.toFixed(1)} y1={padT} x2={hv.x.toFixed(1)} y2={(h - padB).toFixed(1)} stroke="var(--line)" strokeDasharray="3 3" />}
+        {pts.map((p, i) => (
+          <g key={i}>
+            <circle cx={p[0].toFixed(1)} cy={p[1].toFixed(1)} r={hover === i ? 4.5 : 2.5} fill="var(--brand)" style={{ transition: 'r .1s' }} />
+            <rect x={(p[0] - step / 2).toFixed(1)} y={padT} width={step.toFixed(1)} height={(h - padT - padB).toFixed(1)} fill="transparent"
+              style={{ cursor: 'pointer' }} onMouseEnter={() => setHover(i)} />
+          </g>
+        ))}
+        {labels.map((l, i) => <text key={i} x={(padL + i * step).toFixed(1)} y={h - 8} fontSize="9.5" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">{l}</text>)}
+      </svg>
+      {hv && (
+        <div className="line-tip" style={{ left: `${(hv.x / w) * 100}%`, top: `${(hv.y / h) * 100}%` }}>
+          <b>{hv.lab}</b>
+          <span>{format ? format(hv.val) : hv.val}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Lista rankeada con barra de proporción (p. ej. "top planes" por recaudación).
+export function RankList({ data = [], onSeeAll, seeAllLabel }) {
+  const max = Math.max(...data.map((d) => d.value), 0) || 1;
+  return (
+    <div>
+      <div className="rank-list">
+        {data.map((d, i) => (
+          <div className="rank-row" key={i}>
+            <div className="rk-lbl">
+              <div className="rk-name">{d.label}</div>
+              <div className="rk-bar"><i style={{ width: `${(d.value / max) * 100}%`, background: d.color || 'var(--brand)' }} /></div>
+            </div>
+            <div className="rk-val">{d.disp}</div>
+          </div>
+        ))}
+      </div>
+      {onSeeAll && (
+        <div style={{ textAlign: 'right', marginTop: 10 }}>
+          <span className="note" style={{ color: 'var(--brand)', cursor: 'pointer', fontWeight: 700 }} onClick={onSeeAll}>
+            {seeAllLabel} →
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Embudo como lista de escalones: etiqueta y valor SIEMPRE van arriba de la
+// barra (nunca encima ni dentro de ella), así el texto nunca se sale ni queda
+// ilegible en escalones angostos. El % respecto del primer paso se muestra
+// junto al valor, y al pasar el mouse la fila se resalta.
+export function Funnel({ data = [], format }) {
+  const [hover, setHover] = useState(null);
+  const max = data[0]?.value || 1;
+  return (
+    <div className="funnel-list">
+      {data.map((d, i) => {
+        const pct = max ? (d.value / max) * 100 : 0;
+        const active = hover === i;
+        return (
+          <div
+            key={i}
+            className={`funnel-row ${active ? 'act' : ''}`}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+          >
+            <div className="fr-top">
+              <span className="fr-name">{i + 1}. {d.label}</span>
+              <span className="fr-val">
+                <b>{format ? format(d.value) : d.value}</b>
+                {i > 0 && <span className="fr-pct">{pct.toFixed(0)}%</span>}
+              </span>
+            </div>
+            <div className="fr-track">
+              <i style={{ width: `${Math.max(pct, 4)}%`, opacity: (1 - i * 0.22).toFixed(2) }} />
+            </div>
+          </div>
         );
       })}
-    </svg>
+    </div>
   );
 }
 

@@ -16,6 +16,10 @@ export default function Audit({ ctx }) {
   const [rows, setRows] = useState(null);
   const [err, setErr] = useState(null);
   const [filters, setFilters] = useState({ action: '', resource: '' });
+  // Texto del input de "recurso": se escribe letra a letra, pero solo se
+  // aplica como filtro (y dispara la consulta) 300ms después de la última
+  // tecla, para no pegarle una petición al servidor por cada carácter.
+  const [resourceInput, setResourceInput] = useState('');
 
   const load = useCallback(async (f) => {
     setErr(null);
@@ -28,6 +32,12 @@ export default function Audit({ ctx }) {
   useEffect(() => { load(filters); }, [filters, load]);
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const id = setTimeout(() => setF('resource', resourceInput), 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resourceInput]);
 
   const fmtDate = (iso) => {
     if (!iso) return L('none');
@@ -57,9 +67,9 @@ export default function Audit({ ctx }) {
           <Select value={filters.action} onChange={(v) => setF('action', v)}
             options={ACTIONS.map((a) => ({ value: a, label: a }))}
             placeholder={`${L('au_filter_action')}: ${L('filter_all')}`} />
-          <input value={filters.resource} onChange={(e) => setF('resource', e.target.value)}
+          <input value={resourceInput} onChange={(e) => setResourceInput(e.target.value)}
             placeholder={L('au_filter_resource')} />
-          <button className="btn sec sm" onClick={() => setFilters({ action: '', resource: '' })}>{L('clear_filters')}</button>
+          <button className="btn sec sm" onClick={() => { setResourceInput(''); setFilters({ action: '', resource: '' }); }}>{L('clear_filters')}</button>
         </div>
 
         {rows.length === 0 ? <EmptyState msg={L('au_no_rows')} ic="🧾" /> : (

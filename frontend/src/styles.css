@@ -211,3 +211,43 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .chart-legend-item.hover,.chart-legend-item:hover{background:var(--soft)}
 .chart-legend-item b{margin-left:auto;font-family:'Montserrat',sans-serif}
 .chart-legend-item .pct{color:var(--muted);font-size:10.5px;min-width:32px;text-align:right}
+
+/* ── Comercial: selector de rango tipo píldora, insignia de fechas, tooltip de línea y ranking ── */
+.range-pills{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+.range-pill{background:none;border:none;color:var(--muted);font-weight:700;font-size:12px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:'Montserrat',sans-serif;white-space:nowrap;transition:background .15s,color .15s}
+.range-pill:hover{color:var(--ink)}
+.range-pill.act{background:var(--brand);color:#fff;box-shadow:0 2px 6px rgba(26,54,93,.25)}
+.date-badge{font-size:11.5px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.line-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 10px;font-size:11px;box-shadow:var(--shadow);white-space:nowrap;transform:translate(-50%,-125%);z-index:5}
+.line-tip b{display:block;font-size:11.5px;margin-bottom:1px}
+.rank-list{display:flex;flex-direction:column;gap:11px;margin-top:10px}
+.rank-row{display:flex;align-items:center;gap:12px}
+.rank-row .rk-lbl{flex:1;min-width:0}
+.rank-row .rk-name{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.rank-row .rk-bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+.rank-row .rk-bar>i{display:block;height:100%;border-radius:4px;transition:width .2s}
+.rank-row .rk-val{font-size:12.5px;font-weight:800;font-family:'Montserrat',sans-serif;white-space:nowrap;flex-shrink:0}
+.tip-banner{display:flex;align-items:center;gap:11px;background:var(--quote-grad);border:1px solid var(--quote-border);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--quote-text);margin-top:16px}
+.tip-banner .ic{width:27px;height:27px;border-radius:8px;background:var(--quote-icon-bg);display:grid;place-items:center;flex-shrink:0;font-size:13px}
+.tip-banner .chev{margin-left:auto;color:var(--muted);font-size:18px;font-weight:700;line-height:1;flex-shrink:0}
+
+/* Embudo de conversión: lista de escalones con barra de progreso (evita que el
+   texto se salga de la barra en escalones angostos) */
+.funnel-list{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.funnel-row{padding:6px 8px;border-radius:10px;transition:background .15s;cursor:default}
+.funnel-row.act{background:var(--soft)}
+.fr-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;font-size:12.5px}
+.fr-name{font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-val{display:flex;align-items:baseline;gap:6px;flex-shrink:0;font-family:'Montserrat',sans-serif;font-weight:800;color:var(--ink);white-space:nowrap}
+.fr-pct{font-family:'Inter',sans-serif;font-weight:600;color:var(--muted);font-size:11px}
+.fr-track{height:10px;border-radius:6px;background:var(--line);overflow:hidden}
+.fr-track>i{display:block;height:100%;border-radius:6px;background:var(--brand);transition:width .2s,opacity .15s}
+@media(max-width:620px){.range-pills{width:100%}.range-pill{flex:1}}
+
+/* Layout de 2 columnas de Comercial (gráfico + resumen a la izquierda, KPIs a la derecha) */
+.com-layout{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:20px;align-items:start}
+@media(max-width:1080px){.com-layout{grid-template-columns:1fr}}
+.com-side{display:flex;flex-direction:column;gap:16px}
+.kpi-trend{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.kt-side{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.kt-ic{width:38px;height:38px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:16px;flex-shrink:0}

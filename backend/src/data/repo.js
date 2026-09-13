@@ -31,6 +31,17 @@ export async function listAll(col, orderBy) {
   return snap.docs.map(withId);
 }
 
+// Trae los `limit` documentos más recientes de una colección según `field`
+// (descendente), usando el propio orden/límite de Firestore en vez de bajar
+// la colección completa para ordenarla en memoria. Se usa SOLO sin filtros
+// `where` adicionales: combinar un where en un campo distinto con orderBy
+// pediría un índice compuesto que este proyecto no tiene configurado, así
+// que cualquier ruta que filtre sigue usando listAll() como antes.
+export async function listRecent(col, field, limit) {
+  const snap = await db.collection(col).orderBy(field, 'desc').limit(limit).get();
+  return snap.docs.map(withId);
+}
+
 export async function getDoc(col, id) {
   const snap = await db.collection(col).doc(id).get();
   return snap.exists ? withId(snap) : null;

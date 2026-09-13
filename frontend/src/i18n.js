@@ -18,6 +18,12 @@ export const T = {
     c_downloads_trend:'Descargas por mes', c_funnel:'Embudo de conversión', c_rev_plan:'Recaudación por plan', c_badges_type:'Badges emitidos por tipo', c_rev_total:'Total', conv_of_mau:'de MAU convertidos',
     tier_bronze:'Bronce', tier_silver:'Plata', tier_gold:'Oro', tier_diamond:'Diamante', tier_platinum:'Platino',
 
+    // ── comercial ──
+    com_tab_resumen:'Resumen', com_tab_adq:'Adquisición', com_tab_conv:'Conversión', com_tab_ing:'Ingresos',
+    com_downloads_total:'Descargas totales', com_top_plans:'Top planes', com_plan_dist:'Distribución por plan', com_see_all:'Ver todos',
+    com_tip:'Tip: pasa el cursor por el gráfico para ver el detalle de cada mes.',
+    com_range_7d:'Últimos 7 días', com_range_30d:'30 días', com_range_90d:'90 días', com_range_12m:'12 meses',
+
     // ── sponsors ──
     s_intro:'Marcas que financian beneficios para los alumnos.', s_table:'Detalle de sponsors', sp_name:'Sponsor', sp_tier:'Nivel', sp_monthly:'Aporte mensual', sp_offered:'Beneficios ofrecidos', sp_redeemed:'Beneficios cobrados', sp_status:'Estado', s_rev_chart:'Aporte mensual por sponsor', s_add:'Agregar sponsor',
     s_new:'Nuevo sponsor', s_edit:'Editar sponsor', s_no_sponsors:'Todavía no hay sponsors registrados.',
@@ -147,6 +153,12 @@ export const T = {
     this_month:'this month', vs_prev:'vs. prev month', health:'System health', all_ok:'Operational', see_detail:'See detail',
     c_downloads_trend:'Downloads per month', c_funnel:'Conversion funnel', c_rev_plan:'Revenue by plan', c_badges_type:'Badges issued by type', c_rev_total:'Total', conv_of_mau:'of MAU converted',
     tier_bronze:'Bronze', tier_silver:'Silver', tier_gold:'Gold', tier_diamond:'Diamond', tier_platinum:'Platinum',
+
+    // ── commercial ──
+    com_tab_resumen:'Overview', com_tab_adq:'Acquisition', com_tab_conv:'Conversion', com_tab_ing:'Revenue',
+    com_downloads_total:'Total downloads', com_top_plans:'Top plans', com_plan_dist:'Plan breakdown', com_see_all:'See all',
+    com_tip:'Tip: hover over the chart to see each month’s detail.',
+    com_range_7d:'Last 7 days', com_range_30d:'30 days', com_range_90d:'90 days', com_range_12m:'12 months',
 
     s_intro:'Brands funding student benefits.', s_table:'Sponsor detail', sp_name:'Sponsor', sp_tier:'Tier', sp_monthly:'Monthly fee', sp_offered:'Benefits offered', sp_redeemed:'Benefits redeemed', sp_status:'Status', s_rev_chart:'Monthly fee by sponsor', s_add:'Add sponsor',
     s_new:'New sponsor', s_edit:'Edit sponsor', s_no_sponsors:'No sponsors registered yet.',
