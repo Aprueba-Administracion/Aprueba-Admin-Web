@@ -5,51 +5,120 @@ import { Card, StatusPill, Loading, LineChartInteractive, Funnel, DonutMulti, Ba
 
 const PLAN_LABEL = { uni: { es: '1 prueba', en: 'One test' }, all: { es: 'Todas las pruebas', en: 'All tests' } };
 
-function Sparkline({ color = 'var(--brand)' }) {
+// El color por defecto es 'currentColor': la línea hereda el tono que le da la
+// clase .kpi-tile.<tono> .kpi-spark del contenedor, en vez de un valor fijo
+// pensado para fondo oscuro (así también se ve bien sobre el fondo claro nuevo).
+function Sparkline({ color = 'currentColor', width = 70, height = 22 }) {
   return (
-    <svg viewBox="0 0 120 28" width="100%" height="28" style={{ overflow: 'visible' }}>
+    <svg viewBox="0 0 100 24" width={width} height={height} style={{ overflow: 'visible' }}>
       <path
-        d="M 2,20 Q 20,24 35,18 T 70,12 T 95,16 T 118,4"
+        d="M 2,18 Q 20,22 35,16 T 65,10 T 85,14 T 98,4"
         fill="none"
         stroke={color}
-        strokeWidth="2.4"
+        strokeWidth="2.2"
         strokeLinecap="round"
       />
     </svg>
   );
 }
 
-function StyledKpi({ icon, label, value, delta, sparkColor }) {
+// ── Iconos SVG nítidos de fondo ──
+function IconDownloadBig({ size = 95 }) {
   return (
-    <Card style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <div>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '10px',
-            background: 'var(--soft)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            marginBottom: 12,
-          }}
-        >
-          {icon}
-        </div>
-        <div className="lbl" style={{ marginBottom: 4 }}>{label}</div>
-        <div className="kpi-val" style={{ fontSize: '24px', letterSpacing: '-0.5px' }}>{value}</div>
-        {delta && (
-          <div className="dl up" style={{ marginTop: 4 }}>
-            ▲ {delta}
-          </div>
-        )}
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconUsersBig({ size = 95 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function IconStarBig({ size = 95 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+function IconCashBig({ size = 95 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1" />
+      <path d="M16 12h5v4h-5a2 2 0 0 1 0-4Z" />
+    </svg>
+  );
+}
+
+// Icono claro de patrocinio / apoyo (corazón / partnership)
+function IconSponsorHeartBig({ size = 88 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </svg>
+  );
+}
+
+function IconBadgeMedalBig({ size = 88 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="6" />
+      <path d="m8.21 13.89-1.21 7.11 5-3 5 3-1.21-7.11" />
+    </svg>
+  );
+}
+
+// ── KPI Superior (Descargas, MAU, etc.) ──
+// Mismo tratamiento que las tarjetas de Sponsors: fondo predominantemente blanco
+// con un degradado suave del color de la métrica (var(--kpi-<tono>-*) en
+// styles.css) y el ícono grande detrás, en vez de un color sólido fijo. Así
+// también queda correcto en modo oscuro sin duplicar estilos por tema aquí.
+function TopKpiCard({ label, value, delta, icon: IconComponent, tone }) {
+  return (
+    <div className={`kpi-tile ${tone}`}>
+      <div className="kpi-ic"><IconComponent /></div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-val">{value}</div>
+        {delta && <div className="kpi-delta up">▲ {delta}</div>}
       </div>
-      <div style={{ marginTop: 12 }}>
-        <Sparkline color={sparkColor} />
+
+      <div className="kpi-spark">
+        <Sparkline width="100%" height={24} />
       </div>
-    </Card>
+    </div>
+  );
+}
+
+// ── KPI Lateral Compacto (Sponsors activos / Badges) ──
+function SideKpiCard({ label, value, delta, icon: IconComponent, tone }) {
+  return (
+    <div className={`kpi-tile compact ${tone}`}>
+      <div className="kpi-ic"><IconComponent /></div>
+
+      <div className="kpi-label">{label}</div>
+
+      <div className="kpi-row">
+        <div className="kpi-val">{value}</div>
+        {delta && <div className="kpi-delta up">▲ {delta}</div>}
+      </div>
+
+      <div className="kpi-spark compact-spark">
+        <Sparkline width="100%" height={18} />
+      </div>
+    </div>
   );
 }
 
@@ -98,13 +167,12 @@ export default function Overview({ ctx }) {
   const thisMonthText = isEn ? 'this month' : 'este mes';
   const vsPrevText = isEn ? 'vs previous period' : 'vs. mes previo';
   const convRateText = isEn ? 'of MAU converted' : 'de MAU convertidos';
-
   const convPct = d.converted?.rate || 12.8;
 
   return (
     <>
       {/* Barra superior con selector de rango */}
-      <div className="flex between" style={{ alignItems: 'center', marginBottom: 20 }}>
+      <div className="flex between" style={{ alignItems: 'center', marginBottom: 18 }}>
         <h2 style={{ margin: 0 }}>{isEn ? 'Overview' : 'Resumen'}</h2>
         <div className="flex" style={{ gap: 6 }}>
           {['7d', '30d', '90d'].map((r) => (
@@ -120,39 +188,39 @@ export default function Overview({ ctx }) {
         </div>
       </div>
 
-      {/* 4 KPIs temáticos */}
+      {/* 4 KPIs principales */}
       <div className="grid g4" style={{ marginBottom: 16 }}>
-        <StyledKpi
-          icon="📥"
+        <TopKpiCard
           label={isEn ? 'Total downloads' : 'Descargas totales'}
           value={fmt(d.downloads?.total)}
           delta={`${fmt(d.downloads?.month)} ${thisMonthText}`}
-          sparkColor="var(--brand)"
+          icon={IconDownloadBig}
+          tone="blue"
         />
-        <StyledKpi
-          icon="👥"
+        <TopKpiCard
           label={isEn ? 'Monthly active (MAU)' : 'Activos mensuales (MAU)'}
           value={fmt(d.mau?.value)}
           delta={`${d.mau?.deltaPct || 6.4}% ${vsPrevText}`}
-          sparkColor="#10B981"
+          icon={IconUsersBig}
+          tone="blue"
         />
-        <StyledKpi
-          icon="⭐"
+        <TopKpiCard
           label={isEn ? 'Converted to paid' : 'Convertidos a pago'}
           value={fmt(d.converted?.value)}
           delta={`${convPct}% ${convRateText}`}
-          sparkColor="var(--accent)"
+          icon={IconStarBig}
+          tone="blue"
         />
-        <StyledKpi
-          icon="💰"
+        <TopKpiCard
           label={isEn ? 'Monthly revenue' : 'Recaudación mensual'}
           value={`$${fmt(d.mrr?.value)}`}
           delta={`${d.mrr?.deltaPct || 9.1}% ${vsPrevText}`}
-          sparkColor="#A855F7"
+          icon={IconCashBig}
+          tone="blue"
         />
       </div>
 
-      {/* Fila intermedia: Gráfico de Descargas + Embudo con leyenda */}
+      {/* Fila intermedia: Descargas + Embudo */}
       <div className="grid g3" style={{ marginBottom: 16 }}>
         <Card className="span2">
           <div className="flex between" style={{ marginBottom: 12 }}>
@@ -203,9 +271,9 @@ export default function Overview({ ctx }) {
         </Card>
       </div>
 
-      {/* Fila inferior: Salud del sistema + Recaudación por plan + Tarjetas Sponsors/Badges */}
+      {/* Fila inferior */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.9fr', gap: '16px' }}>
-        {/* Estado del sistema */}
+        {/* Salud del sistema */}
         <Card>
           <div className="flex between" style={{ marginBottom: 12 }}>
             <b>{isEn ? 'System health' : 'Estado del sistema'}</b>
@@ -218,11 +286,10 @@ export default function Overview({ ctx }) {
           ))}
           <div style={{ textAlign: 'right', marginTop: 12 }}>
             <span
-              className="note"
-              style={{ color: 'var(--brand)', cursor: 'pointer', fontWeight: 700 }}
+              className="note link-action"
               onClick={() => nav('/operativa')}
             >
-              {isEn ? 'View detail' : 'Ver detalle'} →
+              {isEn ? 'View detail' : 'Ver detalle'} <span className="arw">→</span>
             </span>
           </div>
         </Card>
@@ -236,43 +303,23 @@ export default function Overview({ ctx }) {
           <BarsInteractive data={revBars} />
         </Card>
 
-        {/* Columna derecha: Sponsors y Badges independientes */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Card style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                🤝
-              </div>
-              <span className="lbl">{isEn ? 'Active sponsors' : 'Sponsors activos'}</span>
-            </div>
-            <div className="flex between" style={{ alignItems: 'baseline' }}>
-              <div className="kpi-val" style={{ fontSize: '24px' }}>{fmt(d.sponsorsActive)}</div>
-              <div style={{ width: '60px' }}>
-                <Sparkline color="var(--brand)" />
-              </div>
-            </div>
-            <div className="dl up" style={{ fontSize: '11px', marginTop: 4 }}>
-              ▲ 20%
-            </div>
-          </Card>
+        {/* Columna derecha compacta */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <SideKpiCard
+            label={isEn ? 'Active sponsors' : 'Sponsors activos'}
+            value={fmt(d.sponsorsActive)}
+            delta="20%"
+            icon={IconSponsorHeartBig}
+            tone="blue"
+          />
 
-          <Card style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '8px', background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                🏅
-              </div>
-              <span className="lbl">{isEn ? 'Issued badges' : 'Badges emitidos'}</span>
-            </div>
-            <div className="flex between" style={{ alignItems: 'baseline' }}>
-              <div className="kpi-val" style={{ fontSize: '24px' }}>{fmt(d.badgesIssued)}</div>
-              <div style={{ width: '60px' }}>
-                <Sparkline color="var(--brand)" />
-              </div>
-            </div>
-            <div className="dl up" style={{ fontSize: '11px', marginTop: 4 }}>
-              ▲ 4%
-            </div>
-          </Card>
+          <SideKpiCard
+            label={isEn ? 'Issued badges' : 'Badges emitidos'}
+            value={fmt(d.badgesIssued)}
+            delta="4%"
+            icon={IconBadgeMedalBig}
+            tone="blue"
+          />
         </div>
       </div>
     </>

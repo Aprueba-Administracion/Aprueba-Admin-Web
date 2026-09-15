@@ -16,15 +16,45 @@ export function Card({ children, className = '', style }) {
 
 // KPI con tendencia: valor + variación a la izquierda, mini-sparkline decorativo
 // e ícono circular a la derecha (usado en el panel lateral de Comercial).
-export function KpiTrend({ ic, label, value, delta, up = true, spark = [] }) {
+// `bigIcon` + `tone` activan la variante "tint": en vez del círculo con emoji,
+// muestra un ícono grande translúcido de fondo sobre un degradado suave del
+// color `tone` (mismo tratamiento que las tarjetas KPI de Resumen/Sponsors),
+// sin cambiar el tamaño de la tarjeta. Sin esos props se comporta igual que antes.
+export function KpiTrend({ ic, label, value, delta, up = true, spark = [], bigIcon: BigIcon, tone }) {
+  const tinted = Boolean(BigIcon && tone);
+  // En la variante "tint" la línea de tendencia se dibuja más ancha (0-100) porque
+  // ahora ocupa su propia fila bajo el valor, en vez de compartir la franja
+  // derecha angosta con el ícono grande de fondo (ahí quedaba encima del ícono).
+  const w = tinted ? 100 : 54;
   const path = useMemo(() => {
     if (spark.length < 2) return null;
-    const w = 54, h = 22;
+    const h = 22;
     const max = Math.max(...spark), min = Math.min(...spark), rng = (max - min) || 1;
     const step = w / (spark.length - 1);
     return spark.map((v, i) => [i * step, h - 2 - ((v - min) / rng) * (h - 4)])
       .map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-  }, [spark]);
+  }, [spark, w]);
+
+  if (tinted) {
+    return (
+      <div className={`card kpi-trend tint ${tone}`}>
+        <div className="kt-bigic"><BigIcon size={92} /></div>
+        <div className="kt-txt">
+          <div className="lbl">{label}</div>
+          <div className="kpi-val">{value}</div>
+          {delta && <div className={`dl ${up ? 'up' : 'dn'}`}>{up ? '▲' : '▼'} {delta}</div>}
+        </div>
+        {path && (
+          <div className="kt-spark">
+            <svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none">
+              <path d={path} fill="none" stroke={`var(--kpi-${tone}-icon)`} strokeWidth="1.6" opacity=".55" />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="card kpi-trend">
       <div className="kt-txt">
@@ -615,8 +645,8 @@ export function RankList({ data = [], onSeeAll, seeAllLabel }) {
       </div>
       {onSeeAll && (
         <div style={{ textAlign: 'right', marginTop: 10 }}>
-          <span className="note" style={{ color: 'var(--brand)', cursor: 'pointer', fontWeight: 700 }} onClick={onSeeAll}>
-            {seeAllLabel} →
+          <span className="note link-action" onClick={onSeeAll}>
+            {seeAllLabel} <span className="arw">→</span>
           </span>
         </div>
       )}
@@ -718,6 +748,34 @@ export function IconZap({ size = 14 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
+
+// ── Iconos grandes de fondo para tarjetas KpiTrend "tint" (ver variant `tone`) ──
+export function IconDownload({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+export function IconTrendingUp({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  );
+}
+
+export function IconStar({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }

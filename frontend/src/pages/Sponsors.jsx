@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { api } from '../api/client.js';
 import {
-  Kpi, Card, StatusPill, Loading, HBarsInteractive, DonutMulti, CAT_COLORS,
+  Card, StatusPill, Loading, HBarsInteractive, DonutMulti, CAT_COLORS,
   ErrorBox, EmptyState, Confirm, Toast, useToast,
   IconEdit, IconTrash, IconUsers, IconWallet, IconGift, IconZap,
 } from '../components/ui.jsx';
@@ -12,6 +12,27 @@ import { DateBadge, checkExpired } from './sponsors/DateBadge.jsx';
 import { SponsorsBanner } from './sponsors/SponsorsBanner.jsx';
 import { SponsorForm } from './sponsors/SponsorForm.jsx';
 import { BenefitItemForm } from './sponsors/BenefitItemForm.jsx';
+
+// ── Tarjeta KPI: fondo predominantemente blanco con degradado suave del color de
+// la métrica (mismo espíritu que el banner de arriba) y un ícono gigante detrás,
+// en vez de un color sólido. Los tonos y su ajuste en modo oscuro viven en
+// styles.css (.kpi-tile / .kpi-tile.blue|green|purple) para que respeten el tema. ──
+function SponsorKpiCard({ label, value, delta, up, icon: IconComponent, tone, isEn }) {
+  return (
+    <div className={`kpi-tile ${tone}`}>
+      <div className="kpi-ic"><IconComponent size={115} /></div>
+
+      <div>
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-val">{value}</div>
+      </div>
+
+      <div className={`kpi-delta ${delta && up ? 'up' : 'neutral'}`}>
+        {delta ? <>{up ? '↑ ' : ''}{delta}</> : (isEn ? '— vs. prev. month' : '— vs. mes anterior')}
+      </div>
+    </div>
+  );
+}
 
 export default function Sponsors({ ctx }) {
   const { L, fmt } = ctx;
@@ -102,46 +123,48 @@ export default function Sponsors({ ctx }) {
 
   return (
     <>
-      {/* Contenedor fluido a 2 columnas con la tabla ancha y panel lateral pegado a la orilla */}
       <div className="sp-layout" style={{ width: '100%' }}>
 
         {/* ================= COLUMNA IZQUIERDA ================= */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-          {/* Banner visual con ilustración de libros y birrete */}
+          {/* Banner visual */}
           <SponsorsBanner
             title="Sponsors"
             subtitle={L('s_intro') || (isEn ? 'Brands funding student benefits.' : 'Marcas que financian beneficios para los alumnos.')}
           />
 
-          {/* Tarjetas KPI */}
+          {/* Tarjetas KPI sin icono pequeño superior */}
           <div className="grid g3" style={{ gap: 12 }}>
-            <Card style={{ padding: '14px 16px' }}>
-              <div className="flex between" style={{ alignItems: 'flex-start' }}>
-                <span className="sub" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{L('k_sponsors')}</span>
-                <span style={{ padding: '5px 7px', borderRadius: 8, background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex' }}><IconUsers size={15} /></span>
-              </div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 700, margin: '6px 0 4px 0' }}>{fmt(rows.length)}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>— {isEn ? 'vs. prev. month' : 'vs. mes anterior'}</div>
-            </Card>
+            <SponsorKpiCard
+              label={L('k_sponsors')}
+              value={fmt(rows.length)}
+              delta={null}
+              up={false}
+              icon={IconUsers}
+              tone="blue"
+              isEn={isEn}
+            />
 
-            <Card style={{ padding: '14px 16px' }}>
-              <div className="flex between" style={{ alignItems: 'flex-start' }}>
-                <span className="sub" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{L('k_sponsor_rev')}</span>
-                <span style={{ padding: '5px 7px', borderRadius: 8, background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', display: 'flex' }}><IconWallet size={15} /></span>
-              </div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 700, margin: '6px 0 4px 0' }}>${fmt(totRev)}{L('mo')}</div>
-              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>↑ 12% {isEn ? 'vs. prev. month' : 'vs. mes anterior'}</div>
-            </Card>
+            <SponsorKpiCard
+              label={L('k_sponsor_rev')}
+              value={`$${fmt(totRev)}${L('mo')}`}
+              delta={`12% ${isEn ? 'vs. prev. month' : 'vs. mes anterior'}`}
+              up={true}
+              icon={IconWallet}
+              tone="blue"
+              isEn={isEn}
+            />
 
-            <Card style={{ padding: '14px 16px' }}>
-              <div className="flex between" style={{ alignItems: 'flex-start' }}>
-                <span className="sub" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{L('k_benefits')}</span>
-                <span style={{ padding: '5px 7px', borderRadius: 8, background: 'rgba(168, 85, 247, 0.12)', color: '#a855f7', display: 'flex' }}><IconGift size={15} /></span>
-              </div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 700, margin: '6px 0 4px 0' }}>{fmt(totRed)}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>— {isEn ? 'vs. prev. month' : 'vs. mes anterior'}</div>
-            </Card>
+            <SponsorKpiCard
+              label={L('k_benefits')}
+              value={fmt(totRed)}
+              delta={null}
+              up={false}
+              icon={IconGift}
+              tone="blue"
+              isEn={isEn}
+            />
           </div>
 
           {/* Selector de pestañas */}

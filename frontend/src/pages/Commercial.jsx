@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { api } from '../api/client.js';
 import {
   KpiTrend, Card, Loading, ErrorBox, Tabs,
   LineChartInteractive, RankList, MiniMonthBars, Funnel, HBarsInteractive, BarsInteractive, DonutMulti, CAT_COLORS, COIN,
+  IconDownload, IconUsers, IconTrendingUp, IconStar, IconGift, IconWallet,
 } from '../components/ui.jsx';
 
 const RANGES = ['7d', '30d', '90d', '12m'];
@@ -14,9 +14,6 @@ const RANGE_LABEL_TEXT = {
 const RANGE_PILL_KEY = { '7d': 'com_range_7d', '30d': 'com_range_30d', '90d': 'com_range_90d', '12m': 'com_range_12m' };
 const RANGE_DAYS = { '7d': 7, '30d': 30, '90d': 90, '12m': 365 };
 
-// Calcula una ventana de fechas "hasta hoy" para mostrar junto al selector de
-// rango. Es una insignia informativa: los datos siguen siendo los de ejemplo
-// sembrados en la base, esto solo ubica visualmente qué ventana se está viendo.
 function dateRangeLabel(range, locale) {
   const end = new Date();
   const start = new Date(end.getTime() - RANGE_DAYS[range] * 86400000);
@@ -25,8 +22,6 @@ function dateRangeLabel(range, locale) {
   return `${fmt(start)} – ${fmt(end)} ${year}`;
 }
 
-// Arma y descarga un CSV con las métricas comerciales visibles en pantalla,
-// respetando el rango seleccionado (D-FE-402).
 function downloadCommercialCsv(d, range, isEn) {
   const rows = [];
   rows.push([isEn ? 'Metric' : 'Métrica', isEn ? 'Value' : 'Valor']);
@@ -48,16 +43,12 @@ function downloadCommercialCsv(d, range, isEn) {
   rows.push([isEn ? 'Badges by tier' : 'Badges por tipo', isEn ? 'Value' : 'Valor']);
   for (const b of d.badgesByType || []) rows.push([b.tier, b.value]);
 
-  // Solo se entrecomilla la celda si lo necesita (tiene coma, comillas o salto de línea);
-  // así los números quedan como números de verdad en Excel, no como texto.
   const escapeCell = (cell) => {
     const s = String(cell ?? '');
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const csv = rows.map((row) => row.map(escapeCell).join(',')).join('\r\n');
-  // El BOM (﻿) es lo que le indica a Excel que el archivo es UTF-8;
-  // sin él, interpreta las tildes/ñ con el charset equivocado.
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -84,8 +75,6 @@ export default function Commercial({ ctx }) {
   const load = async (r) => {
     setErr(null);
     try {
-      // Se piden juntos para no renderizar con la serie mensual a medias.
-      // La serie vive en el resumen, ya legible por finanzas.
       const [c, o] = await Promise.all([api.get(`/metrics/commercial?range=${r}`), api.get('/metrics/overview')]);
       setD(c.data); setOv(o.data);
     } catch (e) { setErr(e.message); }
@@ -93,9 +82,6 @@ export default function Commercial({ ctx }) {
   useEffect(() => { load(range); }, [range]);
 
   const months = ov?.downloadsByMonth || [];
-  // Se usan tal cual (mismos valores) en cada KpiTrend/gráfico de las 4
-  // pestañas — antes se recalculaban con un `months.map(...)` nuevo en cada
-  // uno; ahora se sacan una sola vez y se reutiliza la misma referencia.
   const monthVals = useMemo(() => months.map((m) => m.value), [months]);
   const monthLabels = useMemo(() => months.map((m) => m.month), [months]);
 
@@ -111,8 +97,6 @@ export default function Commercial({ ctx }) {
   if (err) return <Card><ErrorBox msg={err} onRetry={() => load(range)} L={L} /></Card>;
   if (!d || !ov) return <Loading L={L} />;
 
-  // Usado por la tarjeta "Tasa de conversión" de la pestaña Conversión: antes
-  // se calculaba dos veces seguidas (una para el valor, otra para el texto).
   const notConverted = Math.max((d.mau || 0) - (d.converted || 0), 0);
 
   const TABS = [
@@ -143,84 +127,86 @@ export default function Commercial({ ctx }) {
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === 'resumen' && (
-        <>
-          <div className="com-layout">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-              <Card>
-                <b>{L('com_downloads_total')}</b>
-                <div style={{ marginTop: 10 }}>
-                  <LineChartInteractive
-                    vals={monthVals}
-                    labels={monthLabels}
-                    format={(v) => fmt(v)}
-                  />
-                </div>
-              </Card>
-
-              <div className="grid g2">
-                <Card>
-                  <b>{L('k_mrr')}</b>
-                  <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'Montserrat, sans-serif', marginTop: 6 }}>
-                    ${fmt(d.mrr)}
-                  </div>
-                  {ov.mrr?.deltaPct != null && (
-                    <div className="dl up" style={{ marginTop: 2, marginBottom: 4 }}>▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
-                  )}
-                  <MiniMonthBars vals={monthVals} labels={monthLabels} />
-                </Card>
-                <Card>
-                  <div className="flex between" style={{ marginBottom: 4 }}>
-                    <b>{L('com_top_plans')}</b>
-                    <span
-                      className="note"
-                      style={{ color: 'var(--brand)', cursor: 'pointer', fontWeight: 700 }}
-                      onClick={() => setTab('ingresos')}
-                    >
-                      {L('com_see_all')} →
-                    </span>
-                  </div>
-                  <RankList data={revBars} />
-                </Card>
+        <div className="com-layout">
+          {/* Columna principal izquierda */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+            {/* Gráfico de descargas totales */}
+            <Card>
+              <b>{L('com_downloads_total')}</b>
+              <div style={{ marginTop: 10 }}>
+                <LineChartInteractive
+                  vals={monthVals}
+                  labels={monthLabels}
+                  format={(v) => fmt(v)}
+                />
               </div>
+            </Card>
+
+            {/* Banner de tip insertado entre ambos bloques */}
+            <div className="tip-banner" style={{ margin: 0 }}>
+              <span className="ic">💡</span>
+              <span style={{ flex: 1 }}>{L('com_tip')}</span>
+              <span className="chev" aria-hidden="true">›</span>
             </div>
 
-            <div className="com-side">
-              <KpiTrend ic="⬇️" label={L('k_downloads')} value={fmt(d.downloads)}
-                delta={ov.downloads?.deltaPct != null ? `${ov.downloads.deltaPct}% ${L('vs_prev')}` : null}
-                spark={monthVals} />
-              <KpiTrend ic="👤" label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} />
-              <KpiTrend ic="📈" label={L('k_mau')} value={fmt(d.mau)}
-                delta={ov.mau?.deltaPct != null ? `${ov.mau.deltaPct}% ${L('vs_prev')}` : null}
-                spark={monthVals} />
-              <KpiTrend ic="⭐" label={L('k_converted')} value={`${fmt(d.converted)} · ${d.convRate}%`}
-                delta={`${d.convRate}% ${L('conv_of_mau')}`} spark={monthVals} />
-
+            {/* Fila con Recaudación mensual y Top planes */}
+            <div className="grid g2">
               <Card>
-                <b>{L('com_plan_dist')}</b>
-                <DonutMulti data={revBars} centerLabel={`$${fmt(d.mrr)}`} />
+                <b>{L('k_mrr')}</b>
+                <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'Montserrat, sans-serif', marginTop: 6 }}>
+                  ${fmt(d.mrr)}
+                </div>
+                {ov.mrr?.deltaPct != null && (
+                  <div className="dl up" style={{ marginTop: 2, marginBottom: 4 }}>▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
+                )}
+                <MiniMonthBars vals={monthVals} labels={monthLabels} />
+              </Card>
+              <Card>
+                <div className="flex between" style={{ marginBottom: 4 }}>
+                  <b>{L('com_top_plans')}</b>
+                  <span
+                    className="note link-action"
+                    onClick={() => setTab('ingresos')}
+                  >
+                    {L('com_see_all')} <span className="arw">→</span>
+                  </span>
+                </div>
+                <RankList data={revBars} />
               </Card>
             </div>
           </div>
 
-          <div className="tip-banner">
-            <span className="ic">💡</span>
-            <span style={{ flex: 1 }}>{L('com_tip')}</span>
-            <span className="chev" aria-hidden="true">›</span>
+          {/* Columna lateral derecha */}
+          <div className="com-side">
+            <KpiTrend label={L('k_downloads')} value={fmt(d.downloads)}
+              delta={ov.downloads?.deltaPct != null ? `${ov.downloads.deltaPct}% ${L('vs_prev')}` : null}
+              spark={monthVals} bigIcon={IconDownload} tone="blue" />
+            <KpiTrend label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} bigIcon={IconUsers} tone="blue" />
+            <KpiTrend label={L('k_mau')} value={fmt(d.mau)}
+              delta={ov.mau?.deltaPct != null ? `${ov.mau.deltaPct}% ${L('vs_prev')}` : null}
+              spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
+            <KpiTrend label={L('k_converted')} value={`${fmt(d.converted)} · ${d.convRate}%`}
+              delta={`${d.convRate}% ${L('conv_of_mau')}`} spark={monthVals} bigIcon={IconStar} tone="blue" />
+
+            <Card>
+              <b>{L('com_plan_dist')}</b>
+              <DonutMulti data={revBars} centerLabel={`$${fmt(d.mrr)}`} />
+            </Card>
           </div>
-        </>
+        </div>
       )}
 
       {tab === 'adquisicion' && (
         <>
           <div className="grid g4">
-            <KpiTrend ic="⬇️" label={L('k_downloads')} value={fmt(d.downloads)}
+            <KpiTrend label={L('k_downloads')} value={fmt(d.downloads)}
               delta={ov.downloads?.deltaPct != null ? `${ov.downloads.deltaPct}% ${L('vs_prev')}` : null}
-              spark={monthVals} />
-            <KpiTrend ic="👤" label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} />
-            <KpiTrend ic="📈" label={L('k_mau')} value={fmt(d.mau)}
+              spark={monthVals} bigIcon={IconDownload} tone="blue" />
+            <KpiTrend label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} bigIcon={IconUsers} tone="blue" />
+            <KpiTrend label={L('k_mau')} value={fmt(d.mau)}
               delta={ov.mau?.deltaPct != null ? `${ov.mau.deltaPct}% ${L('vs_prev')}` : null}
-              spark={monthVals} />
-            <KpiTrend ic="🎁" label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} />
+              spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
+            <KpiTrend label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} bigIcon={IconGift} tone="blue" />
           </div>
           <Card style={{ marginTop: 16 }}>
             <b>{L('com_downloads_total')}</b>
@@ -234,13 +220,13 @@ export default function Commercial({ ctx }) {
       {tab === 'conversion' && (
         <>
           <div className="grid g4">
-            <KpiTrend ic="⭐" label={L('k_converted')} value={fmt(d.converted)}
-              delta={`${d.convRate}% ${L('conv_of_mau')}`} spark={monthVals} />
-            <KpiTrend ic="👤" label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} />
-            <KpiTrend ic="📈" label={L('k_mau')} value={fmt(d.mau)}
+            <KpiTrend label={L('k_converted')} value={fmt(d.converted)}
+              delta={`${d.convRate}% ${L('conv_of_mau')}`} spark={monthVals} bigIcon={IconStar} tone="blue" />
+            <KpiTrend label={L('k_dau')} value={fmt(d.dau)} spark={monthVals} bigIcon={IconUsers} tone="blue" />
+            <KpiTrend label={L('k_mau')} value={fmt(d.mau)}
               delta={ov.mau?.deltaPct != null ? `${ov.mau.deltaPct}% ${L('vs_prev')}` : null}
-              spark={monthVals} />
-            <KpiTrend ic="🎁" label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} />
+              spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
+            <KpiTrend label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} bigIcon={IconGift} tone="blue" />
           </div>
           <div className="grid g2" style={{ marginTop: 16 }}>
             <Card>
@@ -289,12 +275,12 @@ export default function Commercial({ ctx }) {
       {tab === 'ingresos' && (
         <>
           <div className="grid g4">
-            <KpiTrend ic="💰" label={L('k_mrr')} value={`$${fmt(d.mrr)}`}
+            <KpiTrend label={L('k_mrr')} value={`$${fmt(d.mrr)}`}
               delta={ov.mrr?.deltaPct != null ? `${ov.mrr.deltaPct}% ${L('vs_prev')}` : null}
-              spark={monthVals} />
-            <KpiTrend ic="🎁" label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} />
-            <KpiTrend ic="⭐" label={L('k_converted')} value={`${fmt(d.converted)} · ${d.convRate}%`} spark={monthVals} />
-            <KpiTrend ic="📈" label={L('k_mau')} value={fmt(d.mau)} spark={monthVals} />
+              spark={monthVals} bigIcon={IconWallet} tone="blue" />
+            <KpiTrend label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} bigIcon={IconGift} tone="blue" />
+            <KpiTrend label={L('k_converted')} value={`${fmt(d.converted)} · ${d.convRate}%`} spark={monthVals} bigIcon={IconStar} tone="blue" />
+            <KpiTrend label={L('k_mau')} value={fmt(d.mau)} spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
           </div>
           <Card style={{ marginTop: 16 }}>
             <b>{L('c_rev_plan')}</b>

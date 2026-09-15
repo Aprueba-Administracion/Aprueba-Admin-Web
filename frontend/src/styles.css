@@ -8,6 +8,10 @@
   --bronze:#CD7F32;--silver:#94A3B8;--gold:#F5B041;--diamond:#38BDF8;--platinum:#A78BFA;
   --banner-grad:linear-gradient(90deg,#dcebfa 0%,#e9f2fc 45%,#e1effd 100%);--banner-border:rgba(190,215,245,.8);--banner-shadow:rgba(186,215,248,.25);--banner-title:#0f2b48;--banner-sub:#476385;
   --quote-grad:linear-gradient(135deg,rgba(254,243,199,.45) 0%,rgba(255,255,255,.8) 100%);--quote-border:rgba(245,158,11,.25);--quote-icon-bg:#fef3c7;--quote-text:#334155;
+  --kpi-blue-grad:linear-gradient(135deg,#eaf2fc 0%,#ffffff 65%);--kpi-blue-border:rgba(59,100,150,.22);--kpi-blue-icon:#2D5A9E;--kpi-blue-title:#0f2b48;--kpi-blue-sub:#476385;
+  --kpi-green-grad:linear-gradient(135deg,#e6f7ef 0%,#ffffff 65%);--kpi-green-border:rgba(15,157,88,.22);--kpi-green-icon:#0f9d58;--kpi-green-title:#0b3d2b;--kpi-green-sub:#3f7a5e;
+  --kpi-purple-grad:linear-gradient(135deg,#f6ecfb 0%,#ffffff 65%);--kpi-purple-border:rgba(122,58,140,.22);--kpi-purple-icon:#7a2f86;--kpi-purple-title:#3d1642;--kpi-purple-sub:#7a5484;
+  --kpi-orange-grad:linear-gradient(135deg,#fdf1e4 0%,#ffffff 65%);--kpi-orange-border:rgba(180,90,20,.22);--kpi-orange-icon:#b45f14;--kpi-orange-title:#4a2607;--kpi-orange-sub:#8a5a2e;
 }
 .dark{
   --bg:#0B1220;--panel:#131C2E;--ink:#E2E8F0;--muted:#94A3B8;--line:#1E2D45;--soft:#1A2540;
@@ -15,6 +19,10 @@
   --shadow:0 8px 24px rgba(0,0,0,.5);--side:#0A1424;--side-ink:#E2E8F0;--side-mut:rgba(226,232,240,.55);--side-act:rgba(255,255,255,.08);
   --banner-grad:linear-gradient(90deg,#16283f 0%,#17304c 45%,#142943 100%);--banner-border:rgba(59,100,150,.4);--banner-shadow:rgba(0,0,0,.35);--banner-title:#dbe8fb;--banner-sub:#9fb7d6;
   --quote-grad:linear-gradient(135deg,rgba(120,90,20,.28) 0%,rgba(255,255,255,.04) 100%);--quote-border:rgba(245,158,11,.3);--quote-icon-bg:rgba(245,158,11,.18);--quote-text:#e8e6df;
+  --kpi-blue-grad:linear-gradient(135deg,rgba(45,90,158,.30) 0%,rgba(255,255,255,.05) 100%);--kpi-blue-border:rgba(59,100,150,.4);--kpi-blue-icon:#7fb3ff;--kpi-blue-title:#dbe8fb;--kpi-blue-sub:#9fb7d6;
+  --kpi-green-grad:linear-gradient(135deg,rgba(16,163,105,.26) 0%,rgba(255,255,255,.05) 100%);--kpi-green-border:rgba(16,163,105,.4);--kpi-green-icon:#52d999;--kpi-green-title:#d9f7e9;--kpi-green-sub:#8fd6b4;
+  --kpi-purple-grad:linear-gradient(135deg,rgba(122,58,140,.28) 0%,rgba(255,255,255,.05) 100%);--kpi-purple-border:rgba(122,58,140,.4);--kpi-purple-icon:#d79ee0;--kpi-purple-title:#f2ddf5;--kpi-purple-sub:#c79ecf;
+  --kpi-orange-grad:linear-gradient(135deg,rgba(180,90,20,.28) 0%,rgba(255,255,255,.05) 100%);--kpi-orange-border:rgba(180,90,20,.4);--kpi-orange-icon:#f0a35c;--kpi-orange-title:#fbe3c8;--kpi-orange-sub:#dba876;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);font-family:'Inter',system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.5;transition:background .25s}
@@ -231,6 +239,57 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .tip-banner .ic{width:27px;height:27px;border-radius:8px;background:var(--quote-icon-bg);display:grid;place-items:center;flex-shrink:0;font-size:13px}
 .tip-banner .chev{margin-left:auto;color:var(--muted);font-size:18px;font-weight:700;line-height:1;flex-shrink:0}
 
+/* Tarjetas KPI de Sponsors: fondo predominantemente blanco con degradado suave del
+   color de cada métrica (igual espíritu que el banner superior) y un ícono gigante
+   traslúcido detrás del texto. Cada tono define su propio set de variables para que
+   el modo oscuro use un degradado más tenue/transparente en vez de colores sólidos. */
+.kpi-tile{position:relative;overflow:hidden;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;min-height:125px;box-shadow:0 4px 14px rgba(15,23,42,.08);border:1px solid transparent;transition:background .25s,border-color .25s,box-shadow .2s,transform .2s}
+.dark .kpi-tile{box-shadow:0 4px 16px rgba(0,0,0,.35)}
+/* Ninguna de estas tarjetas navega a otra pantalla, pero se les da vida con un
+   hover leve (se elevan un poco y la sombra se marca más) para que la página
+   no se sienta estática al pasar el mouse. */
+.kpi-tile:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,23,42,.14)}
+.dark .kpi-tile:hover{box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.kpi-tile .kpi-ic{position:absolute;right:-10px;bottom:-12px;opacity:.16;pointer-events:none;z-index:0}
+.kpi-tile .kpi-label{position:relative;z-index:1;font-size:.82rem;font-weight:600;margin-bottom:6px}
+.kpi-tile .kpi-val{position:relative;z-index:1;font-size:1.75rem;font-weight:800;letter-spacing:-0.5px}
+.kpi-tile .kpi-delta{position:relative;z-index:1;margin-top:8px;font-size:.75rem;font-weight:600}
+.kpi-tile .kpi-delta.up{color:var(--accent)}
+.kpi-tile.blue{background:var(--kpi-blue-grad);border-color:var(--kpi-blue-border)}
+.kpi-tile.blue .kpi-ic{color:var(--kpi-blue-icon)}
+.kpi-tile.blue .kpi-label,.kpi-tile.blue .kpi-val{color:var(--kpi-blue-title)}
+.kpi-tile.blue .kpi-delta.neutral{color:var(--kpi-blue-sub)}
+.kpi-tile.green{background:var(--kpi-green-grad);border-color:var(--kpi-green-border)}
+.kpi-tile.green .kpi-ic{color:var(--kpi-green-icon)}
+.kpi-tile.green .kpi-label,.kpi-tile.green .kpi-val{color:var(--kpi-green-title)}
+.kpi-tile.green .kpi-delta.neutral{color:var(--kpi-green-sub)}
+.kpi-tile.purple{background:var(--kpi-purple-grad);border-color:var(--kpi-purple-border)}
+.kpi-tile.purple .kpi-ic{color:var(--kpi-purple-icon)}
+.kpi-tile.purple .kpi-label,.kpi-tile.purple .kpi-val{color:var(--kpi-purple-title)}
+.kpi-tile.purple .kpi-delta.neutral{color:var(--kpi-purple-sub)}
+.kpi-tile.orange{background:var(--kpi-orange-grad);border-color:var(--kpi-orange-border)}
+.kpi-tile.orange .kpi-ic{color:var(--kpi-orange-icon)}
+.kpi-tile.orange .kpi-label,.kpi-tile.orange .kpi-val{color:var(--kpi-orange-title)}
+.kpi-tile.orange .kpi-delta.neutral{color:var(--kpi-orange-sub)}
+
+/* Línea de tendencia (sparkline): usa currentColor y hereda el tono de la tarjeta,
+   en vez de un color fijo pensado para fondo oscuro. */
+.kpi-tile .kpi-spark{position:relative;z-index:1;margin-top:8px}
+.kpi-tile.blue .kpi-spark{color:var(--kpi-blue-icon)}
+.kpi-tile.green .kpi-spark{color:var(--kpi-green-icon)}
+.kpi-tile.purple .kpi-spark{color:var(--kpi-purple-icon)}
+.kpi-tile.orange .kpi-spark{color:var(--kpi-orange-icon)}
+
+/* Variante compacta para las tarjetas KPI laterales (Sponsors activos / Badges) */
+.kpi-tile.compact{padding:14px 16px;min-height:auto}
+.kpi-tile.compact .kpi-ic{right:-6px;bottom:-6px}
+.kpi-tile.compact .kpi-val{font-size:1.6rem;line-height:1.1}
+.kpi-tile.compact .kpi-delta{margin-top:4px}
+.kpi-tile.compact .kpi-row{display:flex;align-items:baseline;gap:8px;position:relative;z-index:1}
+/* La línea queda en su propia fila, angosta y pegada a la izquierda, para no
+   cruzar por encima del ícono grande que vive en la esquina inferior derecha. */
+.kpi-tile.compact .kpi-spark.compact-spark{margin-top:8px;width:55%}
+
 /* Embudo de conversión: lista de escalones con barra de progreso (evita que el
    texto se salga de la barra en escalones angostos) */
 .funnel-list{display:flex;flex-direction:column;gap:14px;margin-top:8px}
@@ -242,6 +301,15 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .fr-pct{font-family:'Inter',sans-serif;font-weight:600;color:var(--muted);font-size:11px}
 .fr-track{height:10px;border-radius:6px;background:var(--line);overflow:hidden}
 .fr-track>i{display:block;height:100%;border-radius:6px;background:var(--brand);transition:width .2s,opacity .15s}
+
+/* Enlaces de texto tipo "Ver detalle →" / "Ver todos →": ya eran clickeables,
+   pero no lo parecían porque no reaccionaban al pasar el mouse. El subrayado
+   y el desplazamiento de la flecha dejan claro que sí llevan a algo. */
+.link-action{color:var(--brand);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px;transition:color .15s;text-decoration:none}
+.link-action:hover{color:var(--cta-ink);text-decoration:underline}
+.dark .link-action:hover{color:#fff}
+.link-action .arw{transition:transform .15s}
+.link-action:hover .arw{transform:translateX(3px)}
 @media(max-width:620px){.range-pills{width:100%}.range-pill{flex:1}}
 
 /* Layout de 2 columnas de Comercial (gráfico + resumen a la izquierda, KPIs a la derecha) */
@@ -251,3 +319,32 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .kpi-trend{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .kt-side{display:flex;align-items:center;gap:9px;flex-shrink:0}
 .kt-ic{width:38px;height:38px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+
+/* Variante "tint" de KpiTrend: mismo tamaño de tarjeta (hereda padding/radio de
+   .card), pero con un degradado suave del color `tone` y un ícono grande
+   traslúcido de fondo en vez del círculo con emoji. Todas las tarjetas usan el
+   mismo tono a propósito (p.ej. "blue") en vez de un color distinto por métrica. */
+/* La variante tint apila en columna (texto arriba, línea de tendencia abajo en
+   su propia fila angosta) en vez de la fila texto|ícono original: así la
+   sparkline nunca queda dibujada encima del ícono grande de fondo. */
+.kpi-trend.tint{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;transition:box-shadow .2s,transform .2s}
+.kpi-trend.tint:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,23,42,.14)}
+.dark .kpi-trend.tint:hover{box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.kpi-trend.tint.blue{background:var(--kpi-blue-grad);border-color:var(--kpi-blue-border)}
+.kpi-trend.tint.green{background:var(--kpi-green-grad);border-color:var(--kpi-green-border)}
+.kpi-trend.tint.purple{background:var(--kpi-purple-grad);border-color:var(--kpi-purple-border)}
+.kpi-trend.tint.orange{background:var(--kpi-orange-grad);border-color:var(--kpi-orange-border)}
+.kpi-trend.tint .kt-txt{position:relative;z-index:1;width:100%}
+.kpi-trend.tint .kt-spark{position:relative;z-index:1;width:58%;margin-top:6px}
+.kpi-trend.tint .lbl{color:var(--kpi-blue-sub)}
+.kpi-trend.tint .kpi-val{color:var(--kpi-blue-title)}
+.kpi-trend.tint.green .lbl{color:var(--kpi-green-sub)}
+.kpi-trend.tint.green .kpi-val{color:var(--kpi-green-title)}
+.kpi-trend.tint.purple .lbl{color:var(--kpi-purple-sub)}
+.kpi-trend.tint.purple .kpi-val{color:var(--kpi-purple-title)}
+.kpi-trend.tint.orange .lbl{color:var(--kpi-orange-sub)}
+.kpi-trend.tint.orange .kpi-val{color:var(--kpi-orange-title)}
+.kt-bigic{position:absolute;right:-12px;bottom:-12px;opacity:.16;pointer-events:none;z-index:0;color:var(--kpi-blue-icon)}
+.kpi-trend.tint.green .kt-bigic{color:var(--kpi-green-icon)}
+.kpi-trend.tint.purple .kt-bigic{color:var(--kpi-purple-icon)}
+.kpi-trend.tint.orange .kt-bigic{color:var(--kpi-orange-icon)}
