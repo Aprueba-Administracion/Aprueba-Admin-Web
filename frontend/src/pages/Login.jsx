@@ -36,7 +36,7 @@ export default function Login({ ctx }) {
           {err && <div className="err">{err}</div>}
           <button className="btn" style={{ width: '100%', marginTop: 16 }} disabled={busy}>{busy ? '…' : L('login_btn')}</button>
         </form>
-        <div className="hint-box">{L('login_hint')}</div>
+      {/* <div className="hint-box">{L('login_hint')}</div> */}
         <div style={{ textAlign: 'center', marginTop: 10 }}>
           <button className="ctl" onClick={() => setLang(lang === 'es' ? 'en' : 'es')}>🌐 {lang === 'es' ? 'EN' : 'ES'}</button>
         </div>
