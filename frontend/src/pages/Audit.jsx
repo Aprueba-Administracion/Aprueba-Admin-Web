@@ -153,6 +153,12 @@ export default function Audit({ ctx }) {
     { value: 'system', label: isEn ? 'System' : 'Sistema' },
   ], [isEn]);
 
+  const filteredRows = useMemo(() => {
+    if (!rows) return [];
+    if (!appliedDate) return rows;
+    return rows.filter((r) => r.at && r.at.startsWith(appliedDate));
+  }, [rows, appliedDate]);
+
   if (err && !rows) return <Card><ErrorBox msg={err} onRetry={() => load(filters)} L={L} /></Card>;
   if (!rows) return <Loading L={L} />;
 
