@@ -130,7 +130,6 @@ export const T = {
 
     // ── login ──
     login_title:'Consola de administración', login_email:'Correo', login_pass:'Contraseña', login_otp:'Código MFA (si aplica)', login_btn:'Ingresar',
-    login_hint:'Usuarios de prueba — admin@aprueba.cl / admin123 (MFA 123456) · finance@aprueba.cl / finance123 (MFA 123456) · ops@aprueba.cl / ops123 · support@aprueba.cl / support123',
     logout:'Cerrar sesión', loading:'Cargando…', no_access:'No tienes permiso para esta vista (rol insuficiente).', restarted:'Reinicio programado',
 
     // ── auditoría ──
@@ -259,7 +258,6 @@ export const T = {
     p_deleted:'Plan deleted',
 
     login_title:'Admin console', login_email:'Email', login_pass:'Password', login_otp:'MFA code (if required)', login_btn:'Sign in',
-    login_hint:'Test users — admin@aprueba.cl / admin123 (MFA 123456) · finance@aprueba.cl / finance123 (MFA 123456) · ops@aprueba.cl / ops123 · support@aprueba.cl / support123',
     logout:'Sign out', loading:'Loading…', no_access:'You do not have permission for this view (insufficient role).', restarted:'Restart scheduled',
 
     // ── audit log ──

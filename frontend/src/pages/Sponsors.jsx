@@ -82,7 +82,7 @@ export default function Sponsors({ ctx }) {
     if (benefitIndex !== undefined && benefitIndex !== null) {
       currentBenefits[benefitIndex] = { ...currentBenefits[benefitIndex], ...benefitData };
     } else {
-      currentBenefits.push({ ...benefitData, redeemed: 0, id: `b_${Date.now()}` });
+      currentBenefits.push({ ...benefitData, redeemedCount: 0, id: `b_${Date.now()}` });
     }
 
     run(() => api.put(`/sponsors/${sponsor.id}/benefits`, { benefits: currentBenefits }), L('saved_ok'));
@@ -316,9 +316,9 @@ export default function Sponsors({ ctx }) {
                                         return (
                                           <tr key={b.id || idx} style={{ opacity: isExpired ? 0.65 : 1 }}>
                                             <td><b>{b.name}</b></td>
-                                            <td>💎 {fmt(b.costPlatino || 0)} {isEn ? 'plat.' : 'plat.'}</td>
+                                            <td>💎 {fmt(b.costPlatinum || 0)} {isEn ? 'plat.' : 'plat.'}</td>
                                             <td>{fmt(b.stock || 0)} u.</td>
-                                            <td>{fmt(b.redeemed || 0)}</td>
+                                            <td>{fmt(b.redeemedCount || 0)}</td>
                                             <td>
                                               <DateBadge dateStr={b.expiresAt} isEn={isEn} />
                                             </td>

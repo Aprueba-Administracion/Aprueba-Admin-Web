@@ -9,7 +9,10 @@
     "dev": "node --watch src/index.js",
     "seed": "node src/seed/seed.js",
     "clear:audit": "node src/seed/clear-audit-log.js",
-    "emulator": "firebase emulators:start --only firestore"
+    "emulator": "firebase emulators:start --only firestore",
+    "migrate:sponsor-benefits": "node src/scripts/migrate-sponsor-benefits.js",
+    "fix:benefits-schema": "node src/scripts/fix-benefits-schema.js",
+    "backfill:sponsor-fields": "node src/scripts/backfill-sponsor-fields.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -18,5 +21,8 @@
     "express": "^4.19.2",
     "firebase-admin": "^12.6.0",
     "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.29.1"
   }
 }

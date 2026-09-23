@@ -7,6 +7,10 @@ export const COL = {
   features: 'features',
   plans: 'plans',
   sponsors: 'sponsors',
+  // Catálogo de beneficios de sponsors (modelo canónico: colección raíz,
+  // cada doc referencia a su sponsor con `sponsorId`). Antes vivía como un
+  // array embebido dentro de cada sponsor; ver MODELO_CAMBIOS.md.
+  benefits: 'benefits',
   users: 'users',
   tickets: 'tickets',
   corrections: 'corrections',
@@ -39,6 +43,15 @@ export async function listAll(col, orderBy) {
 // que cualquier ruta que filtre sigue usando listAll() como antes.
 export async function listRecent(col, field, limit) {
   const snap = await db.collection(col).orderBy(field, 'desc').limit(limit).get();
+  return snap.docs.map(withId);
+}
+
+// Trae todos los documentos de una colección donde `field === value`
+// (sin orderBy adicional, para no requerir un índice compuesto). Se usa,
+// por ejemplo, para traer los beneficios de un sponsor: benefits donde
+// sponsorId === <id>.
+export async function listWhere(col, field, value) {
+  const snap = await db.collection(col).where(field, '==', value).get();
   return snap.docs.map(withId);
 }
 

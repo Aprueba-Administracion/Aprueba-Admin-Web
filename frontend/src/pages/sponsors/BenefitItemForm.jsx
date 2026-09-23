@@ -8,7 +8,7 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
 
   const [form, setForm] = useState(() => ({
     name: benefit?.name || '',
-    costPlatino: benefit?.costPlatino ?? '',
+    costPlatinum: benefit?.costPlatinum ?? '',
     stock: benefit?.stock ?? '',
     expiresAt: benefit?.expiresAt || '',
     noLimit: !benefit?.expiresAt,
@@ -19,7 +19,7 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
   const handleSubmit = () => {
     onSave(sponsor, {
       name: form.name,
-      costPlatino: Number(form.costPlatino || 0),
+      costPlatinum: Number(form.costPlatinum || 0),
       stock: Number(form.stock || 0),
       expiresAt: form.noLimit ? null : (form.expiresAt || null),
     }, index);
@@ -56,9 +56,9 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
             type="number"
             min="0"
             placeholder="0"
-            value={form.costPlatino}
+            value={form.costPlatinum}
             onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()}
-            onChange={(e) => set('costPlatino')(e.target.value)}
+            onChange={(e) => set('costPlatinum')(e.target.value)}
           />
         </Field>
         <Field label={isEn ? 'Available stock' : 'Stock disponible'}>
