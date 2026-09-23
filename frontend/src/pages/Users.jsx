@@ -170,7 +170,7 @@ export default function Users({ ctx }) {
       </div>
 
       {tab === 'users' && (
-        <Card>
+        <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
             <input className="grow" placeholder={L('u_search')} value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select value={uFilters.plan} onChange={(v) => setUFilters((f) => ({ ...f, plan: v }))}
@@ -212,7 +212,7 @@ export default function Users({ ctx }) {
       )}
 
       {tab === 'tickets' && (
-        <Card>
+        <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
             <b style={{ marginRight: 'auto' }}>{L('t_table')}</b>
             <Select value={tFilters.state} onChange={(v) => setTFilters((f) => ({ ...f, state: v }))}
@@ -250,7 +250,7 @@ export default function Users({ ctx }) {
       )}
 
       {tab === 'corrections' && (
-        <Card>
+        <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
             <b style={{ marginRight: 'auto' }}>{L('co_table')}</b>
             <Select value={cFilters.state} onChange={(v) => setCFilters({ state: v })}

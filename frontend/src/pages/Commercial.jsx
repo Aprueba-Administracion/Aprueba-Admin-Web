@@ -127,7 +127,7 @@ export default function Commercial({ ctx }) {
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === 'resumen' && (
-        <div className="com-layout">
+        <div className="com-layout tab-fade">
           {/* Columna principal izquierda */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
             {/* Gráfico de descargas totales */}
@@ -197,7 +197,7 @@ export default function Commercial({ ctx }) {
       )}
 
       {tab === 'adquisicion' && (
-        <>
+        <div className="tab-fade">
           <div className="grid g4">
             <KpiTrend label={L('k_downloads')} value={fmt(d.downloads)}
               delta={ov.downloads?.deltaPct != null ? `${ov.downloads.deltaPct}% ${L('vs_prev')}` : null}
@@ -214,11 +214,11 @@ export default function Commercial({ ctx }) {
               <LineChartInteractive vals={monthVals} labels={monthLabels} format={(v) => fmt(v)} />
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       {tab === 'conversion' && (
-        <>
+        <div className="tab-fade">
           <div className="grid g4">
             <KpiTrend label={L('k_converted')} value={fmt(d.converted)}
               delta={`${d.convRate}% ${L('conv_of_mau')}`} spark={monthVals} bigIcon={IconStar} tone="blue" />
@@ -269,11 +269,11 @@ export default function Commercial({ ctx }) {
               </div>
             </Card>
           </div>
-        </>
+        </div>
       )}
 
       {tab === 'ingresos' && (
-        <>
+        <div className="tab-fade">
           <div className="grid g4">
             <KpiTrend label={L('k_mrr')} value={`$${fmt(d.mrr)}`}
               delta={ov.mrr?.deltaPct != null ? `${ov.mrr.deltaPct}% ${L('vs_prev')}` : null}
@@ -297,7 +297,7 @@ export default function Commercial({ ctx }) {
               <HBarsInteractive data={badgeBars} />
             </div>
           </Card>
-        </>
+        </div>
       )}
     </>
   );

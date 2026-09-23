@@ -6,6 +6,9 @@
   --side:#0F2742;--side-ink:#E8EEF7;--side-mut:rgba(232,238,247,.6);--side-act:rgba(255,255,255,.12);
   --ok:#10B981;--ok-bg:rgba(16,185,129,.13);--deg:#F59E0B;--deg-bg:rgba(245,158,11,.14);--down:#EF4444;--down-bg:rgba(239,68,68,.12);
   --bronze:#CD7F32;--silver:#94A3B8;--gold:#F5B041;--diamond:#38BDF8;--platinum:#A78BFA;
+  --bronze-bg:rgba(205,127,50,.15);--silver-bg:rgba(148,163,184,.15);--gold-bg:rgba(245,176,65,.18);
+  --bronze-line:rgba(205,127,50,.35);--silver-line:rgba(148,163,184,.35);--gold-line:rgba(245,176,65,.4);
+  --bronze-ink:#9a5c22;--silver-ink:#64748b;--gold-ink:#95650f;
   --banner-grad:linear-gradient(90deg,#dcebfa 0%,#e9f2fc 45%,#e1effd 100%);--banner-border:rgba(190,215,245,.8);--banner-shadow:rgba(186,215,248,.25);--banner-title:#0f2b48;--banner-sub:#476385;
   --quote-grad:linear-gradient(135deg,rgba(254,243,199,.45) 0%,rgba(255,255,255,.8) 100%);--quote-border:rgba(245,158,11,.25);--quote-icon-bg:#fef3c7;--quote-text:#334155;
   --kpi-blue-grad:linear-gradient(135deg,#eaf2fc 0%,#ffffff 65%);--kpi-blue-border:rgba(59,100,150,.22);--kpi-blue-icon:#2D5A9E;--kpi-blue-title:#0f2b48;--kpi-blue-sub:#476385;
@@ -77,11 +80,18 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);font-family:'Montserrat'}
 td{padding:11px 10px;border-bottom:1px solid var(--line)}
 tr:last-child td{border-bottom:none}
+/* Resalta la fila bajo el cursor para que las tablas se sientan interactivas */
+tbody tr{transition:background-color .12s}
+tbody tr:hover{background:var(--soft)}
 .tbl-wrap{overflow-x:auto}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--cta);color:var(--cta-ink);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat'}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--cta);color:var(--cta-ink);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat';transition:filter .12s,background-color .12s,border-color .12s}
 .btn.sec{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .btn.sm{padding:6px 10px;font-size:12px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+/* Estados hover de botones (el .dgr ya tenía el suyo propio, se excluye para no duplicar el efecto) */
+.btn:not(:disabled):hover{filter:brightness(.94)}
+.btn.sec:not(:disabled):hover{background:var(--line)}
+.btn.dgr:not(:disabled):hover{filter:none}
 input,select{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;color:var(--ink);font-family:'Inter';outline:none}
 input:focus,select:focus{border-color:var(--brand)}
 .avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Montserrat';flex-shrink:0}
@@ -198,6 +208,13 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
 @media(max-width:900px){.sp-layout{grid-template-columns:1fr}}
 
+/* Fila inferior del Resumen: salud del sistema + recaudación por plan + KPIs laterales.
+   Antes iba con grid-template-columns en línea, sin breakpoint, por lo que en móvil
+   la fila se salía del ancho de pantalla en vez de apilarse. */
+.ov-bottom{display:grid;grid-template-columns:1.2fr 1fr 0.9fr;gap:16px;margin-bottom:16px}
+@media(max-width:1080px){.ov-bottom{grid-template-columns:1fr 1fr}.ov-bottom>*:last-child{grid-column:span 2}}
+@media(max-width:620px){.ov-bottom{grid-template-columns:1fr}.ov-bottom>*:last-child{grid-column:span 1}}
+
 /* Banner de Sponsors: ola decorativa se atenúa en modo oscuro y el texto se ajusta en móvil */
 .sp-banner-wave{opacity:.35}
 .dark .sp-banner-wave{opacity:.08}
@@ -207,8 +224,14 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
   .sp-banner-illustration{display:none}
 }
 
-:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4}
-.dark{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181}
+/* Paleta de series para gráficos con varias categorías (barras/donut de
+   Resumen, Comercial y Sponsors). Antes era un arcoíris (azul/naranjo/verde/
+   ámbar/rosa) sin relación con el manual de marca; ahora son 5 tonos
+   derivados de --azul y --oro (más un gris neutro), para que un gráfico con
+   muchas categorías (como Sponsors, que usa las 5) se sienta parte de la
+   misma identidad visual que el resto de la consola en vez de "más colorido". */
+:root{--s1:#1A365D;--s2:#3D72B4;--s3:#F5B041;--s4:#B4791E;--s5:#7C8AA5}
+.dark{--s1:#5B8FD6;--s2:#7FB3FF;--s3:#F5B041;--s4:#E0A45C;--s5:#94A3B8}
 
 .chart-tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);
   border-radius:8px;padding:6px 10px;font-size:11px;box-shadow:var(--shadow);white-space:nowrap;
@@ -363,3 +386,25 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .au-date-input {padding: 6px 10px;font-size: 0.85rem;border-radius: 6px;border: 1px solid var(--line);}
 .au-row-highlight {background: var(--chip);}
 .au-table-detail {display: inline-block;background: var(--soft);padding: 3px 8px;border-radius: 6px;font-size: 0.82rem;font-weight: 500;}
+
+/* Estado de carga tipo "esqueleto": reemplaza el "…" genérico por barras que
+   insinúan la forma del contenido que está por llegar, en vez de una carga
+   silenciosa. Sirve tanto para toda la página como dentro de una card. */
+.skel-wrap{display:flex;flex-direction:column;gap:12px;padding:24px 4px}
+.skel-bar{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--soft) 25%,var(--line) 37%,var(--soft) 63%);background-size:400% 100%;animation:skel-shimmer 1.4s ease infinite}
+.skel-w40{width:40%}
+.skel-w60{width:60%;height:22px}
+.skel-w70{width:70%}
+.skel-w80{width:85%}
+.skel-w50{width:50%}
+@keyframes skel-shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+@media(prefers-reduced-motion:reduce){.skel-bar{animation:none}}
+
+/* Transición suave al cambiar de pestaña (Comercial, Usuarios y soporte,
+   Sponsors): el panel entra con un fade + leve desplazamiento en vez de
+   aparecer de golpe. Se aplica al contenedor de cada pestaña; como React
+   monta un nodo nuevo al cambiar de pestaña, la animación se repite sola
+   cada vez sin necesidad de JS. */
+.tab-fade{animation:tab-fade-in .18s ease-out}
+@keyframes tab-fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.tab-fade{animation:none}}

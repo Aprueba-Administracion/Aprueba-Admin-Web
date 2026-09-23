@@ -1,44 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function Login({ ctx }) {
-  const { L, lang, setLang, dark, setDark: ctxSetDark } = ctx;
+  // dark/setDark viven en App.jsx (única fuente de verdad: un solo useEffect
+  // ahí aplica la clase .dark tanto en <html> como en <body>). Antes este
+  // componente tenía su propio estado local `isDark` que solo tocaba el DOM
+  // mientras el login estaba montado; al iniciar sesión, el toggle de la
+  // consola (Layout.jsx) solo sacaba la clase de <body> y no de <html>, así
+  // que el modo oscuro activado acá quedaba "pegado" después de loguearse.
+  const { L, lang, setLang, dark, setDark } = ctx;
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
-
-  // Estado puramente en memoria, inicializado según el DOM o ctx
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof dark === 'boolean') return dark;
-    if (typeof document !== 'undefined') {
-      return (
-        document.documentElement.classList.contains('dark') ||
-        document.body.classList.contains('dark')
-      );
-    }
-    return false;
-  });
-
-  // Aplica o quita la clase .dark solo en tiempo de ejecución en el DOM
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-    }
-    if (typeof ctxSetDark === 'function') {
-      ctxSetDark(isDark);
-    }
-  }, [isDark, ctxSetDark]);
-
-  const toggleDark = () => {
-    setIsDark((prev) => !prev);
-  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -97,9 +73,9 @@ export default function Login({ ctx }) {
           <button
             type="button"
             className="ctl"
-            onClick={toggleDark}
+            onClick={() => setDark(!dark)}
           >
-            {isDark ? '☀️ Claro' : '🌙 Oscuro'}
+            {dark ? '☀️ Claro' : '🌙 Oscuro'}
           </button>
         </div>
       </div>

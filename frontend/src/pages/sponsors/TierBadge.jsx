@@ -1,19 +1,22 @@
+// Usa las variables --gold/--silver/--bronze del manual de marca (definidas
+// en styles.css) en vez de colores sueltos, para que el badge de nivel quede
+// exactamente en la misma paleta que el resto de la consola.
 export function TierBadge({ tier }) {
   const styles = {
     Gold: {
-      background: 'rgba(234, 179, 8, 0.15)',
-      color: '#d97706',
-      border: '1px solid rgba(234, 179, 8, 0.35)',
+      background: 'var(--gold-bg)',
+      color: 'var(--gold-ink)',
+      border: '1px solid var(--gold-line)',
     },
     Silver: {
-      background: 'rgba(148, 163, 184, 0.15)',
-      color: '#64748b',
-      border: '1px solid rgba(148, 163, 184, 0.35)',
+      background: 'var(--silver-bg)',
+      color: 'var(--silver-ink)',
+      border: '1px solid var(--silver-line)',
     },
     Bronze: {
-      background: 'rgba(180, 83, 9, 0.15)',
-      color: '#b45309',
-      border: '1px solid rgba(180, 83, 9, 0.35)',
+      background: 'var(--bronze-bg)',
+      color: 'var(--bronze-ink)',
+      border: '1px solid var(--bronze-line)',
     },
   };
 

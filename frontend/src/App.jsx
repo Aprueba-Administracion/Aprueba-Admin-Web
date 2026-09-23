@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import { makeL, fmt } from './i18n.js';
@@ -32,9 +32,21 @@ export const VIEWS = [
 export default function App() {
   const { user } = useAuth();
   const [lang, setLang] = useState('es');
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+  });
   const L = useMemo(() => makeL(lang), [lang]);
   const ctx = { L, lang, setLang, dark, setDark, fmt: (n) => fmt(n, lang) };
+
+  // Única fuente de verdad para el modo oscuro: se aplica acá, tanto en <html>
+  // como en <body>, así da lo mismo si el toggle se acciona desde el login o
+  // desde dentro de la consola (antes cada uno tocaba el DOM por su cuenta y
+  // se desincronizaban entre sí).
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    document.body.classList.toggle('dark', dark);
+  }, [dark]);
 
   if (!user) return <Login ctx={ctx} />;
 

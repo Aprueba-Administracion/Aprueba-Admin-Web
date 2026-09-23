@@ -188,7 +188,7 @@ export default function Sponsors({ ctx }) {
           {/* Tabla de sponsors / Acordeón de beneficios */}
           <Card style={{ width: '100%' }}>
             {activeTab === 'sponsors' ? (
-              <>
+              <div className="tab-fade" key="sponsors">
                 <div className="flex between wrap" style={{ gap: 10, marginBottom: 12 }}>
                   <b>{L('s_table') || (isEn ? 'Sponsor detail' : 'Detalle de sponsors')}</b>
                   <button className="btn sm" onClick={() => setDialog({ kind: 'form' })}>+ {L('s_add')}</button>
@@ -224,9 +224,9 @@ export default function Sponsors({ ctx }) {
                     </table>
                   </div>
                 )}
-              </>
+              </div>
             ) : (
-              <>
+              <div className="tab-fade" key="benefits">
                 <div className="flex between wrap" style={{ gap: 10, marginBottom: 16 }}>
                   <b>{isEn ? 'Benefits by Sponsor' : 'Beneficios por Sponsor'}</b>
                 </div>
@@ -374,7 +374,7 @@ export default function Sponsors({ ctx }) {
                     })}
                   </div>
                 )}
-              </>
+              </div>
             )}
 
             {err && <ErrorBox msg={err} onRetry={load} L={L} />}

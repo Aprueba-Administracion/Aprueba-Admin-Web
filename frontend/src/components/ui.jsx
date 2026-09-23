@@ -104,7 +104,21 @@ export function StatusPill({ state, L }) {
   );
 }
 
-export function Loading({ L }) { return <div className="center">{L('loading')}</div>; }
+// Placeholder tipo "esqueleto": unas barras pulsantes en vez del "…" plano de
+// antes. Se usa tanto para páginas completas como dentro de una sola card
+// (Users/Tutors), por eso son barras genéricas de distinto ancho en vez de
+// imitar una tabla o KPI concretos.
+export function Loading({ L }) {
+  return (
+    <div className="skel-wrap" role="status" aria-label={L ? L('loading') : 'Cargando'}>
+      <div className="skel-bar skel-w60" />
+      <div className="skel-bar skel-w40" />
+      <div className="skel-bar skel-w80" />
+      <div className="skel-bar skel-w70" />
+      <div className="skel-bar skel-w50" />
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitivas de interacción (modales, formularios, pestañas, avisos)

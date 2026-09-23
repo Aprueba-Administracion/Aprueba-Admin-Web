@@ -57,7 +57,7 @@ export default function Layout({ ctx, children }) {
             <select className="ctl" value={lang} onChange={(e) => setLang(e.target.value)}>
               <option value="es">🌐 ES</option><option value="en">🌐 EN</option>
             </select>
-            <button className="ctl" onClick={() => { setDark(!dark); document.body.classList.toggle('dark', !dark); }}>{dark ? '☀️' : '🌙'}</button>
+            <button className="ctl" onClick={() => setDark(!dark)}>{dark ? '☀️' : '🌙'}</button>
           </div>
         </header>
         <main className="content">{children}</main>

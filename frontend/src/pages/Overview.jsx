@@ -272,7 +272,7 @@ export default function Overview({ ctx }) {
       </div>
 
       {/* Fila inferior */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.9fr', gap: '16px' }}>
+      <div className="ov-bottom">
         {/* Salud del sistema */}
         <Card>
           <div className="flex between" style={{ marginBottom: 12 }}>
