@@ -11,6 +11,10 @@ const STATE_TAG = { active: ['g', 'us_active'], suspended: ['w', 'us_suspended']
 const PRI_TAG = { high: ['d', 'pri_high'], med: ['w', 'pri_med'], low: ['', 'pri_low'] };
 const TICKET_TAG = { open: ['d', 'ts_open'], progress: ['w', 'ts_progress'], closed: ['g', 'ts_closed'] };
 const COR_TAG = { pending: ['w', 'cs_pending'], confirmed: ['g', 'cs_confirmed'], rejected: ['d', 'cs_rejected'] };
+// Modelo canónico de Max (Fase 2 #1, al pie de la letra): category y channel
+// de supportTickets son enums cerrados.
+const CATEGORIES = ['login', 'payments', 'content', 'account', 'other'];
+const CHANNELS = ['app', 'web', 'email'];
 // Recompensa fija que el backend otorga al confirmar (routes/corrections.js).
 const CONFIRM_REWARD = 250;
 // Planes conocidos por si el rol no puede leer /admin/plans (solo gerencia).
@@ -39,10 +43,13 @@ export default function Users({ ctx }) {
   const [uErr, setUErr] = useState(null);
 
   // ── tickets / recorrecciones ──
-  const [tFilters, setTFilters] = useState({ state: '', priority: '' });
+  // Los filtros usan `status` (no `state`) desde Fase 2 #1/#6, alineado al
+  // modelo canónico de Max: state era el nombre en el doc de endpoints, pero
+  // el modelo de datos usa status.
+  const [tFilters, setTFilters] = useState({ status: '', priority: '' });
   const [tickets, setTickets] = useState(null);
   const [tErr, setTErr] = useState(null);
-  const [cFilters, setCFilters] = useState({ state: '' });
+  const [cFilters, setCFilters] = useState({ status: '' });
   const [corrections, setCorrections] = useState(null);
   const [cErr, setCErr] = useState(null);
 
@@ -105,8 +112,8 @@ export default function Users({ ctx }) {
     loadUsers(uFilters, cursors[page - 1]);
   };
 
-  const openTickets = (tickets || []).filter((x) => x.state !== 'closed').length;
-  const pendingCor = (corrections || []).filter((x) => (x.state || 'pending') === 'pending').length;
+  const openTickets = (tickets || []).filter((x) => x.status !== 'closed').length;
+  const pendingCor = (corrections || []).filter((x) => (x.status || 'pending') === 'pending').length;
 
   const kpis = useMemo(() => {
     const list = users || [];
@@ -215,30 +222,30 @@ export default function Users({ ctx }) {
         <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
             <b style={{ marginRight: 'auto' }}>{L('t_table')}</b>
-            <Select value={tFilters.state} onChange={(v) => setTFilters((f) => ({ ...f, state: v }))}
+            <Select value={tFilters.status} onChange={(v) => setTFilters((f) => ({ ...f, status: v }))}
               options={Object.keys(TICKET_TAG).map((s) => ({ value: s, label: L(TICKET_TAG[s][1]) }))} placeholder={`${L('t_state')}: ${L('filter_all')}`} />
             <Select value={tFilters.priority} onChange={(v) => setTFilters((f) => ({ ...f, priority: v }))}
               options={Object.keys(PRI_TAG).map((s) => ({ value: s, label: L(PRI_TAG[s][1]) }))} placeholder={`${L('t_pri')}: ${L('filter_all')}`} />
-            <button className="btn sec sm" onClick={() => setTFilters({ state: '', priority: '' })}>{L('clear_filters')}</button>
+            <button className="btn sec sm" onClick={() => setTFilters({ status: '', priority: '' })}>{L('clear_filters')}</button>
           </div>
           {tErr && <ErrorBox msg={tErr} onRetry={() => loadTickets(tFilters)} L={L} />}
           {!tickets ? <Loading L={L} /> : tickets.length === 0 ? <EmptyState msg={L('t_no_tickets')} ic="🎫" /> : (
             <div className="tbl-wrap"><table>
               <thead><tr>
-                <th>{L('t_id')}</th><th>{L('t_subj')}</th><th>{L('t_user')}</th>
+                <th>{L('t_number')}</th><th>{L('t_subj')}</th><th>{L('t_user')}</th>
                 <th>{L('t_pri')}</th><th>{L('t_state')}</th><th>{L('t_age')}</th><th />
               </tr></thead>
               <tbody>{tickets.map((x) => (
                 <tr key={x.id}>
-                  <td className="note">#{x.id}</td>
+                  <td className="note">#{x.number ?? x.id}</td>
                   <td>
                     <b className="clamp" style={{ fontSize: 13 }}>{x.subject}</b>
-                    {x.lastReply && <div className="note clamp">↩ {x.lastReply}</div>}
+                    {x.category && <div className="note">{L(`cat_${x.category}`)}</div>}
                   </td>
-                  <td>{x.user}</td>
+                  <td>{x.userName || x.user}</td>
                   <td><Pill value={x.priority} map={PRI_TAG} L={L} /></td>
-                  <td><Pill value={x.state} map={TICKET_TAG} L={L} /></td>
-                  <td className="note">{x.age}</td>
+                  <td><Pill value={x.status} map={TICKET_TAG} L={L} /></td>
+                  <td className="note">{x.ageLabel || x.age}</td>
                   <td><div className="row-acts">
                     <button className="btn sec sm" onClick={() => setDialog({ kind: 'ticket', ticket: x })}>{L('t_manage')}</button>
                   </div></td>
@@ -253,9 +260,9 @@ export default function Users({ ctx }) {
         <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
             <b style={{ marginRight: 'auto' }}>{L('co_table')}</b>
-            <Select value={cFilters.state} onChange={(v) => setCFilters({ state: v })}
+            <Select value={cFilters.status} onChange={(v) => setCFilters({ status: v })}
               options={Object.keys(COR_TAG).map((s) => ({ value: s, label: L(COR_TAG[s][1]) }))} placeholder={`${L('t_state')}: ${L('filter_all')}`} />
-            <button className="btn sec sm" onClick={() => setCFilters({ state: '' })}>{L('clear_filters')}</button>
+            <button className="btn sec sm" onClick={() => setCFilters({ status: '' })}>{L('clear_filters')}</button>
           </div>
           {!isAdmin && <p className="note" style={{ marginBottom: 10 }}>ℹ️ {L('co_needs_admin')}</p>}
           {cErr && <ErrorBox msg={cErr} onRetry={() => loadCorrections(cFilters)} L={L} />}
@@ -270,16 +277,16 @@ export default function Users({ ctx }) {
                 return (
                   <tr key={c.id}>
                     <td>
-                      <b className="clamp" style={{ fontSize: 13 }}>{q?.statement || c.questionId}</b>
+                      <b className="clamp" style={{ fontSize: 13 }}>{q?.statement || c.questionStatement || c.questionId}</b>
                       <div className="note">{c.questionId}</div>
                     </td>
-                    <td>{c.userId}</td>
+                    <td>{c.userName || c.userId}</td>
                     <td><span className="tag">{L(`reason_${c.reason}`)}</span></td>
                     <td><span className="note clamp">{c.comment}</span></td>
-                    <td><Pill value={c.state || 'pending'} map={COR_TAG} L={L} /></td>
+                    <td><Pill value={c.status || 'pending'} map={COR_TAG} L={L} /></td>
                     <td className="note">{c.createdAt ? new Date(c.createdAt).toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US') : L('none')}</td>
                     <td><div className="row-acts">
-                      <button className="btn sec sm" disabled={(c.state || 'pending') !== 'pending'}
+                      <button className="btn sec sm" disabled={(c.status || 'pending') !== 'pending'}
                         onClick={() => setDialog({ kind: 'correction', correction: c, question: q })}>
                         {L('co_resolve')}
                       </button>
@@ -397,52 +404,92 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
 
 function TicketDialog({ ticket, ctx, busy, me, onClose, onSave }) {
   const { L } = ctx;
-  const [state, setState] = useState(ticket.state || 'open');
+  const [detail, setDetail] = useState(null);
+  const [loadErr, setLoadErr] = useState(null);
+  const [status, setStatus] = useState(ticket.status || 'open');
   const [priority, setPriority] = useState(ticket.priority || 'med');
   const [assigneeId, setAssigneeId] = useState(ticket.assigneeId || '');
   const [reply, setReply] = useState('');
+  const [internalNote, setInternalNote] = useState('');
+
+  // El GET de la fila no trae el hilo de mensajes (supportTickets/{id}/messages);
+  // se pide aparte al abrir el diálogo.
+  useEffect(() => {
+    let alive = true;
+    api.get(`/tickets/${ticket.id}`)
+      .then((r) => { if (alive) setDetail(r.data); })
+      .catch((e) => { if (alive) setLoadErr(e.message); });
+    return () => { alive = false; };
+  }, [ticket.id]);
+
+  const t = detail || ticket;
 
   const submit = () => {
     const patch = {};
-    if (state !== (ticket.state || 'open')) patch.state = state;
-    if (priority !== (ticket.priority || 'med')) patch.priority = priority;
-    if (assigneeId !== (ticket.assigneeId || '')) patch.assigneeId = assigneeId;
+    if (status !== (t.status || 'open')) patch.status = status;
+    if (priority !== (t.priority || 'med')) patch.priority = priority;
+    if (assigneeId !== (t.assigneeId || '')) patch.assigneeId = assigneeId || null;
     if (reply.trim()) patch.reply = reply.trim();
+    if (internalNote.trim()) patch.internalNote = internalNote.trim();
     if (!Object.keys(patch).length) { onClose(); return; }
     onSave(patch);
   };
 
   return (
-    <Modal busy={busy} title={L('t_manage')} subtitle={`#${ticket.id} · ${ticket.user}`} onClose={onClose}
+    <Modal wide busy={busy} title={L('t_manage')} subtitle={`#${t.number ?? t.id} · ${t.userName || t.user}`} onClose={onClose}
       footer={<>
         <button className="btn sec" onClick={onClose} disabled={busy}>{L('cancel')}</button>
         <button className="btn" onClick={submit} disabled={busy}>{busy ? '…' : L('save')}</button>
       </>}>
-      <p style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 4 }}>{ticket.subject}</p>
-      <div className="note" style={{ marginBottom: 6 }}>{L('t_age')}: {ticket.age}</div>
-      {ticket.lastReply && (
-        <>
-          <div className="section-label" style={{ marginTop: 10 }}>{L('t_last_reply')}</div>
-          <p className="note">{ticket.lastReply}</p>
-        </>
+      <p style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 4 }}>{t.subject}</p>
+      <div className="note" style={{ marginBottom: 6 }}>
+        {L('t_age')}: {t.ageLabel || t.age}
+        {t.category && <> · {L('t_category')}: {L(`cat_${t.category}`)}</>}
+        {t.channel && <> · {L('t_channel')}: {L(`chan_${t.channel}`)}</>}
+        {t.userEmail && <> · {t.userEmail}</>}
+      </div>
+      {t.status === 'closed' && t.closedAt && (
+        <div className="note" style={{ marginBottom: 6 }}>{L('t_closed_at')}: {new Date(t.closedAt).toLocaleString()}</div>
       )}
+
+      <div className="section-label" style={{ marginTop: 10 }}>{L('t_thread')}</div>
+      {loadErr && <ErrorBox msg={loadErr} L={L} />}
+      {!detail && !loadErr ? <Loading L={L} /> : (
+        <div className="msg-thread">
+          {(t.messages || []).length === 0 && <p className="note">{L('t_no_messages')}</p>}
+          {(t.messages || []).map((m) => (
+            <div key={m.id} className={`msg ${m.authorType} ${m.internal ? 'internal' : ''}`}>
+              <div className="msg-meta">
+                <span><b>{m.authorName}</b>{m.internal && <> · {L('t_internal')}</>}</span>
+                <span>{m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}</span>
+              </div>
+              {m.body}
+            </div>
+          ))}
+        </div>
+      )}
+
       <FormGrid>
         <Field label={L('t_state')}>
-          <Select value={state} onChange={setState} options={Object.keys(TICKET_TAG).map((s) => ({ value: s, label: L(TICKET_TAG[s][1]) }))} />
+          <Select value={status} onChange={setStatus} options={Object.keys(TICKET_TAG).map((s) => ({ value: s, label: L(TICKET_TAG[s][1]) }))} />
         </Field>
         <Field label={L('t_pri')}>
           <Select value={priority} onChange={setPriority} options={Object.keys(PRI_TAG).map((s) => ({ value: s, label: L(PRI_TAG[s][1]) }))} />
         </Field>
-        <Field wide label={L('t_assignee')}>
+        <Field wide label={L('t_assignee')} hint={!assigneeId ? L('t_unassigned') : t.assigneeName}>
           <div className="flex" style={{ gap: 8 }}>
             <input style={{ flex: 1 }} value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} placeholder={me?.id} />
-            <button className="btn sec sm" onClick={() => setAssigneeId(me?.id || '')}>{me?.name}</button>
+            <button className="btn sec sm" type="button" onClick={() => setAssigneeId(me?.id || '')}>{L('t_assign_me')}</button>
           </div>
         </Field>
         <Field wide label={L('t_reply')} hint={L('t_reply_ph')}>
           <textarea value={reply} onChange={(e) => setReply(e.target.value)} />
         </Field>
+        <Field wide label={L('t_internal_note')} hint={L('t_internal_note_ph')}>
+          <textarea value={internalNote} onChange={(e) => setInternalNote(e.target.value)} />
+        </Field>
       </FormGrid>
+      {status === 'open' && t.status === 'closed' && <p className="note">{L('t_reopen_hint')}</p>}
     </Modal>
   );
 }
@@ -454,9 +501,11 @@ function CorrectionDialog({ correction, question, ctx, busy, isAdmin, onClose, o
   const [statement, setStatement] = useState(question?.statement || '');
   const [correctAnswer, setCorrectAnswer] = useState(question?.correctAnswer || '');
   const [explanation, setExplanation] = useState(question?.explanation || '');
+  const [note, setNote] = useState('');
 
   const submit = () => {
     const body = { resolution };
+    if (note.trim()) body.note = note.trim();
     // El backend solo aplica questionPatch cuando la resolución es 'confirmed'.
     if (resolution === 'confirmed' && fix) {
       const patch = {};
@@ -477,13 +526,14 @@ function CorrectionDialog({ correction, question, ctx, busy, isAdmin, onClose, o
         </button>
       </>}>
       <Card className="flat">
-        <KV k={L('co_user')} v={correction.userId} />
+        <KV k={L('co_user')} v={correction.userName || correction.userId} />
         <KV k={L('co_reason')} v={L(`reason_${correction.reason}`)} />
         <KV k={L('co_comment')} v={correction.comment} />
+        <KV k={L('co_proposed_answer')} v={correction.proposedAnswer || L('none')} />
         <KV k={L('co_question')} v={correction.questionId} />
       </Card>
 
-      {question && (
+      {question ? (
         <>
           <div className="section-label">{L('co_question')}</div>
           <p style={{ fontSize: 13.5, fontWeight: 600 }}>{question.statement}</p>
@@ -493,7 +543,12 @@ function CorrectionDialog({ correction, question, ctx, busy, isAdmin, onClose, o
             ))}
           </div>
         </>
-      )}
+      ) : correction.questionStatement ? (
+        <>
+          <div className="section-label">{L('co_question')}</div>
+          <p style={{ fontSize: 13.5, fontWeight: 600 }}>{correction.questionStatement}</p>
+        </>
+      ) : null}
       {!question && !isAdmin && <p className="note" style={{ marginTop: 10 }}>ℹ️ {L('co_needs_admin')}</p>}
 
       <div className="section-label">{L('co_resolution')}</div>
@@ -522,6 +577,12 @@ function CorrectionDialog({ correction, question, ctx, busy, isAdmin, onClose, o
           )}
         </>
       )}
+
+      <FormGrid>
+        <Field wide label={L('co_note')} hint={L('co_note_ph')}>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} />
+        </Field>
+      </FormGrid>
     </Modal>
   );
 }

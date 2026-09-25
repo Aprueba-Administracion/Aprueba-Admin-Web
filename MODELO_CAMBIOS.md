@@ -94,12 +94,12 @@ volver a sembrar.
 
 | # | Concepto | Antes | Canónico (Max) | Estado |
 | --- | --- | --- | --- | --- |
-| 1 | Tickets de soporte | `tickets` / campo `state` | `supportTickets` / campo `status` | Pendiente |
+| 1 | Tickets de soporte | `tickets` / campo `state` | `supportTickets` / campo `status` | **Hecho** (ver detalle abajo) |
 | 2 | Métricas (Resumen/Comercial) | `metrics/{overview,commercial}` con factor de escala sintético | `metricsDaily` / `metricsMonthly` (agregados reales) | Pendiente (baja prioridad: aún no hay pipeline real de eventos) |
 | 3 | Beneficios de sponsors | array `benefits[]` embebido en el doc del sponsor | colección raíz `benefits` con `sponsorId` | **Hecho** (backend + migración, ver detalle abajo) |
 | 4 | Medallas de alumnos | campo numérico `users.badges` | subcolección `users/{uid}/medalLedger` | Pendiente |
 | 5 | Servicios / contenedores | colecciones `services` y `containers` | `serviceStatus` (snapshot) + `opsConfig` (config); contenedores en vivo desde Cloud Run | Pendiente |
-| 6 | Recorrecciones | campo `state`, `reason` texto libre | campo `status`, `reason` enum + `comment` | Pendiente |
+| 6 | Recorrecciones | campo `state`, `reason` texto libre | campo `status`, `reason` enum + `comment` | **Hecho** (ver detalle abajo) |
 | 7 | Usuarios admin | campo de deshabilitación propio | campo `active` | Pendiente |
 | 8 | Planes | `price` número plano, nombres sin i18n | `price {monthly, yearly}`, `name {es, en}` | Pendiente |
 
@@ -183,3 +183,148 @@ más del documento.
 **Sigue pendiente:** no hay UI todavía para editar `contactEmail`, para
 `stock` ilimitado (`stock: null` según Max) ni para `description`/`icon` de
 un beneficio.
+
+### Fase 2, ítems #1 y #6 — Tickets de soporte y Recorrecciones (completada)
+
+A diferencia de sponsors/beneficios (Fase 1), acá **no hizo falta un script de
+migración**: tanto `tickets` (renombrada a `supportTickets`) como `corrections`
+solo tenían datos de prueba cargados por `seed.js`, sin registros reales en el
+Firebase del proyecto que hubiera que preservar. Por eso el cambio se aplicó
+directamente sobre el seed y el código, y se resuelve simplemente volviendo a
+correr `npm run seed`.
+
+**Tickets de soporte:**
+- `data/repo.js`: `COL.tickets` ahora apunta a la colección `supportTickets`
+  (antes `tickets`).
+- `routes/tickets.js`: filtro de `GET /tickets` y el arreglo `allowed` de
+  `PATCH /tickets/:id` usan `status` en vez de `state`.
+- `seed/seed.js`: los 5 tickets de ejemplo ahora usan la clave `status`
+  (mismos valores: `open`/`progress`/`closed`).
+- `frontend/pages/Users.jsx`: filtros, cálculo de `openTickets`, la tabla y
+  el diálogo de edición del ticket (`TicketDialog`) leen/escriben `status`.
+
+**Recorrecciones:**
+- `routes/corrections.js`: filtro de `GET /corrections`, el `PATCH` de
+  resolución y la respuesta usan `status` en vez de `state`.
+- `seed/seed.js`: las 2 recorrecciones de ejemplo usan la clave `status`
+  (mismos valores: `pending`). El enum de `reason` (`wrong_answer`, `typo`,
+  etc.) + campo `comment` separado **ya estaba implementado** desde antes,
+  no requirió cambios.
+- `frontend/pages/Users.jsx`: filtros, cálculo de `pendingCor`, la tabla y
+  el botón de resolución leen `status`.
+
+> Importante: `state` también se usa en `Users.jsx` para el **estado de la
+> cuenta de usuario** (activo/suspendido/dado de baja — `USER_STATES`,
+> `x.state` en las filas de usuarios, `UserDialog`). Ese es un concepto
+> distinto y no forma parte de este cambio; se dejó exactamente igual.
+
+**Siguiente paso para ver el cambio reflejado:** correr `npm run seed`
+nuevamente para que Firestore tenga los documentos con la colección/campo
+nuevos.
+
+### Fase 2 — ampliación al modelo completo del documento de Max (completada)
+
+El corte anterior (rename `state`→`status` + `tickets`→`supportTickets`) fue
+deliberadamente parcial. Max indicó que tomáramos la decisión que más nos
+convenga, y con Amaru acordamos hacerlo tal cual el documento
+`Aprueba_Admin_Modelo_Datos_Firestore.docx` para evitar problemas de
+implementación más adelante. Esta ampliación agrega **todos** los campos y
+el comportamiento que faltaban en `supportTickets` y `corrections`.
+
+**`supportTickets/{id}` — campos nuevos:**
+`number` (secuencial, vía transacción `counters/ticketNumber` —
+`repo.js: nextTicketNumber()`), `subjectLower`, `category` (enum
+`login|payments|content|account|other`, solo la crea la app del alumno; el
+admin **no** la edita, igual que en el documento de endpoints), `userEmail`,
+`priorityRank` (derivado de `priority`), `assigneeName` (denormalizado de
+`adminUsers`), `channel` (`app|web|email`), `messagesCount`, `lastMessageAt`,
+`closedAt`. El campo `age` ("2 h", "1 d") **ya no se guarda**: `routes/
+tickets.js` lo calcula en cada respuesta a partir de `createdAt`/`closedAt`
+(`withAge()`), tal como pide el documento.
+
+**Subcolección `supportTickets/{id}/messages/{messageId}`** (nueva):
+`authorType` (`user|agent|system`), `authorId`/`authorName`, `body`,
+`internal` (notas internas, no visibles para el alumno), `createdAt`,
+`expiresAt` (TTL: se fija a `closedAt + 2 años` en todos los mensajes al
+cerrar el ticket, y se limpia al reabrir).
+
+**`PATCH /admin/tickets/:id`** — reescrito para igualar la lógica del
+documento de endpoints (`api.txt`), adaptada al contrato HTTP plano que ya
+usa este proyecto (sin envolver `user`/`assignee` en objetos anidados, que
+es lo único que ese documento cambia y que ya habíamos decidido no tocar):
+- Transiciones de estado válidas: `open→progress`, `open→closed`,
+  `progress→closed`, `closed→open`; cualquier otra combinación devuelve
+  `409 INVALID_STATE_TRANSITION` (p. ej. `progress→open` NO está permitida).
+- `assigneeId` se valida contra `adminUsers` (debe existir con rol `support`
+  o `admin`); si no, `422 ASSIGNEE_INVALID`. `assigneeId: null` desasigna.
+- `reply` crea un mensaje `agent` visible para el alumno; si el ticket
+  estaba `open` y no se pidió cambio de estado, pasa solo a `progress`; si
+  no tenía asignado, se autoasigna al agente que responde.
+- `internalNote` (campo nuevo, separado de `reply`) crea un mensaje `agent`
+  con `internal: true`.
+- Reabrir (`closed→open`) crea un mensaje `system` ("Ticket reabierto") y
+  limpia el TTL de los mensajes existentes.
+- La operación es atómica (un solo `batch`: update del ticket + mensajes +
+  `messagesCount` incremental).
+
+**`GET /admin/tickets`** — devuelve `meta.openCount` (tickets no cerrados,
+para el badge del menú) y admite filtros `status`, `priority`,
+`assigneeId` (incl. `unassigned`), `userId`, búsqueda `q` (por
+`subjectLower` o por número) y `sort`. **No implementa paginación por
+cursor** (el proyecto no la tenía para tickets y el volumen de datos de este
+capstone no lo justifica); si en algún momento se necesita, es una extensión
+aparte.
+
+**`GET /admin/tickets/:id`** (nuevo endpoint) — devuelve el ticket completo
+más su hilo de mensajes (`supportTickets/{id}/messages`, orden ascendente
+por `createdAt`, máx. 200). El frontend lo usa para abrir el detalle del
+ticket.
+
+**`corrections/{id}` — campos nuevos:**
+`questionTestId`, `questionAxis`, `questionDifficulty`, `questionStatement`
+(recortado a 120 caracteres) — denormalizados de la pregunta al momento de
+la solicitud, así la cola de recorrecciones se puede mostrar sin permiso de
+gerencia; `proposedAnswer`; `potentialReward` (`{tier, amount}`, la regla
+fija de 250 medallas de bronce); `rewardGranted` ahora se persiste en el
+documento (antes solo viajaba en la respuesta); `questionPatch` (copia de lo
+aplicado); `note` (nota del revisor, visible al alumno); `resolvedByName`.
+`GET /admin/corrections` ahora expone `meta.pendingCount` y acepta
+`status=all`. El `PATCH` rechaza con `409 ALREADY_RESOLVED` si la solicitud
+ya no está `pending` (evita otorgar la recompensa dos veces).
+
+**Frontend (`Users.jsx`):**
+- Tabla de tickets: columna de número (`#1042`) en vez del id interno,
+  categoría bajo el asunto, antigüedad calculada (`ageLabel`).
+- `TicketDialog` ahora es un panel de detalle completo: pide
+  `GET /tickets/:id` al abrir, muestra el hilo de mensajes (con distinción
+  visual para notas internas), permite responder al alumno y agregar una
+  nota interna por separado, cambiar estado/prioridad/asignado, y muestra
+  categoría/canal/correo del alumno y fecha de cierre.
+- `CorrectionDialog`: muestra la respuesta propuesta por el alumno y un
+  campo de nota del revisor; usa `questionStatement` denormalizado como
+  respaldo cuando el rol no tiene acceso a `/questions`.
+- Nuevas clases CSS `.msg-thread`/`.msg` en `styles.css` para el hilo.
+- `i18n.js`: se corrigieron las claves de `reason` (el enum real es
+  `wrong_answer|ambiguous|typo|bad_explanation|other`; antes faltaban
+  `reason_ambiguous` y `reason_bad_explanation`, y sobraba `reason_unclear`)
+  y se agregaron las claves de categoría/canal/hilo de mensajes.
+
+**`seed/seed.js`** — reescrito para el modelo completo: IDs de ticket y de
+mensaje **fijos** (no aleatorios) para que `npm run seed` siga siendo
+idempotente (sobrescribe los mismos documentos en vez de acumular
+duplicados en cada corrida); el contador `counters/ticketNumber` queda
+sembrado en el número máximo sembrado (1042), listo para que el próximo
+ticket real (creado por la app del alumno, fuera del alcance del admin)
+saque el siguiente número con `nextTicketNumber()`.
+
+**Deliberadamente fuera de este alcance** (para no invadir otros ítems de
+la tabla de Fase 2 más arriba):
+- Ítem **#4** (medallas): el documento describe que confirmar una
+  recorrección también debería escribir en una subcolección
+  `users/{uid}/medalLedger`. Esto sigue usando el campo plano
+  `users.badges`, tal como estaba, porque la migración de medallas a
+  subcolección es su propio ítem pendiente en la tabla (no forma parte de
+  tickets/recorrecciones).
+- No se agregó ningún endpoint nuevo para listar agentes (`adminUsers`)
+  para el selector de "asignado a"; se mantiene el campo de texto libre
+  con el ID del agente, igual que antes.
