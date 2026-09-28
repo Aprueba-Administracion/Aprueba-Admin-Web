@@ -22,6 +22,17 @@ function withAge(t) {
   return { ...t, ageSeconds: secs, ageLabel, age: ageLabel };
 }
 
+// GET /admin/agents — lista los adminUsers que pueden recibir tickets
+// (roles support/admin), para que la consola ofrezca un <select> real en
+// vez de un campo de texto libre con el id del agente (ver MODELO_CAMBIOS.md).
+r.get('/agents', requireRole('support'), wrap(async (req, res) => {
+  const all = await listAll(COL.adminUsers);
+  const agents = all
+    .filter((u) => ['support', 'admin'].includes(u.role))
+    .map((u) => ({ id: u.id, name: u.name, role: u.role }));
+  return ok(res, agents);
+}));
+
 r.get('/tickets', requireRole('support'), wrap(async (req, res) => {
   const all = await listAll(COL.tickets);
   const openCount = all.filter((t) => t.status === 'open' || t.status === 'progress').length;

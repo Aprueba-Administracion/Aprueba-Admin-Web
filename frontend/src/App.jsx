@@ -65,8 +65,13 @@ export default function App() {
 function Guard({ view, ctx }) {
   const { canAccess } = useAuth();
   const loc = useLocation();
+  // Si el rol actual no puede ver esta ruta —típicamente porque quedó
+  // apuntando a una vista de otro rol al cambiar de cuenta sin recargar la
+  // página (logout + login con otro usuario, misma pestaña)— se redirige a
+  // Resumen en vez de mostrar el aviso de "sin acceso": esa vista ni
+  // siquiera debería quedar "abierta" para un rol que no la tiene.
   if (!canAccess(view.roles)) {
-    return <div className="card" style={{ marginTop: 8 }}><b>⛔ {ctx.L('no_access')}</b></div>;
+    return <Navigate to="/" replace />;
   }
   const El = view.el;
   return <El ctx={ctx} key={loc.pathname} />;

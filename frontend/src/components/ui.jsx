@@ -10,6 +10,38 @@ export function Kpi({ label, value, delta, up, ic }) {
   );
 }
 
+// Mini-tendencia decorativa que usan las tarjetas KPI con degradado (Resumen,
+// Comercial, Sponsors). El color por defecto es 'currentColor': hereda el
+// tono que le da la clase .kpi-tile.<tono> .kpi-spark del contenedor.
+export function Sparkline({ color = 'currentColor', width = 70, height = 22 }) {
+  return (
+    <svg viewBox="0 0 100 24" width={width} height={height} style={{ overflow: 'visible' }}>
+      <path d="M 2,18 Q 20,22 35,16 T 65,10 T 85,14 T 98,4" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Tarjeta KPI con degradado suave del color `tone` (blue|green|purple|orange,
+// ver var(--kpi-<tono>-*) en styles.css) y un ícono grande translúcido de
+// fondo, en vez de un emoji + color sólido. Mismo tratamiento visual que las
+// tarjetas de Resumen/Comercial/Sponsors — úsala en cualquier vista nueva
+// para mantener consistencia.
+export function TopKpiCard({ label, value, delta, icon: IconComponent, tone }) {
+  return (
+    <div className={`kpi-tile ${tone}`}>
+      <div className="kpi-ic"><IconComponent size={95} /></div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-val">{value}</div>
+        {delta && <div className="kpi-delta up">▲ {delta}</div>}
+      </div>
+      <div className="kpi-spark">
+        <Sparkline width="100%" height={24} />
+      </div>
+    </div>
+  );
+}
+
 export function Card({ children, className = '', style }) {
   return <div className={`card ${className}`} style={style}>{children}</div>;
 }
@@ -790,6 +822,34 @@ export function IconStar({ size = 16 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+// ── Usuarios y soporte: mismos íconos de línea que las tarjetas KPI de arriba ──
+export function IconCheckCircle({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="8 12.5 11 15.5 16 9" />
+    </svg>
+  );
+}
+
+export function IconBan({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+    </svg>
+  );
+}
+
+export function IconTicket({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z" />
+      <line x1="10" y1="7" x2="10" y2="17" strokeDasharray="2.2 2.2" />
     </svg>
   );
 }

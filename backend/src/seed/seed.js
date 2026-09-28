@@ -43,14 +43,73 @@ const sponsors = [
   { id: 'spo_5', name: 'EdiTextos PAES', tier: 'Silver', monthlyFee: 1300, benefitsOffered: 2, benefitsRedeemed: 170, status: 'ok' },
 ];
 
-const users = [
-  { id: 'usr_1', name: 'Camila Rojas', email: 'camila@correo.cl', country: 'CL', plan: 'all', state: 'active', lastActivity: 'hoy', badges: 412, subscription: { id: 'sub_77', status: 'active' }, groups: 2 },
-  { id: 'usr_2', name: 'Juan López', email: 'juan@correo.cl', country: 'CL', plan: 'uni', state: 'active', lastActivity: 'hoy', badges: 188, subscription: { id: 'sub_78', status: 'active' }, groups: 1 },
-  { id: 'usr_3', name: 'Andrea Muñoz', email: 'andrea@correo.cl', country: 'CL', plan: 'free', state: 'active', lastActivity: 'ayer', badges: 54, groups: 0 },
-  { id: 'usr_4', name: 'Tomás Gana', email: 'tomas@correo.cl', country: 'PE', plan: 'free', state: 'suspended', lastActivity: '12 may', badges: 31, groups: 0 },
-  { id: 'usr_5', name: 'María Vidal', email: 'maria@correo.cl', country: 'CL', plan: 'all', state: 'active', lastActivity: 'hoy', badges: 276, subscription: { id: 'sub_80', status: 'active' }, groups: 3 },
-  { id: 'usr_6', name: 'Diego Soto', email: 'diego@correo.cl', country: 'CL', plan: 'uni', state: 'churned', lastActivity: '02 abr', badges: 140, groups: 1 },
+// users/{uid} al pie de la letra del modelo canónico de Max (modelo.txt):
+// se agregan nameLower/emailLower, authProvider, planStatus/planSource,
+// stateChangedAt/suspension/sessionsRevokedAt, pendingEmail, streak,
+// lastActiveDate/lastActiveAt (el rótulo "hoy/ayer/N d" YA NO se guarda,
+// se calcula en el backend igual que `age` en tickets — ver withActivity()
+// en routes/users.js), medals/badgesTotal (reemplaza el `badges` plano),
+// lastAdminAction (reemplaza los campos sueltos auditedBy/auditedAt/
+// lastActionReason que se usaban antes) y createdAt/updatedAt.
+// Se descartan `subscription` y `groups`: no están en la tabla de campos
+// de users/{uid} del documento (las suscripciones son su propia colección,
+// fuera de alcance por ahora; ver MODELO_CAMBIOS.md).
+const usersRaw = [
+  {
+    id: 'usr_1', name: 'Camila Rojas', email: 'camila@correo.cl', authProvider: 'google', country: 'CL',
+    plan: 'all', planStatus: 'active', planSource: 'subscription', state: 'active',
+    streak: 23, lastActiveAt: hoursAgo(1), badgesBronze: 412, stripeCustomerId: 'cus_QaBcDeFgHi',
+    createdAt: daysAgo(220),
+  },
+  {
+    id: 'usr_2', name: 'Juan López', email: 'juan@correo.cl', authProvider: 'password', country: 'CL',
+    plan: 'uni', planStatus: 'active', planSource: 'subscription', state: 'active',
+    streak: 9, lastActiveAt: hoursAgo(3), badgesBronze: 188, stripeCustomerId: 'cus_JlKmNoPqRs',
+    pendingEmail: 'juan.nuevo@correo.cl', createdAt: daysAgo(150),
+  },
+  {
+    id: 'usr_3', name: 'Andrea Muñoz', email: 'andrea@correo.cl', authProvider: 'password', country: 'CL',
+    plan: 'free', planStatus: 'none', planSource: 'free', state: 'active',
+    streak: 2, lastActiveAt: daysAgo(1), badgesBronze: 54, createdAt: daysAgo(80),
+  },
+  {
+    id: 'usr_4', name: 'Tomás Gana', email: 'tomas@correo.cl', authProvider: 'apple', country: 'PE',
+    plan: 'free', planStatus: 'none', planSource: 'free', state: 'suspended',
+    streak: 0, lastActiveAt: daysAgo(120), badgesBronze: 31, createdAt: daysAgo(200),
+    stateChangedAt: daysAgo(5),
+    suspension: { reason: 'Reporte de fraude en recorrecciones', by: 'adm_1', at: daysAgo(5) },
+    sessionsRevokedAt: daysAgo(5),
+    lastAdminAction: { action: 'suspend', reason: 'Reporte de fraude en recorrecciones', by: 'adm_1', at: daysAgo(5) },
+  },
+  {
+    id: 'usr_5', name: 'María Vidal', email: 'maria@correo.cl', authProvider: 'google', country: 'CL',
+    plan: 'all', planStatus: 'active', planSource: 'subscription', state: 'active',
+    streak: 15, lastActiveAt: hoursAgo(2), badgesBronze: 276, stripeCustomerId: 'cus_MvNbXcVbNm',
+    createdAt: daysAgo(300),
+  },
+  {
+    id: 'usr_6', name: 'Diego Soto', email: 'diego@correo.cl', authProvider: 'password', country: 'CL',
+    plan: 'uni', planStatus: 'canceled', planSource: 'subscription', state: 'churned',
+    streak: 0, lastActiveAt: daysAgo(179), badgesBronze: 140, createdAt: daysAgo(400),
+    stateChangedAt: daysAgo(179),
+  },
 ];
+
+const users = usersRaw.map(({ badgesBronze, ...u }) => ({
+  ...u,
+  nameLower: u.name.toLowerCase(),
+  emailLower: u.email.toLowerCase(),
+  stateChangedAt: u.stateChangedAt ?? null,
+  suspension: u.suspension ?? null,
+  sessionsRevokedAt: u.sessionsRevokedAt ?? null,
+  pendingEmail: u.pendingEmail ?? null,
+  lastActiveDate: u.lastActiveAt.slice(0, 10),
+  medals: { bronze: badgesBronze, silver: 0, gold: 0, diamond: 0, platinum: 0 },
+  badgesTotal: badgesBronze,
+  lastAdminAction: u.lastAdminAction ?? null,
+  stripeCustomerId: u.stripeCustomerId ?? null,
+  updatedAt: u.createdAt,
+}));
 
 // Fase 2 #1, al pie de la letra del documento canónico de Max: colección
 // renombrada a supportTickets, campo `state` → `status`, más los campos

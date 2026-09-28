@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, qs } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import {
-  Kpi, Card, Loading, ErrorBox, EmptyState, Modal, Field, FormGrid, Select,
+  TopKpiCard, Card, Loading, ErrorBox, EmptyState, Modal, Field, FormGrid, Select,
   Tabs, Toast, useToast, KV, Pill, Pager,
+  IconUsers, IconCheckCircle, IconBan, IconTicket,
 } from '../components/ui.jsx';
 
 const USER_STATES = ['active', 'suspended', 'churned'];
@@ -19,9 +20,46 @@ const CHANNELS = ['app', 'web', 'email'];
 const CONFIRM_REWARD = 250;
 // Planes conocidos por si el rol no puede leer /admin/plans (solo gerencia).
 const FALLBACK_PLANS = [{ id: 'free', name: 'Gratis' }, { id: 'uni', name: '1 prueba' }, { id: 'all', name: 'Todas' }];
+// Agentes conocidos por si /admin/agents falla (mismo criterio de respaldo que FALLBACK_PLANS).
+const FALLBACK_AGENTS = [{ id: 'adm_1', name: 'Admin General', role: 'admin' }, { id: 'adm_4', name: 'Soporte', role: 'support' }];
 
 const PAGE_SIZE = 20;
 const initials = (name) => String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+// Iconos del panel de detalle de usuario (estilo que ya usaba Amaru en su
+// versión de Usuarios; se mantienen como SVG inline en vez de emojis).
+const SvgSearch = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+const SvgEdit = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+const SvgCreditCard = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+  </svg>
+);
+const SvgClock = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+const SvgAward = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+  </svg>
+);
+const SvgCalendar = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
 
 export default function Users({ ctx }) {
   const { L, fmt, lang } = ctx;
@@ -41,6 +79,13 @@ export default function Users({ ctx }) {
   const [uTotal, setUTotal] = useState(0);
   const [uNext, setUNext] = useState(null);
   const [uErr, setUErr] = useState(null);
+  // Conteos globales para los KPI (antes se calculaban solo sobre la página
+  // de usuarios cargada, lo que subcontaba si había más de una página).
+  const [uStats, setUStats] = useState(null);
+  // Usuario elegido en la lista para ver el panel de detalle al lado
+  // (estilo maestro-detalle, en vez del modal antiguo para "ver ficha").
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSubTab, setUserSubTab] = useState('summary');
 
   // ── tickets / recorrecciones ──
   // Los filtros usan `status` (no `state`) desde Fase 2 #1/#6, alineado al
@@ -55,10 +100,17 @@ export default function Users({ ctx }) {
 
   // ── catálogos auxiliares ──
   const [plans, setPlans] = useState(null);
+  const [agents, setAgents] = useState(null);
   const [questionsById, setQuestionsById] = useState(null);
 
   const planOptions = (plans || FALLBACK_PLANS).map((p) => ({ value: p.id, label: p.name }));
   const planName = (id) => (plans || FALLBACK_PLANS).find((p) => p.id === id)?.name || id || L('none');
+  const agentOptions = (agents || FALLBACK_AGENTS).map((a) => ({ value: a.id, label: a.name }));
+  const agentName = (id) => (agents || FALLBACK_AGENTS).find((a) => a.id === id)?.name || id;
+
+  const loadUserStats = useCallback(async () => {
+    try { setUStats((await api.get('/users/stats')).data); } catch { /* las tarjetas simplemente no muestran conteo */ }
+  }, []);
 
   const loadUsers = useCallback(async (f, cursor) => {
     setUErr(null);
@@ -67,6 +119,9 @@ export default function Users({ ctx }) {
       setUsers(r.data);
       setUTotal(r.meta?.pagination?.total ?? r.data.length);
       setUNext(r.meta?.pagination?.nextCursor ?? null);
+      // Si el usuario abierto en el panel de detalle sigue en la página
+      // recargada, se refresca con los datos nuevos; si no, se deja como está.
+      setSelectedUser((prev) => (prev ? r.data.find((u) => u.id === prev.id) || prev : null));
     } catch (e) { setUErr(e.message); }
   }, []);
 
@@ -82,6 +137,11 @@ export default function Users({ ctx }) {
 
   // El catálogo de planes solo lo puede leer gerencia; si falla, se usa el fallback.
   useEffect(() => { api.get('/plans').then((r) => setPlans(r.data)).catch(() => setPlans(null)); }, []);
+  // Agentes válidos para asignar tickets (roles support/admin); si el endpoint
+  // falla se usa el fallback fijo.
+  useEffect(() => { api.get('/agents').then((r) => setAgents(r.data)).catch(() => setAgents(null)); }, []);
+
+  useEffect(() => { loadUserStats(); }, [loadUserStats]);
 
   // Cada bloque recarga cuando cambian sus filtros (la primera ejecución hace la carga inicial).
   useEffect(() => { setCursors([null]); setPage(0); loadUsers(uFilters, null); }, [uFilters, loadUsers]);
@@ -115,14 +175,6 @@ export default function Users({ ctx }) {
   const openTickets = (tickets || []).filter((x) => x.status !== 'closed').length;
   const pendingCor = (corrections || []).filter((x) => (x.status || 'pending') === 'pending').length;
 
-  const kpis = useMemo(() => {
-    const list = users || [];
-    return {
-      active: list.filter((x) => x.state === 'active').length,
-      suspended: list.filter((x) => x.state === 'suspended').length,
-    };
-  }, [users]);
-
   const run = async (fn, okMsg) => {
     setBusy(true);
     try {
@@ -134,7 +186,11 @@ export default function Users({ ctx }) {
   };
 
   const patchUser = async (u, patch) => {
-    if (await run(() => api.patch(`/users/${u.id}`, patch), L('saved_ok'))) loadUsers(uFilters, cursors[page]);
+    if (await run(() => api.patch(`/users/${u.id}`, patch), L('saved_ok'))) {
+      loadUsers(uFilters, cursors[page]);
+      // Un cambio de estado (suspender/reactivar) mueve los conteos globales.
+      if ('state' in patch) loadUserStats();
+    }
   };
 
   const patchTicket = async (tk, patch) => {
@@ -162,10 +218,10 @@ export default function Users({ ctx }) {
   return (
     <>
       <div className="grid g4">
-        <Kpi ic="👥" label={L('u_total')} value={fmt(uTotal)} />
-        <Kpi ic="🟢" label={L('u_active')} value={fmt(kpis.active)} />
-        <Kpi ic="⛔" label={L('u_suspended')} value={fmt(kpis.suspended)} />
-        <Kpi ic="🎫" label={L('u_tickets')} value={fmt(openTickets)} />
+        <TopKpiCard label={L('u_total')} value={fmt(uStats?.total ?? uTotal)} icon={IconUsers} tone="blue" />
+        <TopKpiCard label={L('u_active')} value={uStats ? fmt(uStats.active) : '…'} icon={IconCheckCircle} tone="blue" />
+        <TopKpiCard label={L('u_suspended')} value={uStats ? fmt(uStats.suspended) : '…'} icon={IconBan} tone="blue" />
+        <TopKpiCard label={L('u_tickets')} value={fmt(openTickets)} icon={IconTicket} tone="blue" />
       </div>
 
       <div style={{ marginTop: 18 }}>
@@ -179,7 +235,13 @@ export default function Users({ ctx }) {
       {tab === 'users' && (
         <Card className="tab-fade">
           <div className="filters" style={{ marginBottom: 12 }}>
-            <input className="grow" placeholder={L('u_search')} value={search} onChange={(e) => setSearch(e.target.value)} />
+            <div style={{ position: 'relative', flex: '1 1 240px' }}>
+              <input className="grow" style={{ width: '100%', paddingLeft: 32 }} placeholder={L('u_search')}
+                value={search} onChange={(e) => setSearch(e.target.value)} />
+              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', display: 'flex' }}>
+                <SvgSearch />
+              </span>
+            </div>
             <Select value={uFilters.plan} onChange={(v) => setUFilters((f) => ({ ...f, plan: v }))}
               options={planOptions} placeholder={`${L('u_plan')}: ${L('filter_all')}`} />
             <Select value={uFilters.state} onChange={(v) => setUFilters((f) => ({ ...f, state: v }))}
@@ -188,33 +250,123 @@ export default function Users({ ctx }) {
           </div>
           {uErr && <ErrorBox msg={uErr} onRetry={() => loadUsers(uFilters, cursors[page])} L={L} />}
           {users?.length === 0 ? <EmptyState msg={L('u_no_users')} ic="👥" /> : (
-            <div className="tbl-wrap"><table>
-              <thead><tr>
-                <th>{L('u_name')}</th><th>{L('u_plan')}</th><th>{L('u_state')}</th>
-                <th>{L('u_last')}</th><th>{L('u_badges')}</th><th />
-              </tr></thead>
-              <tbody>{(users || []).map((x) => (
-                <tr key={x.id}>
-                  <td><div className="flex">
-                    <div className="avatar">{initials(x.name)}</div>
-                    <div><b style={{ fontSize: 13 }}>{x.name}</b><div className="note">{x.email}</div></div>
-                  </div></td>
-                  <td><span className="tag">{planName(x.plan)}</span></td>
-                  <td><Pill value={x.state} map={STATE_TAG} L={L} /></td>
-                  <td className="note">{x.lastActivity || L('none')}</td>
-                  <td><b>{fmt(x.badges)}</b> 🏅</td>
-                  <td><div className="row-acts">
-                    <button className="btn sec sm" onClick={() => openUser(x)}>{L('view')}</button>
-                    <button className="btn sec sm"
-                      onClick={() => patchUser(x, { state: x.state === 'suspended' ? 'active' : 'suspended', reason: 'Acción rápida desde consola' })}>
-                      {x.state === 'suspended' ? L('u_reactivate') : L('u_suspend')}
-                    </button>
-                  </div></td>
-                </tr>
-              ))}</tbody>
-            </table></div>
+            // Lista maestro-detalle: la tabla se reemplazó por tarjetas de usuario
+            // + un panel de detalle al lado (con sub-pestañas), estilo que ya
+            // había hecho Amaru; se conserva la paginación y los filtros de antes.
+            <div className="u-split" style={{ gridTemplateColumns: selectedUser ? '460px 1fr' : '1fr' }}>
+              <div className="u-list">
+                <div className="u-rows">
+                  {(users || []).map((x) => {
+                    const isSel = selectedUser?.id === x.id;
+                    return (
+                      <div key={x.id} className={`u-row ${isSel ? 'sel' : ''}`}>
+                        <div className="flex" style={{ gap: 12, flex: '1 1 200px', minWidth: 0 }}>
+                          <div className="avatar">{initials(x.name)}</div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                            <div className="note" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.email}</div>
+                          </div>
+                        </div>
+                        <Pill value={x.state} map={STATE_TAG} L={L} />
+                        <button type="button" className={`btn sm ${isSel ? '' : 'sec'}`}
+                          onClick={() => { setSelectedUser(isSel ? null : x); setUserSubTab('summary'); }}
+                          style={{ whiteSpace: 'nowrap' }}>
+                          {isSel ? L('u_close_detail') : L('u_view_detail')}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 10 }}>
+                  <Pager page={page} shown={users?.length || 0} total={uTotal} hasNext={!!uNext} onNext={goNext} onPrev={goPrev} L={L} />
+                </div>
+              </div>
+
+              {selectedUser && (
+                <div className="u-detail">
+                  <div className="flex" style={{ justifyContent: 'space-between', marginBottom: 20, alignItems: 'flex-start' }}>
+                    <div className="flex" style={{ gap: 14 }}>
+                      <div className="avatar" style={{ width: 52, height: 52, fontSize: 18 }}>{initials(selectedUser.name)}</div>
+                      <div>
+                        <div className="flex" style={{ gap: 10 }}>
+                          <h2 style={{ margin: 0, fontSize: 18 }}>{selectedUser.name}</h2>
+                          <Pill value={selectedUser.state} map={STATE_TAG} L={L} />
+                        </div>
+                        <span className="note">{selectedUser.email}</span>
+                      </div>
+                    </div>
+                    <div className="flex" style={{ gap: 8 }}>
+                      <button type="button" className="btn sec sm" onClick={() => openUser(selectedUser)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SvgEdit /><span>{L('edit')}</span>
+                      </button>
+                      <button type="button" className="btn sec sm" disabled={busy}
+                        onClick={() => patchUser(selectedUser, { state: selectedUser.state === 'suspended' ? 'active' : 'suspended', reason: 'Acción rápida desde consola' })}>
+                        {selectedUser.state === 'suspended' ? L('u_reactivate') : L('u_suspend')}
+                      </button>
+                      <button type="button" onClick={() => setSelectedUser(null)} title={L('u_close_detail')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 16, padding: '4px 6px' }}>
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="u-subtabs">
+                    {[
+                      { id: 'summary', label: L('u_summary_tab') },
+                      { id: 'activity', label: L('u_activity_tab') },
+                      { id: 'tickets', label: L('tab_tickets') },
+                      { id: 'corrections', label: L('tab_corrections') },
+                    ].map((st) => (
+                      <button key={st.id} type="button" className={`u-subtab ${userSubTab === st.id ? 'on' : ''}`}
+                        onClick={() => setUserSubTab(st.id)}>{st.label}</button>
+                    ))}
+                  </div>
+
+                  {userSubTab === 'summary' && (
+                    <div className="u-stats">
+                      <div className="u-stat"><span className="u-stat-ic"><SvgCreditCard /></span>
+                        <div><div className="note">{L('u_plan')}</div><div style={{ fontWeight: 700 }}>{planName(selectedUser.plan)}</div></div></div>
+                      <div className="u-stat"><span className="u-stat-ic"><SvgClock /></span>
+                        <div><div className="note">{L('u_last')}</div><div style={{ fontWeight: 700 }}>{selectedUser.lastActiveLabel || L('none')}</div></div></div>
+                      <div className="u-stat"><span className="u-stat-ic"><SvgAward /></span>
+                        <div><div className="note">{L('u_badges')}</div><div style={{ fontWeight: 700 }}>{fmt(selectedUser.badgesTotal ?? 0)}</div></div></div>
+                      <div className="u-stat"><span className="u-stat-ic"><SvgCalendar /></span>
+                        <div><div className="note">{L('u_registered')}</div>
+                          <div style={{ fontWeight: 700 }}>
+                            {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US') : L('none')}
+                          </div>
+                        </div></div>
+                    </div>
+                  )}
+
+                  {userSubTab === 'activity' && (
+                    <p className="note" style={{ padding: '24px 0', textAlign: 'center' }}>{L('u_no_activity')}</p>
+                  )}
+
+                  {userSubTab === 'tickets' && (() => {
+                    const own = (tickets || []).filter((tk) => tk.userId === selectedUser.id || tk.userName === selectedUser.name);
+                    return own.length === 0 ? <EmptyState msg={L('u_no_user_tickets')} ic="🎫" /> : own.map((tk) => (
+                      <div key={tk.id} className="u-mini-row">
+                        <div><b>#{tk.number ?? tk.id}</b> {tk.subject}</div>
+                        <Pill value={tk.status} map={TICKET_TAG} L={L} />
+                      </div>
+                    ));
+                  })()}
+
+                  {userSubTab === 'corrections' && (() => {
+                    const own = (corrections || []).filter((c) => c.userId === selectedUser.id || c.userName === selectedUser.name);
+                    return own.length === 0 ? <EmptyState msg={L('u_no_user_corrections')} ic="⚑" /> : own.map((c) => (
+                      <div key={c.id} className="u-mini-row">
+                        <div><b>{c.questionStatement || c.questionId}</b>: <span className="note">{c.comment}</span></div>
+                        <Pill value={c.status || 'pending'} map={COR_TAG} L={L} />
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+            </div>
           )}
-          <Pager page={page} shown={users?.length || 0} total={uTotal} hasNext={!!uNext} onNext={goNext} onPrev={goPrev} L={L} />
         </Card>
       )}
 
@@ -230,7 +382,7 @@ export default function Users({ ctx }) {
           </div>
           {tErr && <ErrorBox msg={tErr} onRetry={() => loadTickets(tFilters)} L={L} />}
           {!tickets ? <Loading L={L} /> : tickets.length === 0 ? <EmptyState msg={L('t_no_tickets')} ic="🎫" /> : (
-            <div className="tbl-wrap"><table>
+            <div className="tbl-wrap pretty"><table>
               <thead><tr>
                 <th>{L('t_number')}</th><th>{L('t_subj')}</th><th>{L('t_user')}</th>
                 <th>{L('t_pri')}</th><th>{L('t_state')}</th><th>{L('t_age')}</th><th />
@@ -267,7 +419,7 @@ export default function Users({ ctx }) {
           {!isAdmin && <p className="note" style={{ marginBottom: 10 }}>ℹ️ {L('co_needs_admin')}</p>}
           {cErr && <ErrorBox msg={cErr} onRetry={() => loadCorrections(cFilters)} L={L} />}
           {!corrections ? <Loading L={L} /> : corrections.length === 0 ? <EmptyState msg={L('co_no_items')} ic="⚑" /> : (
-            <div className="tbl-wrap"><table>
+            <div className="tbl-wrap pretty"><table>
               <thead><tr>
                 <th>{L('co_question')}</th><th>{L('co_user')}</th><th>{L('co_reason')}</th>
                 <th>{L('co_comment')}</th><th>{L('t_state')}</th><th>{L('co_created')}</th><th />
@@ -306,7 +458,7 @@ export default function Users({ ctx }) {
       )}
 
       {dialog?.kind === 'ticket' && (
-        <TicketDialog ticket={dialog.ticket} ctx={ctx} busy={busy} me={me}
+        <TicketDialog ticket={dialog.ticket} ctx={ctx} busy={busy} me={me} agentOptions={agentOptions}
           onClose={() => setDialog(null)} onSave={(patch) => patchTicket(dialog.ticket, patch)} />
       )}
 
@@ -325,28 +477,31 @@ export default function Users({ ctx }) {
 
 function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, onClose, onSave }) {
   const { L, fmt } = ctx;
-  const [email, setEmail] = useState(user.email || '');
+  const [pendingEmail, setPendingEmail] = useState(user.pendingEmail || '');
   const [plan, setPlan] = useState(user.plan || '');
   const [state, setState] = useState(user.state || 'active');
   const [reason, setReason] = useState('');
 
   // Cuando llega el detalle completo del API se refrescan los campos editables.
   useEffect(() => {
-    setEmail(user.email || ''); setPlan(user.plan || ''); setState(user.state || 'active');
+    setPendingEmail(user.pendingEmail || ''); setPlan(user.plan || ''); setState(user.state || 'active');
   }, [user]);
 
-  const dirty = email !== (user.email || '') || plan !== (user.plan || '') || state !== (user.state || 'active');
+  const dirty = pendingEmail !== (user.pendingEmail || '') || plan !== (user.plan || '') || state !== (user.state || 'active');
 
-  // El PATCH del API es parcial: solo se envía lo que cambió.
+  // El PATCH del API es parcial: solo se envía lo que cambió. La consola ya
+  // no escribe el `email` real (espejo de Firebase Auth), solo pendingEmail.
   const submit = () => {
     const patch = {};
-    if (email !== (user.email || '')) patch.email = email;
+    if (pendingEmail !== (user.pendingEmail || '')) patch.pendingEmail = pendingEmail || null;
     if (plan !== (user.plan || '')) patch.plan = plan;
     if (state !== (user.state || 'active')) patch.state = state;
     if (reason.trim()) patch.reason = reason.trim();
     if (!Object.keys(patch).length) { onClose(); return; }
     onSave(patch);
   };
+
+  const la = user.lastAdminAction;
 
   return (
     <Modal wide busy={busy} title={L('u_detail')} subtitle={user.id} onClose={onClose}
@@ -370,22 +525,32 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
               <div className="section-label" style={{ marginTop: 0 }}>{L('u_detail')}</div>
               <KV k={L('u_id')} v={user.id} />
               <KV k={L('u_country')} v={user.country} />
-              <KV k={L('u_badges')} v={`${fmt(user.badges)} 🏅`} />
-              <KV k={L('u_groups')} v={user.groups ?? 0} />
-              <KV k={L('u_last')} v={user.lastActivity} />
-              <KV k={L('u_subscription')} v={user.subscription ? `${user.subscription.id} · ${user.subscription.status}` : L('none')} />
+              <KV k={L('u_provider')} v={L(`provider_${user.authProvider}`)} />
+              <KV k={L('u_plan_status')} v={L(`plan_status_${user.planStatus}`)} />
+              <KV k={L('u_plan_source')} v={L(`plan_source_${user.planSource}`)} />
+              <KV k={L('u_streak')} v={fmt(user.streak ?? 0)} />
+              <KV k={L('u_badges')} v={`${fmt(user.badgesTotal ?? 0)} 🏅`} />
+              <KV k={L('u_last')} v={user.lastActiveLabel || L('none')} />
+              <KV k={L('u_pending_email')} v={user.pendingEmail || L('none')} />
             </Card>
             <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('u_audit')}</div>
-              <KV k={L('u_audit_by')} v={user.auditedBy} />
-              <KV k={L('u_audit')} v={user.auditedAt ? new Date(user.auditedAt).toLocaleString() : L('none')} />
-              <KV k={L('u_last_reason')} v={user.lastActionReason} />
+              <div className="section-label" style={{ marginTop: 0 }}>{L('u_last_admin_action')}</div>
+              {la ? (
+                <>
+                  <KV k={L('u_last_admin_action')} v={L(`admin_action_${la.action}`)} />
+                  <KV k={L('u_admin_by')} v={la.by} />
+                  <KV k={L('u_admin_reason')} v={la.reason || L('none')} />
+                  <KV k={L('u_admin_when')} v={la.at ? new Date(la.at).toLocaleString() : L('none')} />
+                </>
+              ) : <p className="note">{L('none')}</p>}
             </Card>
           </div>
 
           <div className="section-label">{L('edit')}</div>
           <FormGrid>
-            <Field label={L('u_email')}><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+            <Field label={L('u_pending_email')} hint={L('u_pending_email_ph')}>
+              <input type="email" value={pendingEmail} onChange={(e) => setPendingEmail(e.target.value)} />
+            </Field>
             <Field label={L('u_plan')} hint={plansUnavailable ? L('u_plans_unavailable') : undefined}>
               <Select value={plan} onChange={setPlan} options={planOptions} placeholder={L('none')} />
             </Field>
@@ -402,7 +567,7 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
   );
 }
 
-function TicketDialog({ ticket, ctx, busy, me, onClose, onSave }) {
+function TicketDialog({ ticket, ctx, busy, me, agentOptions, onClose, onSave }) {
   const { L } = ctx;
   const [detail, setDetail] = useState(null);
   const [loadErr, setLoadErr] = useState(null);
@@ -478,7 +643,8 @@ function TicketDialog({ ticket, ctx, busy, me, onClose, onSave }) {
         </Field>
         <Field wide label={L('t_assignee')} hint={!assigneeId ? L('t_unassigned') : t.assigneeName}>
           <div className="flex" style={{ gap: 8 }}>
-            <input style={{ flex: 1 }} value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} placeholder={me?.id} />
+            <Select value={assigneeId} onChange={setAssigneeId} placeholder={L('t_unassigned')}
+              options={agentOptions} style={{ flex: 1 }} />
             <button className="btn sec sm" type="button" onClick={() => setAssigneeId(me?.id || '')}>{L('t_assign_me')}</button>
           </div>
         </Field>

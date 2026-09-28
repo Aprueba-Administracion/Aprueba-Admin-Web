@@ -325,6 +325,85 @@ la tabla de Fase 2 más arriba):
   `users.badges`, tal como estaba, porque la migración de medallas a
   subcolección es su propio ítem pendiente en la tabla (no forma parte de
   tickets/recorrecciones).
-- No se agregó ningún endpoint nuevo para listar agentes (`adminUsers`)
-  para el selector de "asignado a"; se mantiene el campo de texto libre
-  con el ID del agente, igual que antes.
+## Nuevo endpoint `GET /admin/agents`
+El "tomo" (documento de criterios de aceptación) pide que los tickets sean
+"editables (estado, prioridad, asignación)"; el campo de asignación existía
+en el backend (`PATCH /admin/tickets/:id` ya validaba `assigneeId` contra
+`adminUsers`), pero en la consola era un campo de texto libre donde había
+que escribir a mano el ID interno del agente — no era usable en la
+práctica ("en ningún lado permite asignarlo a nadie").
+
+Se agregó `GET /admin/agents` (mismo router de `tickets.js`, rol mínimo
+`support`) que lista los `adminUsers` con rol `support` o `admin` (los
+únicos que `PATCH /admin/tickets/:id` acepta como `assigneeId`), devolviendo
+solo `{id, name, role}`. `Users.jsx` lo consume para reemplazar el input de
+texto de "Asignado a" por un `<Select>` real con nombres, con el mismo
+patrón de respaldo fijo (`FALLBACK_AGENTS`) que ya usaba `planOptions` si
+`/admin/plans` no está disponible para el rol.
+
+## `users/{uid}` — modelo completo del documento de Max
+
+Al revisar por qué "Fecha de registro" salía vacía en la ficha del alumno,
+se detectó que la colección `users` seguía en su versión simplificada de
+antes de que existiera el documento canónico (`modelo.txt`): sin
+`createdAt`/`updatedAt` (campos **requeridos** en la tabla del documento),
+con el rastro de auditoría repartido en tres campos sueltos
+(`auditedBy`/`auditedAt`/`lastActionReason`) en vez del mapa único
+`lastAdminAction: {action, reason, by, at}` que pide el modelo, y sin
+`planStatus`/`planSource`/`state` machine completa. Se implementó al pie de
+la letra, igual que se hizo con `supportTickets`/`corrections` en Fase 2:
+
+**Campos nuevos en `users/{uid}`** (backend `routes/users.js` y
+`seed/seed.js`): `nameLower`/`emailLower` (búsqueda), `authProvider`
+(`password|google|apple`), `planStatus` (`none|active|past_due|canceled`),
+`planSource` (`subscription|manual`; se fija a `manual` automáticamente
+cuando soporte cambia el plan a mano, para que el sincronizador de Stripe
+no lo vuelva a pisar — así lo describe el propio documento), `state`
+(sin cambios) + `stateChangedAt` (timestamp de la última transición) +
+`suspension: {reason, by, at}` (solo mientras `state="suspended"`, `null`
+en otro caso) + `sessionsRevokedAt` (se fija automáticamente al
+suspender), `pendingEmail` (correo pendiente de verificación — **la
+consola ya no escribe el `email` real del alumno**, que es un espejo de
+Firebase Auth; solo puede dejar un `pendingEmail`), `streak`,
+`lastActiveDate`/`lastActiveAt` (el rótulo "hoy"/"ayer"/"N d" que muestra
+la tabla YA NO se guarda: se calcula en `GET /users` y `GET /users/:id`
+igual que `ageLabel` en tickets, ver `withActivity()`), `medals` (mapa por
+tier) + `badgesTotal` (reemplaza el `badges` plano anterior),
+`lastAdminAction` (reemplaza los tres campos sueltos de auditoría),
+`stripeCustomerId`, `createdAt`/`updatedAt`.
+
+**`PATCH /admin/users/:id`** ahora solo acepta `state`, `plan`,
+`planSource`, `pendingEmail` y `forceLogout` (booleano, fuerza
+`sessionsRevokedAt` sin cambiar el estado); cualquier cambio de estos deja
+un `lastAdminAction` con el motivo (`reason`) que mande la consola.
+Suspender además fija `suspension` y `sessionsRevokedAt` automáticamente;
+reactivar limpia `suspension`.
+
+**Nuevo `GET /admin/users/stats`** (mencionado en el documento de Max entre
+los lectores de `users/{uid}`, pero nunca implementado): antes las tarjetas
+KPI de "Activos"/"Suspendidos" en `Users.jsx` se calculaban en el frontend
+solo sobre los usuarios de la página cargada (`PAGE_SIZE=20`), lo que
+subcontaba si había más de una página. Ahora esas tarjetas usan el conteo
+global real de este endpoint.
+
+**Deliberadamente fuera de este alcance:**
+- Se eliminaron los campos `subscription` (objeto embebido ad-hoc) y
+  `groups` de `users/{uid}`: ninguno de los dos está en la tabla de campos
+  del documento. Las suscripciones reales son su propia colección raíz
+  (`subscriptions`, relación 1—N con `users` por `userId`) — implementarla
+  completa queda pendiente, no es parte de este alcance. La ficha ahora
+  muestra `planStatus`/`planSource` en su lugar, que es justamente lo que
+  el documento describe como "denormalizado de subscriptions o fijado
+  manualmente".
+- Las subcolecciones `users/{uid}/devices` y `users/{uid}/activityLog` no
+  se implementaron (la segunda requeriría una Cloud Function de fan-out
+  desde `answers`/`practiceSessions`/`medalLedger`/`benefitRedemptions`,
+  fuera de alcance de la consola de administración). La pestaña
+  "Actividad" del panel de detalle queda como placeholder, igual que antes.
+- `medalLedger` (subcolección de movimientos de medallas) sigue pendiente,
+  tal como se documentó en el ítem #4 de Fase 2: `badgesTotal`/`medals`
+  siguen siendo el campo plano en `users`, no una proyección de la
+  subcolección.
+- Los campos opcionales `school`/`region`/`age`/`locale` del documento
+  (marcados como no obligatorios) no se sembraron; no los usa ninguna
+  vista de la consola hoy.

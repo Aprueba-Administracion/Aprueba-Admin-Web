@@ -84,6 +84,14 @@ tr:last-child td{border-bottom:none}
 tbody tr{transition:background-color .12s}
 tbody tr:hover{background:var(--soft)}
 .tbl-wrap{overflow-x:auto}
+/* Variante un poco más prolija (encabezado con fondo suave + filas alternadas),
+   opt-in vía className extra para no cambiar el resto de las tablas del proyecto. */
+.tbl-wrap.pretty thead th{background:var(--soft);border-radius:0}
+.tbl-wrap.pretty thead th:first-child{border-top-left-radius:10px}
+.tbl-wrap.pretty thead th:last-child{border-top-right-radius:10px}
+.tbl-wrap.pretty td{padding:13px 10px}
+.tbl-wrap.pretty tbody tr:nth-child(even){background:var(--soft)}
+.tbl-wrap.pretty tbody tr:nth-child(even):hover,.tbl-wrap.pretty tbody tr:hover{background:var(--line)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--cta);color:var(--cta-ink);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat';transition:filter .12s,background-color .12s,border-color .12s}
 .btn.sec{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .btn.sm{padding:6px 10px;font-size:12px}
@@ -177,6 +185,23 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .msg.system{background:none;border-style:dashed;text-align:center;color:var(--muted);font-size:11px;padding:5px 10px}
 .msg.internal{border-color:var(--warn)}
 .msg-meta{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--muted);margin-bottom:3px}
+/* ── panel usuario + detalle (estilo de Amaru, Usuarios y soporte) ── */
+.u-split{display:grid;gap:18px;align-items:start}
+.u-list{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.u-rows{display:flex;flex-direction:column;gap:8px}
+.u-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);transition:.15s ease}
+.u-row:hover{background:var(--soft)}
+.u-row.sel{border-color:var(--brand);background:var(--soft)}
+.u-detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);position:sticky;top:16px}
+.u-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.u-stat{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px}
+.u-stat-ic{color:var(--brand);flex-shrink:0;display:flex}
+.u-subtabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.u-subtab{background:none;border:none;cursor:pointer;padding-bottom:9px;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.u-subtab.on{font-weight:700;color:var(--brand);border-bottom-color:var(--brand)}
+.u-timeline-row{display:flex;align-items:center;justify-content:space-between;padding:9px 4px}
+.u-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0}
+.u-mini-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
 /* ── valoraciones ── */
 .stars{display:inline-flex;align-items:center;gap:2px;font-size:13px;color:var(--line)}
 .stars .on{color:var(--cta)}
