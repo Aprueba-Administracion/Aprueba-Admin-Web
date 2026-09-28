@@ -202,6 +202,13 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .u-timeline-row{display:flex;align-items:center;justify-content:space-between;padding:9px 4px}
 .u-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0}
 .u-mini-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.u-stat-val{font-weight:700}
+/* Modificadores puntuales para no repetir el mismo style={{}} línea a línea
+   en Users.jsx (ver .filters/.section-label/.avatar base más arriba). */
+.filters.mb{margin-bottom:12px}
+.section-label.tight{margin-top:0}
+.avatar.md{width:44px;height:44px;font-size:15px}
+.avatar.lg{width:52px;height:52px;font-size:18px}
 /* ── valoraciones ── */
 .stars{display:inline-flex;align-items:center;gap:2px;font-size:13px;color:var(--line)}
 .stars .on{color:var(--cta)}

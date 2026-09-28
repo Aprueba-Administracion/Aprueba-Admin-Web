@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
-import { COL, listAll, getDoc, patchDoc } from '../data/repo.js';
+import { COL, listAll, getDoc, patchDoc, FieldValue } from '../data/repo.js';
 import { logAudit } from '../lib/audit.js';
 
 const r = Router();
@@ -41,9 +41,17 @@ r.patch('/corrections/:id', requireRole('support'), wrap(async (req, res) => {
 
   if (resolution === 'confirmed') {
     // Otorga recompensa al alumno y, opcionalmente, corrige la pregunta.
+    // Modelo canónico de Max: badgesTotal/medals.bronze (no el `badges` plano
+    // que usaba la versión anterior de users/{uid}, ver MODELO_CAMBIOS.md).
     const user = await getDoc(COL.users, cor.userId);
     if (user) {
-      await patchDoc(COL.users, cor.userId, { badges: (user.badges || 0) + CONFIRM_REWARD.amount });
+      const medals = { bronze: 0, silver: 0, gold: 0, diamond: 0, platinum: 0, ...(user.medals || {}) };
+      medals.bronze += CONFIRM_REWARD.amount;
+      await patchDoc(COL.users, cor.userId, {
+        medals,
+        badgesTotal: (user.badgesTotal || 0) + CONFIRM_REWARD.amount,
+        updatedAt: new Date().toISOString(),
+      });
       rewardGranted = { userId: cor.userId, ...CONFIRM_REWARD };
     }
     if (questionPatch && cor.questionId) {
@@ -52,7 +60,10 @@ r.patch('/corrections/:id', requireRole('support'), wrap(async (req, res) => {
         updatedAt: new Date().toISOString(),
         updatedBy: req.user.id,
         lastCorrectionId: req.params.id,
-        correctionsCount: (await getDoc(COL.questions, cor.questionId))?.correctionsCount + 1 || 1,
+        // FieldValue.increment evita la lectura extra (y la condición de
+        // carrera si dos recorrecciones de la misma pregunta se resuelven
+        // casi al mismo tiempo) que tenía el `getDoc` + 1 manual anterior.
+        correctionsCount: FieldValue.increment(1),
       });
     }
   }

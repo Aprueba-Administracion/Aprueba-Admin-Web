@@ -12,10 +12,6 @@ const STATE_TAG = { active: ['g', 'us_active'], suspended: ['w', 'us_suspended']
 const PRI_TAG = { high: ['d', 'pri_high'], med: ['w', 'pri_med'], low: ['', 'pri_low'] };
 const TICKET_TAG = { open: ['d', 'ts_open'], progress: ['w', 'ts_progress'], closed: ['g', 'ts_closed'] };
 const COR_TAG = { pending: ['w', 'cs_pending'], confirmed: ['g', 'cs_confirmed'], rejected: ['d', 'cs_rejected'] };
-// Modelo canónico de Max (Fase 2 #1, al pie de la letra): category y channel
-// de supportTickets son enums cerrados.
-const CATEGORIES = ['login', 'payments', 'content', 'account', 'other'];
-const CHANNELS = ['app', 'web', 'email'];
 // Recompensa fija que el backend otorga al confirmar (routes/corrections.js).
 const CONFIRM_REWARD = 250;
 // Planes conocidos por si el rol no puede leer /admin/plans (solo gerencia).
@@ -94,9 +90,14 @@ export default function Users({ ctx }) {
   const [tFilters, setTFilters] = useState({ status: '', priority: '' });
   const [tickets, setTickets] = useState(null);
   const [tErr, setTErr] = useState(null);
+  // Conteos globales que manda el backend (meta.openCount/pendingCount, ver
+  // GET /tickets y /corrections): no dependen de los filtros activos, a
+  // diferencia de `tickets`/`corrections`, que son solo la página filtrada.
+  const [openTickets, setOpenTickets] = useState(0);
   const [cFilters, setCFilters] = useState({ status: '' });
   const [corrections, setCorrections] = useState(null);
   const [cErr, setCErr] = useState(null);
+  const [pendingCor, setPendingCor] = useState(0);
 
   // ── catálogos auxiliares ──
   const [plans, setPlans] = useState(null);
@@ -106,7 +107,6 @@ export default function Users({ ctx }) {
   const planOptions = (plans || FALLBACK_PLANS).map((p) => ({ value: p.id, label: p.name }));
   const planName = (id) => (plans || FALLBACK_PLANS).find((p) => p.id === id)?.name || id || L('none');
   const agentOptions = (agents || FALLBACK_AGENTS).map((a) => ({ value: a.id, label: a.name }));
-  const agentName = (id) => (agents || FALLBACK_AGENTS).find((a) => a.id === id)?.name || id;
 
   const loadUserStats = useCallback(async () => {
     try { setUStats((await api.get('/users/stats')).data); } catch { /* las tarjetas simplemente no muestran conteo */ }
@@ -127,12 +127,20 @@ export default function Users({ ctx }) {
 
   const loadTickets = useCallback(async (f) => {
     setTErr(null);
-    try { setTickets((await api.get(`/tickets${qs(f)}`)).data); } catch (e) { setTErr(e.message); }
+    try {
+      const r = await api.get(`/tickets${qs(f)}`);
+      setTickets(r.data);
+      setOpenTickets(r.meta?.openCount ?? 0);
+    } catch (e) { setTErr(e.message); }
   }, []);
 
   const loadCorrections = useCallback(async (f) => {
     setCErr(null);
-    try { setCorrections((await api.get(`/corrections${qs(f)}`)).data); } catch (e) { setCErr(e.message); }
+    try {
+      const r = await api.get(`/corrections${qs(f)}`);
+      setCorrections(r.data);
+      setPendingCor(r.meta?.pendingCount ?? 0);
+    } catch (e) { setCErr(e.message); }
   }, []);
 
   // El catálogo de planes solo lo puede leer gerencia; si falla, se usa el fallback.
@@ -171,9 +179,6 @@ export default function Users({ ctx }) {
     setPage(page - 1);
     loadUsers(uFilters, cursors[page - 1]);
   };
-
-  const openTickets = (tickets || []).filter((x) => x.status !== 'closed').length;
-  const pendingCor = (corrections || []).filter((x) => (x.status || 'pending') === 'pending').length;
 
   const run = async (fn, okMsg) => {
     setBusy(true);
@@ -234,7 +239,7 @@ export default function Users({ ctx }) {
 
       {tab === 'users' && (
         <Card className="tab-fade">
-          <div className="filters" style={{ marginBottom: 12 }}>
+          <div className="filters mb">
             <div style={{ position: 'relative', flex: '1 1 240px' }}>
               <input className="grow" style={{ width: '100%', paddingLeft: 32 }} placeholder={L('u_search')}
                 value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -286,7 +291,7 @@ export default function Users({ ctx }) {
                 <div className="u-detail">
                   <div className="flex" style={{ justifyContent: 'space-between', marginBottom: 20, alignItems: 'flex-start' }}>
                     <div className="flex" style={{ gap: 14 }}>
-                      <div className="avatar" style={{ width: 52, height: 52, fontSize: 18 }}>{initials(selectedUser.name)}</div>
+                      <div className="avatar lg">{initials(selectedUser.name)}</div>
                       <div>
                         <div className="flex" style={{ gap: 10 }}>
                           <h2 style={{ margin: 0, fontSize: 18 }}>{selectedUser.name}</h2>
@@ -326,14 +331,14 @@ export default function Users({ ctx }) {
                   {userSubTab === 'summary' && (
                     <div className="u-stats">
                       <div className="u-stat"><span className="u-stat-ic"><SvgCreditCard /></span>
-                        <div><div className="note">{L('u_plan')}</div><div style={{ fontWeight: 700 }}>{planName(selectedUser.plan)}</div></div></div>
+                        <div><div className="note">{L('u_plan')}</div><div className="u-stat-val">{planName(selectedUser.plan)}</div></div></div>
                       <div className="u-stat"><span className="u-stat-ic"><SvgClock /></span>
-                        <div><div className="note">{L('u_last')}</div><div style={{ fontWeight: 700 }}>{selectedUser.lastActiveLabel || L('none')}</div></div></div>
+                        <div><div className="note">{L('u_last')}</div><div className="u-stat-val">{selectedUser.lastActiveLabel || L('none')}</div></div></div>
                       <div className="u-stat"><span className="u-stat-ic"><SvgAward /></span>
-                        <div><div className="note">{L('u_badges')}</div><div style={{ fontWeight: 700 }}>{fmt(selectedUser.badgesTotal ?? 0)}</div></div></div>
+                        <div><div className="note">{L('u_badges')}</div><div className="u-stat-val">{fmt(selectedUser.badgesTotal ?? 0)}</div></div></div>
                       <div className="u-stat"><span className="u-stat-ic"><SvgCalendar /></span>
                         <div><div className="note">{L('u_registered')}</div>
-                          <div style={{ fontWeight: 700 }}>
+                          <div className="u-stat-val">
                             {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US') : L('none')}
                           </div>
                         </div></div>
@@ -372,7 +377,7 @@ export default function Users({ ctx }) {
 
       {tab === 'tickets' && (
         <Card className="tab-fade">
-          <div className="filters" style={{ marginBottom: 12 }}>
+          <div className="filters mb">
             <b style={{ marginRight: 'auto' }}>{L('t_table')}</b>
             <Select value={tFilters.status} onChange={(v) => setTFilters((f) => ({ ...f, status: v }))}
               options={Object.keys(TICKET_TAG).map((s) => ({ value: s, label: L(TICKET_TAG[s][1]) }))} placeholder={`${L('t_state')}: ${L('filter_all')}`} />
@@ -410,7 +415,7 @@ export default function Users({ ctx }) {
 
       {tab === 'corrections' && (
         <Card className="tab-fade">
-          <div className="filters" style={{ marginBottom: 12 }}>
+          <div className="filters mb">
             <b style={{ marginRight: 'auto' }}>{L('co_table')}</b>
             <Select value={cFilters.status} onChange={(v) => setCFilters({ status: v })}
               options={Object.keys(COR_TAG).map((s) => ({ value: s, label: L(COR_TAG[s][1]) }))} placeholder={`${L('t_state')}: ${L('filter_all')}`} />
@@ -512,7 +517,7 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
       {loading ? <Loading L={L} /> : (
         <>
           <div className="flex" style={{ gap: 12, marginBottom: 14 }}>
-            <div className="avatar" style={{ width: 44, height: 44, fontSize: 15 }}>{initials(user.name)}</div>
+            <div className="avatar md">{initials(user.name)}</div>
             <div>
               <b style={{ fontSize: 15 }}>{user.name}</b>
               <div className="note">{user.email}</div>
@@ -522,7 +527,7 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
 
           <div className="grid g2">
             <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('u_detail')}</div>
+              <div className="section-label tight">{L('u_detail')}</div>
               <KV k={L('u_id')} v={user.id} />
               <KV k={L('u_country')} v={user.country} />
               <KV k={L('u_provider')} v={L(`provider_${user.authProvider}`)} />
@@ -534,7 +539,7 @@ function UserDialog({ user, loading, ctx, busy, planOptions, plansUnavailable, o
               <KV k={L('u_pending_email')} v={user.pendingEmail || L('none')} />
             </Card>
             <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('u_last_admin_action')}</div>
+              <div className="section-label tight">{L('u_last_admin_action')}</div>
               {la ? (
                 <>
                   <KV k={L('u_last_admin_action')} v={L(`admin_action_${la.action}`)} />
