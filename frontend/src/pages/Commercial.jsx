@@ -2,8 +2,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { api } from '../api/client.js';
 import {
   KpiTrend, Card, Loading, ErrorBox, Tabs,
-  LineChartInteractive, RankList, MiniMonthBars, Funnel, HBarsInteractive, BarsInteractive, DonutMulti, CAT_COLORS, COIN,
-  IconDownload, IconUsers, IconTrendingUp, IconStar, IconGift, IconWallet,
+  LineChartInteractive, RankList, MiniMonthBars, Funnel, BarsInteractive, DonutMulti, CAT_COLORS,
+  IconDownload, IconCalendar, IconUsers, IconTrendingUp, IconStar, IconGift, IconWallet,
 } from '../components/ui.jsx';
 
 const RANGES = ['7d', '30d', '90d', '12m'];
@@ -90,8 +90,11 @@ export default function Commercial({ ctx }) {
     value: r.value, color: CAT_COLORS[i % CAT_COLORS.length], disp: '$' + fmt(r.value),
   })), [d, isEn, fmt]);
 
+  // Sin el emoji de medalla en el label: dentro del <text> del gráfico SVG se
+  // veía mal (tipografía de emoji del SO, sin el tratamiento currentColor). El
+  // color de la barra ya identifica el tier (var(--bronze|silver|gold|...)).
   const badgeBars = useMemo(() => (d?.badgesByType || []).map((b) => ({
-    label: `${COIN[b.tier]} ${L('tier_' + b.tier)}`, value: b.value, disp: fmt(b.value), color: `var(--${b.tier})`,
+    label: L('tier_' + b.tier), value: b.value, disp: fmt(b.value), color: `var(--${b.tier})`,
   })), [d, L, fmt]);
 
   if (err) return <Card><ErrorBox msg={err} onRetry={() => load(range)} L={L} /></Card>;
@@ -117,10 +120,10 @@ export default function Commercial({ ctx }) {
               </button>
             ))}
           </div>
-          <span className="date-badge">📅 {dateRangeLabel(range, locale)}</span>
+          <span className="date-badge"><IconCalendar size={14} /> {dateRangeLabel(range, locale)}</span>
         </div>
         <button className="btn sec sm" onClick={() => downloadCommercialCsv(d, range, isEn)}>
-          ⬇️ {isEn ? 'Export CSV' : 'Exportar CSV'}
+          <IconDownload size={14} /> {isEn ? 'Export CSV' : 'Exportar CSV'}
         </button>
       </div>
 
@@ -293,8 +296,8 @@ export default function Commercial({ ctx }) {
           </Card>
           <Card style={{ marginTop: 16 }}>
             <b>{L('c_badges_type')}</b>
-            <div style={{ marginTop: 10 }}>
-              <HBarsInteractive data={badgeBars} />
+            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
+              <DonutMulti data={badgeBars} pctPill centerLabel={fmt(d.badgesByType?.reduce((a, b) => a + (b.value || 0), 0) || 0)} />
             </div>
           </Card>
         </div>

@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { IconGlobeFilled, IconSunFilled, IconMoonFilled, IconEye, IconEyeOff } from '../components/ui.jsx';
 
 export default function Login({ ctx }) {
   // dark/setDark viven en App.jsx (única fuente de verdad: un solo useEffect
@@ -10,12 +12,13 @@ export default function Login({ ctx }) {
   // que el modo oscuro activado acá quedaba "pegado" después de loguearse.
   const { L, lang, setLang, dark, setDark } = ctx;
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [otp, setOtp] = useState('');
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [showPass, setShowPass] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -23,6 +26,10 @@ export default function Login({ ctx }) {
     setBusy(true);
     try {
       await login(email, password, otp || undefined);
+      // Sin esto, si la sesión se cerró (o expiró) estando en otra vista, el
+      // navegador seguía apuntando a esa URL (p. ej. /usuarios) y al volver a
+      // loguearse quedaba ahí mismo en vez de partir en Resumen.
+      navigate('/', { replace: true });
     } catch (e2) {
       setErr(e2.message || 'Error');
     } finally {
@@ -50,46 +57,24 @@ export default function Login({ ctx }) {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
           </div>
           <div className="field">
-          <label>{L('login_pass')}</label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <input
-              type={showPass ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ paddingRight: 36, width: '100%' }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPass(!showPass)}
-              title={showPass ? 'Ocultar contraseña' : 'Ver contraseña'}
-              style={{
-                position: 'absolute',
-                right: 8,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                color: 'var(--muted, #64748b)',
-                padding: 4,
-              }}
-            >
-              {showPass ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                  <line x1="2" y1="2" x2="22" y2="22" />
-                </svg>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
+            <label>{L('login_pass')}</label>
+            <div className="pw-wrap">
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="pw-toggle"
+                onClick={() => setShowPass((v) => !v)}
+                aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                tabIndex={-1}
+              >
+                {showPass ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
           </div>
-        </div>
           <div className="field">
             <label>{L('login_otp')}</label>
             <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" />
@@ -103,17 +88,19 @@ export default function Login({ ctx }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 14 }}>
           <button
             type="button"
-            className="ctl"
+            className="ctl ctl-icon"
+            style={{ gap: 6 }}
             onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
           >
-            🌐 {lang === 'es' ? 'EN' : 'ES'}
+            <IconGlobeFilled size={13} /> {lang === 'es' ? 'EN' : 'ES'}
           </button>
           <button
             type="button"
-            className="ctl"
+            className="ctl ctl-icon"
+            style={{ gap: 6 }}
             onClick={() => setDark(!dark)}
           >
-            {dark ? '☀️ Claro' : '🌙 Oscuro'}
+            {dark ? <IconSunFilled size={15} /> : <IconMoonFilled size={14} />} {dark ? 'Claro' : 'Oscuro'}
           </button>
         </div>
       </div>

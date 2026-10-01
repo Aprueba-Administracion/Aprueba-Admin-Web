@@ -35,9 +35,6 @@ export function TopKpiCard({ label, value, delta, icon: IconComponent, tone }) {
         <div className="kpi-val">{value}</div>
         {delta && <div className="kpi-delta up">▲ {delta}</div>}
       </div>
-      <div className="kpi-spark">
-        <Sparkline width="100%" height={24} />
-      </div>
     </div>
   );
 }
@@ -535,7 +532,10 @@ export function HBarsInteractive({ data = [] }) {
 
 // Donut multi-serie interactivo: total al centro, resalta segmento (sin cambiar
 // su grosor — solo atenúa los demás) y leyenda siempre visible.
-export function DonutMulti({ data = [], centerLabel }) {
+// `pctPill`: variante opcional donde el % va como una píldora de color junto
+// al valor (en vez de texto plano entre la etiqueta y el valor) — opt-in para
+// no cambiar el aspecto de los usos existentes (Comercial/Sponsors).
+export function DonutMulti({ data = [], centerLabel, pctPill = false }) {
   const [hover, setHover] = useState(null);
   const total = data.reduce((a, d) => a + (d.value || 0), 0) || 1;
   const r = 40, c = 2 * Math.PI * r;
@@ -547,7 +547,7 @@ export function DonutMulti({ data = [], centerLabel }) {
     return seg;
   });
   return (
-    <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+    <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', marginTop: 6, justifyContent: 'center' }}>
       <svg viewBox="0 0 104 104" width="140" height="140">
         <circle cx="52" cy="52" r={r} fill="none" stroke="var(--line)" strokeWidth="14" />
         {segs.map((s) => {
@@ -573,16 +573,29 @@ export function DonutMulti({ data = [], centerLabel }) {
           {hover != null ? segs[hover].label : 'total'}
         </text>
       </svg>
-      <div className="chart-legend">
-  {segs.map((s) => (
-    <div key={s.i} className={`chart-legend-item ${hover === s.i ? 'hover' : ''}`}
-      onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)}>
-      <span className="dot" style={{ background: s.color || 'var(--brand)' }} />
-      <span>{s.label}</span>
-      <span className="pct">{Math.round(((s.value || 0) / total) * 100)}%</span>
-      <b>{s.disp}</b>
-    </div>
-  ))}
+      <div className={`chart-legend ${pctPill ? 'roomy' : ''}`}>
+  {segs.map((s) => {
+    const pct = Math.round(((s.value || 0) / total) * 100);
+    const color = s.color || 'var(--brand)';
+    return (
+      <div key={s.i} className={`chart-legend-item ${pctPill ? 'roomy' : ''} ${hover === s.i ? 'hover' : ''}`}
+        onMouseEnter={() => setHover(s.i)} onMouseLeave={() => setHover(null)}>
+        <span className="dot" style={{ background: color }} />
+        <span>{s.label}</span>
+        {pctPill ? (
+          <>
+            <b>{s.disp}</b>
+            <span className="pct-pill" style={{ background: `color-mix(in srgb, ${color} 18%, transparent)`, color }}>{pct}%</span>
+          </>
+        ) : (
+          <>
+            <span className="pct">{pct}%</span>
+            <b>{s.disp}</b>
+          </>
+        )}
+      </div>
+    );
+  })}
 </div>
     </div>
   );
@@ -798,6 +811,17 @@ export function IconZap({ size = 14 }) {
   );
 }
 
+export function IconCalendar({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
 // ── Iconos grandes de fondo para tarjetas KpiTrend "tint" (ver variant `tone`) ──
 export function IconDownload({ size = 16 }) {
   return (
@@ -850,6 +874,284 @@ export function IconTicket({ size = 16 }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z" />
       <line x1="10" y1="7" x2="10" y2="17" strokeDasharray="2.2 2.2" />
+    </svg>
+  );
+}
+
+// ── Navegación y chrome (reemplazan los emojis del sidebar/topbar) ──
+// Rellenos (fill=currentColor), no solo el contorno, para que se vean como
+// íconos "sólidos" y no como líneas huecas — un único color (el que herede
+// del contenedor), sin colores distintos por ítem.
+export function IconDashboard({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <rect x="4" y="12" width="4" height="8" rx="1" />
+      <rect x="10" y="4" width="4" height="16" rx="1" />
+      <rect x="16" y="9" width="4" height="11" rx="1" />
+    </svg>
+  );
+}
+
+// Solo el símbolo "$", sin círculo detrás — pedido explícito del usuario.
+export function IconDollarSign({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <text x="12" y="18.5" textAnchor="middle" fontSize="19" fontWeight="800" fontFamily="Arial, sans-serif">$</text>
+    </svg>
+  );
+}
+
+// Megáfono (difusión/promoción del sponsor) — el apretón de manos no se leía
+// bien a tamaño chico en el sidebar.
+export function IconMegaphone({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2 10a2 2 0 0 1 2-2h2l10-4.5a1 1 0 0 1 1.4.9v15.2a1 1 0 0 1-1.4.9L6 16.5H4a2 2 0 0 1-2-2V10Z" />
+      <path d="M6.5 17 8 21.5a1.2 1.2 0 0 0 1.14.8h.6A1.2 1.2 0 0 0 10.9 21l-.9-4H6.5Z" />
+      <path d="M19.5 8.2c1.3 1 1.3 6.6 0 7.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconTool({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z" />
+    </svg>
+  );
+}
+
+export function IconGraduationCap({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22 10 12 5 2 10l10 5 10-5Z" />
+      <path d="M6 12.5v4.5c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5l-6 3-6-3Z" />
+    </svg>
+  );
+}
+
+export function IconBook({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z" />
+    </svg>
+  );
+}
+
+export function IconPuzzle({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.44 7.85c-.05.32.06.65.29.88l1.57 1.57c.94.94.94 2.47 0 3.41l-1.61 1.61a.98.98 0 0 1-.84.28c-.47-.07-.8-.48-.97-.93a2.5 2.5 0 1 0-3.21 3.21c.45.17.86.5.93.97a.98.98 0 0 1-.28.84l-1.61 1.61c-.94.94-2.47.94-3.41 0l-1.57-1.57a1.03 1.03 0 0 0-.88-.29c-.49.07-.84.5-1.02.97a2.5 2.5 0 1 1-3.24-3.24c.47-.18.9-.53.97-1.02a1.03 1.03 0 0 0-.29-.88L2.7 13.7c-.94-.94-.94-2.47 0-3.41l1.61-1.61c.23-.23.53-.34.84-.28.47.07.8.48.97.93a2.5 2.5 0 1 0 3.21-3.21c-.45-.17-.86-.5-.93-.97a.98.98 0 0 1 .28-.84L10.29 2.7c.94-.94 2.47-.94 3.41 0l1.57 1.57c.23.23.56.34.88.29.49-.07.84-.5 1.02-.97a2.5 2.5 0 1 1 3.24 3.24c-.47.18-.9.53-.97 1.02Z" />
+    </svg>
+  );
+}
+
+// Versión rellena de IconUsers específica para el nav del sidebar: IconUsers
+// (línea, ya existente) se sigue usando en Users.jsx (tarjeta KPI), así que
+// se deja intacta para no cambiar esa página; esta es una variante aparte.
+export function IconUsersFilled({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="8" r="4" />
+      <path d="M2 20.5C2 16.4 5.1 13 9 13s7 3.4 7 7.5V21H2v-.5Z" />
+      <circle cx="17.5" cy="9" r="3" opacity=".7" />
+      <path d="M16 13.3c3 .8 5.5 3.6 5.5 6.9v.8h-3.2v-.8c0-2.4-.9-4.5-2.3-6.9Z" opacity=".7" />
+    </svg>
+  );
+}
+
+export function IconClipboardList({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd">
+      <path d="M8 2h8a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm1 7.2h6v1.6H9V9.2Zm0 4.4h6v1.6H9v-1.6Z" />
+    </svg>
+  );
+}
+
+export function IconMenu({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+    </svg>
+  );
+}
+
+export function IconGlobe({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
+    </svg>
+  );
+}
+
+export function IconSun({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+export function IconMoon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+    </svg>
+  );
+}
+
+export function IconLogOut({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+// Insignia circular de color sólido con el ícono de línea "flotando" en blanco
+// encima — el tratamiento "relleno + color" que reemplaza a los íconos de
+// solo contorno en el sidebar. Cada vista tiene su propio color (v.color en
+// App.jsx), así se distinguen de un vistazo en vez de verse todos iguales.
+export function NavIcon({ icon: Icon, color, size = 26, iconSize = 14 }) {
+  return (
+    <span className="nav-ic-badge" style={{ background: color, width: size, height: size }}>
+      <Icon size={iconSize} />
+    </span>
+  );
+}
+
+// Versión rellena (sólida) de los controles del topbar/login: a diferencia de
+// los íconos de línea de arriba, estos usan fill en vez de stroke para que se
+// vean "llenos" y cada uno lleva su propio color vía CSS (ver .ic-globe,
+// .ic-sun, .ic-moon, .ic-logout en styles.css).
+export function IconMenuFilled({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="5.5" width="18" height="3" rx="1.5" />
+      <rect x="3" y="10.5" width="18" height="3" rx="1.5" />
+      <rect x="3" y="15.5" width="18" height="3" rx="1.5" />
+    </svg>
+  );
+}
+
+export function IconGlobeFilled({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="10" />
+      <g stroke="var(--panel)" strokeWidth="1.4" fill="none">
+        <ellipse cx="12" cy="12" rx="4.2" ry="10" />
+        <line x1="2.3" y1="12" x2="21.7" y2="12" />
+        <path d="M3.6 7.5h16.8M3.6 16.5h16.8" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconSunFilled({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="5.2" stroke="none" />
+      <g>
+        <line x1="12" y1="1.5" x2="12" y2="4" />
+        <line x1="12" y1="20" x2="12" y2="22.5" />
+        <line x1="4.2" y1="4.2" x2="5.9" y2="5.9" />
+        <line x1="18.1" y1="18.1" x2="19.8" y2="19.8" />
+        <line x1="1.5" y1="12" x2="4" y2="12" />
+        <line x1="20" y1="12" x2="22.5" y2="12" />
+        <line x1="4.2" y1="19.8" x2="5.9" y2="18.1" />
+        <line x1="18.1" y1="5.9" x2="19.8" y2="4.2" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconMoonFilled({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+    </svg>
+  );
+}
+
+export function IconLogOutFilled({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="currentColor" opacity=".9" stroke="none" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+export function IconEye({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function IconDiamond({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3h12l4 6-10 12L2 9Z" />
+      <path d="M2 9h20" />
+      <path d="M9 3 7 9l5 12 5-12-2-6" />
+    </svg>
+  );
+}
+
+export function IconEyeOff({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-3.18 4.19" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
+// Bandera para "recorrecciones" (reemplaza el emoji ⚑) — línea, en el mismo
+// estilo que el resto de los íconos usados en tabs/EmptyState de esta consola.
+export function IconFlag({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 3v18" />
+      <path d="M4 4.5c2-1.2 4-1.2 6 0s4 1.2 6 0c1-.6 2-.6 2 0v9c0 .6-1 .6-2 0-2-1.2-4-1.2-6 0s-4 1.2-6 0" />
+    </svg>
+  );
+}
+
+// Ícono de información (reemplaza el emoji ℹ️).
+export function IconInfo({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="11" x2="12" y2="16.5" />
+      <circle cx="12" cy="7.7" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Medalla para el conteo de badges de un alumno (reemplaza el emoji 🏅).
+export function IconMedal({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="15" r="6" />
+      <path d="m9 9.5-3-6M15 9.5l3-6" />
+      <path d="M12 12.2v5.6M9.5 15h5" />
     </svg>
   );
 }

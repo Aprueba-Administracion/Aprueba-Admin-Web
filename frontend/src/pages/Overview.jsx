@@ -5,23 +5,6 @@ import { Card, StatusPill, Loading, LineChartInteractive, Funnel, DonutMulti, Ba
 
 const PLAN_LABEL = { uni: { es: '1 prueba', en: 'One test' }, all: { es: 'Todas las pruebas', en: 'All tests' } };
 
-// El color por defecto es 'currentColor': la línea hereda el tono que le da la
-// clase .kpi-tile.<tono> .kpi-spark del contenedor, en vez de un valor fijo
-// pensado para fondo oscuro (así también se ve bien sobre el fondo claro nuevo).
-function Sparkline({ color = 'currentColor', width = 70, height = 22 }) {
-  return (
-    <svg viewBox="0 0 100 24" width={width} height={height} style={{ overflow: 'visible' }}>
-      <path
-        d="M 2,18 Q 20,22 35,16 T 65,10 T 85,14 T 98,4"
-        fill="none"
-        stroke={color}
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 // ── Iconos SVG nítidos de fondo ──
 function IconDownloadBig({ size = 95 }) {
   return (
@@ -94,10 +77,6 @@ function TopKpiCard({ label, value, delta, icon: IconComponent, tone }) {
         <div className="kpi-val">{value}</div>
         {delta && <div className="kpi-delta up">▲ {delta}</div>}
       </div>
-
-      <div className="kpi-spark">
-        <Sparkline width="100%" height={24} />
-      </div>
     </div>
   );
 }
@@ -113,10 +92,6 @@ function SideKpiCard({ label, value, delta, icon: IconComponent, tone }) {
       <div className="kpi-row">
         <div className="kpi-val">{value}</div>
         {delta && <div className="kpi-delta up">▲ {delta}</div>}
-      </div>
-
-      <div className="kpi-spark compact-spark">
-        <Sparkline width="100%" height={18} />
       </div>
     </div>
   );
@@ -173,7 +148,7 @@ export default function Overview({ ctx }) {
     <>
       {/* Barra superior con selector de rango */}
       <div className="flex between" style={{ alignItems: 'center', marginBottom: 18 }}>
-        <h2 style={{ margin: 0 }}>{isEn ? 'Overview' : 'Resumen'}</h2>
+        <h2 style={{ margin: 0 }}>{isEn ? 'Overview' : ''}</h2>
         <div className="flex" style={{ gap: 6 }}>
           {['7d', '30d', '90d'].map((r) => (
             <button

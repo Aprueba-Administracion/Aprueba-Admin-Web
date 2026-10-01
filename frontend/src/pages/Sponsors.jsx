@@ -4,12 +4,11 @@ import { api } from '../api/client.js';
 import {
   Card, StatusPill, Loading, HBarsInteractive, DonutMulti, CAT_COLORS,
   ErrorBox, EmptyState, Confirm, Toast, useToast,
-  IconEdit, IconTrash, IconUsers, IconWallet, IconGift, IconZap,
+  IconEdit, IconTrash, IconUsers, IconWallet, IconGift, IconZap, IconDiamond,
 } from '../components/ui.jsx';
 
 import { TierBadge } from './sponsors/TierBadge.jsx';
 import { DateBadge, checkExpired } from './sponsors/DateBadge.jsx';
-import { SponsorsBanner } from './sponsors/SponsorsBanner.jsx';
 import { SponsorForm } from './sponsors/SponsorForm.jsx';
 import { BenefitItemForm } from './sponsors/BenefitItemForm.jsx';
 
@@ -128,12 +127,6 @@ export default function Sponsors({ ctx }) {
         {/* ================= COLUMNA IZQUIERDA ================= */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-          {/* Banner visual */}
-          <SponsorsBanner
-            title="Sponsors"
-            subtitle={L('s_intro') || (isEn ? 'Brands funding student benefits.' : 'Marcas que financian beneficios para los alumnos.')}
-          />
-
           {/* Tarjetas KPI sin icono pequeño superior */}
           <div className="grid g3" style={{ gap: 12 }}>
             <SponsorKpiCard
@@ -171,17 +164,17 @@ export default function Sponsors({ ctx }) {
           <div className="flex" style={{ gap: 8, marginTop: 4 }}>
             <button
               className={`btn sm ${activeTab === 'sponsors' ? '' : 'sec'}`}
-              style={{ borderRadius: 20, padding: '6px 16px', fontWeight: activeTab === 'sponsors' ? 600 : 400 }}
+              style={{ borderRadius: 20, padding: '6px 16px', fontWeight: activeTab === 'sponsors' ? 600 : 400, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               onClick={() => setActiveTab('sponsors')}
             >
-              🤝 {L('s_table') || (isEn ? 'Sponsor detail' : 'Detalle de sponsors')}
+              <IconUsers size={14} /> {L('s_table') || (isEn ? 'Sponsor detail' : 'Detalle de sponsors')}
             </button>
             <button
               className={`btn sm ${activeTab === 'benefits' ? '' : 'sec'}`}
-              style={{ borderRadius: 20, padding: '6px 16px', fontWeight: activeTab === 'benefits' ? 600 : 400 }}
+              style={{ borderRadius: 20, padding: '6px 16px', fontWeight: activeTab === 'benefits' ? 600 : 400, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               onClick={() => setActiveTab('benefits')}
             >
-              🎁 {isEn ? 'Benefits' : 'Beneficios'} ({fmt(totBenefitsCount)})
+              <IconGift size={14} /> {isEn ? 'Benefits' : 'Beneficios'} ({fmt(totBenefitsCount)})
             </button>
           </div>
 
@@ -194,12 +187,12 @@ export default function Sponsors({ ctx }) {
                   <button className="btn sm" onClick={() => setDialog({ kind: 'form' })}>+ {L('s_add')}</button>
                 </div>
 
-                {rows.length === 0 ? <EmptyState msg={L('s_no_sponsors')} ic="🤝" /> : (
+                {rows.length === 0 ? <EmptyState msg={L('s_no_sponsors')} ic={<IconUsers size={22} />} /> : (
                   <div className="tbl-wrap" style={{ width: '100%', overflowX: 'auto' }}>
                     <table style={{ width: '100%' }}>
                       <thead><tr>
                         <th>{L('sp_name')}</th><th>{L('sp_tier')}</th><th>{L('sp_monthly')}</th>
-                        <th>{L('sp_offered')}</th><th>{L('sp_redeemed')}</th><th>{L('sp_status')}</th><th />
+                        <th>{L('sp_offered')}</th><th>{L('sp_redeemed')}</th><th>{L('sp_status')}</th><th style={{ width: 92 }} />
                       </tr></thead>
                       <tbody>{rows.map((s) => (
                         <tr key={s.id}>
@@ -210,7 +203,7 @@ export default function Sponsors({ ctx }) {
                           <td>{fmt(s.benefitsRedeemed ?? 0)}</td>
                           <td><StatusPill state={s.status} L={L} /></td>
                           <td>
-                            <div className="row-acts" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6, whiteSpace: 'nowrap' }}>
+                            <div className="row-acts" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-end', gap: 6, whiteSpace: 'nowrap' }}>
                               <button className="btn sec sm" onClick={() => setDialog({ kind: 'form', sponsor: s })} title={L('edit')}>
                                 <IconEdit />
                               </button>
@@ -232,7 +225,7 @@ export default function Sponsors({ ctx }) {
                 </div>
 
                 {rows.length === 0 ? (
-                  <EmptyState msg={L('s_no_sponsors')} ic="🤝" />
+                  <EmptyState msg={L('s_no_sponsors')} ic={<IconGift size={22} />} />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
                     {rows.map((sponsor) => {
@@ -316,7 +309,7 @@ export default function Sponsors({ ctx }) {
                                         return (
                                           <tr key={b.id || idx} style={{ opacity: isExpired ? 0.65 : 1 }}>
                                             <td><b>{b.name}</b></td>
-                                            <td>💎 {fmt(b.costPlatinum || 0)} {isEn ? 'plat.' : 'plat.'}</td>
+                                            <td style={{ display: 'flex', alignItems: 'center', gap: 5 }}><IconDiamond size={13} /> {fmt(b.costPlatinum || 0)} {isEn ? 'plat.' : 'plat.'}</td>
                                             <td>{fmt(b.stock || 0)} u.</td>
                                             <td>{fmt(b.redeemedCount || 0)}</td>
                                             <td>
@@ -393,7 +386,9 @@ export default function Sponsors({ ctx }) {
           {/* Gráfico Circular */}
           <Card>
             <b style={{ display: 'block', marginBottom: 12 }}>{isEn ? 'Distribution by sponsor' : 'Distribución por sponsor'}</b>
-            <DonutMulti data={chartData} centerLabel={`$${fmt(totRev)}`} />
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <DonutMulti data={chartData} centerLabel={`$${fmt(totRev)}`} />
+            </div>
           </Card>
 
           {/* Mensaje motivacional */}

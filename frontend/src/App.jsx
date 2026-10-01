@@ -13,20 +13,27 @@ import Tutors from './pages/Tutors.jsx';
 import Content from './pages/Content.jsx';
 import Plans from './pages/Plans.jsx';
 import Audit from './pages/Audit.jsx';
+import {
+  IconDashboard, IconDollarSign, IconMegaphone, IconTool, IconUsersFilled,
+  IconGraduationCap, IconBook, IconPuzzle, IconClipboardList,
+} from './components/ui.jsx';
 
 // Definición de las vistas: ruta, etiqueta, icono y roles que pueden verlas.
 // Los roles replican el `requireRole` del backend para no ofrecer pantallas que
 // el API rechazaría con 403 (admin siempre pasa).
+// `ic` es el componente de ícono SVG relleno (fill=currentColor, no solo el
+// contorno) que Layout.jsx renderiza en el sidebar — un solo color heredado,
+// sin tonos distintos por vista.
 export const VIEWS = [
-  { id: 'resumen', path: '/', ic: '📊', group: 1, roles: ['admin', 'finance', 'ops', 'support'], el: Overview },
-  { id: 'comercial', path: '/comercial', ic: '💰', group: 1, roles: ['finance'], el: Commercial },
-  { id: 'sponsors', path: '/sponsors', ic: '🤝', group: 1, roles: ['finance'], el: Sponsors },
-  { id: 'operativa', path: '/operativa', ic: '🛠️', group: 2, roles: ['ops'], el: Operations },
-  { id: 'usuarios', path: '/usuarios', ic: '👥', group: 2, roles: ['support'], el: Users },
-  { id: 'tutores', path: '/tutores', ic: '🎓', group: 2, roles: ['support'], el: Tutors },
-  { id: 'contenido', path: '/contenido', ic: '📚', group: 2, roles: ['admin'], el: Content },
-  { id: 'planes', path: '/planes', ic: '🧩', group: 2, roles: ['admin'], el: Plans },
-  { id: 'auditoria', path: '/auditoria', ic: '🧾', group: 2, roles: ['admin'], el: Audit },
+  { id: 'resumen', path: '/', ic: IconDashboard, group: 1, roles: ['admin', 'finance', 'ops', 'support'], el: Overview },
+  { id: 'comercial', path: '/comercial', ic: IconDollarSign, group: 1, roles: ['finance'], el: Commercial },
+  { id: 'sponsors', path: '/sponsors', ic: IconMegaphone, group: 1, roles: ['finance'], el: Sponsors },
+  { id: 'operativa', path: '/operativa', ic: IconTool, group: 2, roles: ['ops'], el: Operations },
+  { id: 'usuarios', path: '/usuarios', ic: IconUsersFilled, group: 2, roles: ['support'], el: Users },
+  { id: 'tutores', path: '/tutores', ic: IconGraduationCap, group: 2, roles: ['support'], el: Tutors },
+  { id: 'contenido', path: '/contenido', ic: IconBook, group: 2, roles: ['admin'], el: Content },
+  { id: 'planes', path: '/planes', ic: IconPuzzle, group: 2, roles: ['admin'], el: Plans },
+  { id: 'auditoria', path: '/auditoria', ic: IconClipboardList, group: 2, roles: ['admin'], el: Audit },
 ];
 
 export default function App() {

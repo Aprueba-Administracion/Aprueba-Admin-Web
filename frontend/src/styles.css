@@ -15,6 +15,8 @@
   --kpi-green-grad:linear-gradient(135deg,#e6f7ef 0%,#ffffff 65%);--kpi-green-border:rgba(15,157,88,.22);--kpi-green-icon:#0f9d58;--kpi-green-title:#0b3d2b;--kpi-green-sub:#3f7a5e;
   --kpi-purple-grad:linear-gradient(135deg,#f6ecfb 0%,#ffffff 65%);--kpi-purple-border:rgba(122,58,140,.22);--kpi-purple-icon:#7a2f86;--kpi-purple-title:#3d1642;--kpi-purple-sub:#7a5484;
   --kpi-orange-grad:linear-gradient(135deg,#fdf1e4 0%,#ffffff 65%);--kpi-orange-border:rgba(180,90,20,.22);--kpi-orange-icon:#b45f14;--kpi-orange-title:#4a2607;--kpi-orange-sub:#8a5a2e;
+  --chat-staff-bg:#e8f0fe;--chat-staff-border:#c7d9fc;--chat-staff-name:#1d4ed8;
+  --chat-user-bg:#f1f5f9;--chat-user-border:#e2e8f0;--chat-user-name:#0f172a;--chat-body:#1e293b;
 }
 .dark{
   --bg:#0B1220;--panel:#131C2E;--ink:#E2E8F0;--muted:#94A3B8;--line:#1E2D45;--soft:#1A2540;
@@ -26,6 +28,8 @@
   --kpi-green-grad:linear-gradient(135deg,rgba(16,163,105,.26) 0%,rgba(255,255,255,.05) 100%);--kpi-green-border:rgba(16,163,105,.4);--kpi-green-icon:#52d999;--kpi-green-title:#d9f7e9;--kpi-green-sub:#8fd6b4;
   --kpi-purple-grad:linear-gradient(135deg,rgba(122,58,140,.28) 0%,rgba(255,255,255,.05) 100%);--kpi-purple-border:rgba(122,58,140,.4);--kpi-purple-icon:#d79ee0;--kpi-purple-title:#f2ddf5;--kpi-purple-sub:#c79ecf;
   --kpi-orange-grad:linear-gradient(135deg,rgba(180,90,20,.28) 0%,rgba(255,255,255,.05) 100%);--kpi-orange-border:rgba(180,90,20,.4);--kpi-orange-icon:#f0a35c;--kpi-orange-title:#fbe3c8;--kpi-orange-sub:#dba876;
+  --chat-staff-bg:rgba(45,90,158,.22);--chat-staff-border:rgba(59,100,150,.4);--chat-staff-name:#9dc4ff;
+  --chat-user-bg:#1A2540;--chat-user-border:#1E2D45;--chat-user-name:#E2E8F0;--chat-body:#E2E8F0;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);font-family:'Inter',system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.5;transition:background .25s}
@@ -41,13 +45,13 @@ a{color:inherit;text-decoration:none}
 .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--side-ink);cursor:pointer;margin-bottom:2px;border-left:3px solid transparent;transition:background .15s}
 .nav-item:hover{background:var(--side-act)}
 .nav-item.act{background:var(--side-act);border-left-color:var(--cta)}
-.nav-item .ico{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .ico{display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0}
 .nav-item .badge{margin-left:auto;font-size:9px;font-weight:800;background:var(--down);color:#fff;border-radius:10px;padding:1px 7px}
 .side-foot{padding:12px;border-top:1px solid rgba(255,255,255,.08)}
 .side-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px}
 .side-avatar{width:34px;height:34px;border-radius:50%;background:var(--cta);color:#1A365D;display:grid;place-items:center;font-weight:800;font-family:'Montserrat';flex-shrink:0}
 .side-user .nm{font-size:13px;font-weight:700}.side-user .rl{font-size:11px;color:var(--side-mut)}
-.side-logout{margin-top:8px;width:100%;background:rgba(255,255,255,.06);color:var(--side-ink);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px;font-size:12px;cursor:pointer}
+.side-logout{margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.06);color:var(--side-ink);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px;font-size:12px;cursor:pointer}
 .side-logout:hover{background:rgba(255,255,255,.12)}
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
 .topbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
@@ -55,6 +59,14 @@ a{color:inherit;text-decoration:none}
 .page-title{font-family:'Montserrat';font-weight:800;font-size:18px}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .ctl{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 10px;font-size:12px;cursor:pointer;font-family:'Inter'}
+/* Íconos rellenos (fill=currentColor, no solo el contorno) del topbar/login
+   (hamburguesa, idioma, modo oscuro/claro, cerrar sesión) y del selector de
+   idioma con el globo superpuesto, reemplazando los emojis anteriores. Un
+   solo color heredado del botón, sin tonos distintos por control. */
+.ctl-icon{display:inline-flex;align-items:center;justify-content:center}
+.ctl-group{position:relative;display:inline-flex;align-items:center;color:var(--muted)}
+.ctl-group svg{position:absolute;left:9px;pointer-events:none}
+.ctl-group select.ctl{padding-left:27px}
 .content{padding:22px;max-width:1280px;width:100%;margin:0 auto}
 .h{font-size:18px;font-weight:700;margin-bottom:4px}
 .sub{color:var(--muted);font-size:13px}
@@ -134,6 +146,12 @@ input:focus,select:focus{border-color:var(--brand)}
 .field{margin-top:12px}
 .field label{font-size:11.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
 .field input{width:100%}
+/* Wrapper del campo de contraseña con el botón de mostrar/ocultar superpuesto
+   a la derecha (login). */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:36px}
+.pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;border-radius:6px}
+.pw-toggle:hover{color:var(--ink);background:var(--soft)}
 .err{background:var(--down-bg);color:#DC2626;border-radius:9px;padding:9px 11px;font-size:12.5px;font-weight:600;margin-top:12px}
 .hint-box{font-size:11px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:14px;line-height:1.6}
 .center{display:grid;place-items:center;padding:40px;color:var(--muted)}
@@ -239,12 +257,16 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .opt-row input{flex:1}
 .opt-row.correct .k{background:var(--ok-bg);border-color:var(--ok);color:#059669}
 @media(max-width:1080px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}.span4,.span3{grid-column:span 2}}
-@media(max-width:860px){.sidebar{position:fixed;z-index:30;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.3)}.sidebar.open{transform:translateX(0)}.hamb{display:grid;place-items:center}.scrim.open{display:block}.builder{grid-template-columns:1fr}}
+/* El botón hamburguesa y el sidebar deslizable solo deben verse en vista de
+   teléfono real, no en una ventana de escritorio angosta — por eso el corte
+   bajó de 860px a 600px (antes aparecía incluso en vistas "normales" que
+   simplemente no eran muy anchas). */
+@media(max-width:600px){.sidebar{position:fixed;z-index:30;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.3)}.sidebar.open{transform:translateX(0)}.hamb{display:grid;place-items:center}.scrim.open{display:block}.builder{grid-template-columns:1fr}}
 @media(max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr}.span2,.span3,.span4{grid-column:span 1}.content{padding:14px}
   .form-grid{grid-template-columns:1fr}.field.span-2{grid-column:span 1}.modal-scrim{padding:12px 8px}.clamp{max-width:200px}}
 
 /* Layout de 2 columnas de Sponsors (tabla ancha + panel lateral) */
-.sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+.sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
 @media(max-width:900px){.sp-layout{grid-template-columns:1fr}}
 
 /* Fila inferior del Resumen: salud del sistema + recaudación por plan + KPIs laterales.
@@ -276,11 +298,18 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
   border-radius:8px;padding:6px 10px;font-size:11px;box-shadow:var(--shadow);white-space:nowrap;
   z-index:5;transform:translate(-8px,-115%)}
 .chart-tip b{display:block;font-size:11.5px;margin-bottom:2px}
-.chart-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12px;min-width:150px}
+.chart-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12px;min-width:128px}
+.chart-legend.roomy{min-width:220px;gap:9px}
 .chart-legend-item{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;cursor:pointer}
 .chart-legend-item.hover,.chart-legend-item:hover{background:var(--soft)}
 .chart-legend-item b{margin-left:auto;font-family:'Montserrat',sans-serif}
 .chart-legend-item .pct{color:var(--muted);font-size:10.5px;min-width:32px;text-align:right}
+.chart-legend-item .pct-pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;text-align:center;min-width:30px}
+/* Variante con más aire entre etiqueta, valor y píldora (Badges emitidos por
+   tipo) — no toca el resto de los usos del donut (Sponsors, conversión). */
+.chart-legend-item.roomy{gap:14px}
+.chart-legend-item.roomy span:not(.dot):not(.pct-pill){margin-right:2px}
+.chart-legend-item.roomy b{margin-left:auto;margin-right:12px}
 
 /* ── Comercial: selector de rango tipo píldora, insignia de fechas, tooltip de línea y ranking ── */
 .range-pills{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
@@ -326,20 +355,12 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .kpi-tile.orange .kpi-label,.kpi-tile.orange .kpi-val{color:var(--kpi-orange-title)}
 .kpi-tile.orange .kpi-delta.neutral{color:var(--kpi-orange-sub)}
 
-/* Sparkline */
-.kpi-tile .kpi-spark{position:relative;z-index:1;margin-top:8px}
-.kpi-tile.blue .kpi-spark{color:var(--kpi-blue-icon)}
-.kpi-tile.green .kpi-spark{color:var(--kpi-green-icon)}
-.kpi-tile.purple .kpi-spark{color:var(--kpi-purple-icon)}
-.kpi-tile.orange .kpi-spark{color:var(--kpi-orange-icon)}
-
 /* Variante compacta para las tarjetas KPI laterales */
 .kpi-tile.compact{padding:14px 16px;min-height:auto}
 .kpi-tile.compact .kpi-ic{right:-6px;bottom:-6px}
 .kpi-tile.compact .kpi-val{font-size:1.6rem;line-height:1.1}
 .kpi-tile.compact .kpi-delta{margin-top:4px}
 .kpi-tile.compact .kpi-row{display:flex;align-items:baseline;gap:8px;position:relative;z-index:1}
-.kpi-tile.compact .kpi-spark.compact-spark{margin-top:8px;width:55%}
 
 /* Embudo de conversión */
 .funnel-list{display:flex;flex-direction:column;gap:14px;margin-top:8px}

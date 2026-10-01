@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { VIEWS } from '../App.jsx';
+import { IconMenuFilled, IconGlobeFilled, IconSunFilled, IconMoonFilled, IconLogOutFilled } from './ui.jsx';
 
 const Logo = () => (
   <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
@@ -24,11 +25,14 @@ export default function Layout({ ctx, children }) {
   const grp1 = visible.filter((v) => v.group === 1);
   const grp2 = visible.filter((v) => v.group === 2);
 
-  const NavItem = (v) => (
-    <NavLink key={v.id} to={v.path} end={v.path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'act' : ''}`} onClick={() => setOpen(false)}>
-      <span className="ico">{v.ic}</span>{L('nav_' + v.id)}
-    </NavLink>
-  );
+  const NavItem = (v) => {
+    const Ic = v.ic;
+    return (
+      <NavLink key={v.id} to={v.path} end={v.path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'act' : ''}`} onClick={() => setOpen(false)}>
+        <span className="ico"><Ic size={16} /></span>{L('nav_' + v.id)}
+      </NavLink>
+    );
+  };
 
   return (
     <div className="app">
@@ -45,19 +49,24 @@ export default function Layout({ ctx, children }) {
             <div className="side-avatar">{initials}</div>
             <div><div className="nm">{user.name}</div><div className="rl">{L('role_' + user.role)}</div></div>
           </div>
-          <button className="side-logout" onClick={logout}>{L('logout')}</button>
+          <button className="side-logout" onClick={logout}><IconLogOutFilled size={14} />{L('logout')}</button>
         </div>
       </aside>
       <div className={`scrim ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />
       <div className="main-wrap">
         <header className="topbar">
-          <button className="hamb" onClick={() => setOpen(true)}>☰</button>
+          <button className="hamb" onClick={() => setOpen(true)} aria-label={L('menu') || 'Menú'}><IconMenuFilled size={18} /></button>
           <div className="page-title">{L('nav_' + current.id)}</div>
           <div className="tb-right">
-            <select className="ctl" value={lang} onChange={(e) => setLang(e.target.value)}>
-              <option value="es">🌐 ES</option><option value="en">🌐 EN</option>
-            </select>
-            <button className="ctl" onClick={() => setDark(!dark)}>{dark ? '☀️' : '🌙'}</button>
+            <span className="ctl-group">
+              <IconGlobeFilled size={14} />
+              <select className="ctl" value={lang} onChange={(e) => setLang(e.target.value)}>
+                <option value="es">ES</option><option value="en">EN</option>
+              </select>
+            </span>
+            <button className="ctl ctl-icon" onClick={() => setDark(!dark)} aria-label={dark ? 'Modo claro' : 'Modo oscuro'}>
+              {dark ? <IconSunFilled size={16} /> : <IconMoonFilled size={15} />}
+            </button>
           </div>
         </header>
         <main className="content">{children}</main>
