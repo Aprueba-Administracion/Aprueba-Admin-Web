@@ -72,7 +72,7 @@ export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCRea
                 >
                   <span className="corrections-panel-layout-12" style={{ "--corrections-panel-layout-12-background": ((value) => typeof value === 'number' ? value + 'px' : value)(tabItem.dotColor) }} />
                   {tabItem.label}
-                  <span className="corrections-panel-layout-13" style={{ "--corrections-panel-layout-13-background": ((value) => typeof value === 'number' ? value + 'px' : value)(active ? '#eff6ff' : 'var(--soft, #f1f5f9)'), "--corrections-panel-layout-13-color": ((value) => typeof value === 'number' ? value + 'px' : value)(active ? '#2563eb' : 'var(--muted)') }}>
+                  <span className="corrections-panel-layout-13">
                     {tabItem.count}
                   </span>
                 </button>

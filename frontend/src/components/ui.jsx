@@ -369,8 +369,13 @@ export function Pager({ page, shown, total, hasNext, onNext, onPrev, L }) {
   );
 }
 
-export function KV({ k, v }) {
-  return <div className="kv"><span className="k">{k}</span><span className="v">{v ?? '—'}</span></div>;
+export function KV({ k, v, ic }) {
+  return (
+    <div className="kv">
+      <span className="k">{ic && <span className="kv-ic">{ic}</span>}{k}</span>
+      <span className="v">{v ?? '—'}</span>
+    </div>
+  );
 }
 
 // ── Gráficos SVG inline (mismos del wireframe) ──
@@ -771,6 +776,56 @@ export function IconTrash({ size = 15 }) {
   );
 }
 
+export function IconChevronLeft({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+export function IconMapPin({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+export function IconLanguages({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 8h8" /><path d="M9 5v3a8 8 0 0 1-6 7.5" /><path d="M3 20a12 12 0 0 0 6.5-3.5" />
+      <path d="m13 20 4-9 4 9" /><path d="M14.5 17h5" />
+    </svg>
+  );
+}
+
+export function IconX({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18" /><path d="M6 6l12 12" />
+    </svg>
+  );
+}
+
+export function IconPause({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" />
+    </svg>
+  );
+}
+
+export function IconPlay({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </svg>
+  );
+}
+
 export const COIN = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎', platinum: '⬡' };
 export function IconUsers({ size = 16 }) {
   return (
@@ -856,6 +911,20 @@ export function IconCheckCircle({ size = 16 }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <polyline points="8 12.5 11 15.5 16 9" />
+    </svg>
+  );
+}
+
+// Insignia de verificado estilo Instagram/Twitter: círculo festoneado azul
+// relleno con un check blanco. Los colores van fijos (no currentColor) para
+// que se vea igual de bien en modo claro y oscuro, a diferencia del ícono de
+// solo contorno (IconCheckCircle) que en oscuro se veía como un anillo casi
+// invisible.
+export function IconVerifiedBadge({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="#2563eb" />
+      <path d="m9 12 2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }

@@ -4,7 +4,9 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import {
   TopKpiCard, Card, Loading, ErrorBox, EmptyState, Modal, Confirm, Field, FormGrid, Select, Check,
   Chips, TagInput, Stars, Toast, useToast, KV, Pill, Tabs,
-  IconGraduationCap, IconCheckCircle, IconStar, IconUsers,
+  IconGraduationCap, IconCheckCircle, IconVerifiedBadge, IconStar, IconUsers,
+  IconEdit, IconTrash, IconX, IconPause, IconPlay,
+  IconChevronLeft, IconMapPin, IconLanguages, IconDollarSign, IconCalendar, IconGlobe,
 } from '../components/ui.jsx';
 
 // Catálogos cerrados: coinciden con las constantes del backend (routes/tutors.js).
@@ -119,7 +121,14 @@ export default function Tutors({ ctx }) {
   const [dialog, setDialog] = useState(null); // {kind, tutor?, review?}
   const [busy, setBusy] = useState(false);
   const seenSubjects = useRef(new Set());
-  const [selectedId, setSelectedId] = useState(null);
+  // Antes la selección se guardaba por `id` del tutor. Si un registro (p.ej.
+  // uno de prueba creado a medio llenar) tenía el id vacío o duplicado con
+  // otro, `rows.find(x => x.id === selectedId)` podía resolver siempre al
+  // mismo tutor sin importar en cuál se apretara "Ver" — daba la sensación de
+  // que había que cerrar el panel para poder abrir otro. Usando la posición
+  // en la lista en vez del id, el cambio de selección no depende de que los
+  // ids vengan bien formados.
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(null);
@@ -184,15 +193,15 @@ export default function Tutors({ ctx }) {
     );
   };
 
-  const openDetail = (tutor) => {
-    setSelectedId(tutor.id);
+  const openDetail = (index) => {
+    setSelectedIndex(index);
     setDetailTab('profile');
   };
 
   // Refresh the selected record after mutations, and discard stale responses.
   useEffect(() => {
     const request = ++detailRequest.current;
-    const tutor = rows?.find((x) => x.id === selectedId);
+    const tutor = selectedIndex != null ? rows?.[selectedIndex] : null;
     if (!tutor) {
       setDetail(null);
       setDetailLoading(false);
@@ -209,7 +218,19 @@ export default function Tutors({ ctx }) {
       if (request === detailRequest.current) setDetailLoading(false);
     });
     return () => { detailRequest.current++; };
-  }, [selectedId, rows]);
+  }, [selectedIndex, rows]);
+
+  // En teléfono la ficha se abre como ventana flotante encima de la lista
+  // (ver tu-detail-backdrop más abajo); mientras está abierta se bloquea el
+  // scroll del fondo para que se sienta como una ventana modal de verdad.
+  useEffect(() => {
+    if (!detail || typeof window === 'undefined') return;
+    const isPhone = window.matchMedia('(max-width:620px)').matches;
+    if (!isPhone) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [detail]);
 
   if (err && !rows) return <Card><ErrorBox msg={err} onRetry={() => load(filters)} L={L} /></Card>;
   if (!rows) return <Loading L={L} />;
@@ -245,16 +266,35 @@ export default function Tutors({ ctx }) {
         {rows.length === 0 ? <EmptyState msg={L('tu_no_tutors')} ic="🎓" /> : (
           <div className={detail ? 'tu-split has-detail' : 'tu-split'}>
             <div className="tu-list">
-              {rows.map((x) => (
-                <article key={x.id} className={selectedId === x.id ? 'tu-row sel' : 'tu-row'}>
+              {rows.map((x, i) => (
+                <article
+                  key={x.id || i}
+                  className={selectedIndex === i ? 'tu-row sel' : 'tu-row'}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => (selectedIndex === i ? setSelectedIndex(null) : openDetail(i))}
+                >
                   <div className="tu-person">
                     <div className="tavatar tu-avatar-colors" style={{ '--tu-avatar-bg': x.avatarColor || 'var(--brand)', '--tu-avatar-ink': x.textColor || '#fff' }}>{x.initials || initialsOf(x.name)}</div>
                     <div className="tu-identity">
-                      <b>{x.name}</b><div className="note">{x.contact?.email || L('none')}</div>
-                      <div className="chips tu-badges">
-                        {x.verified && <span className="tag g">✓ {L('tu_verified')}</span>}
+                      {/* El estado (Activo/Inactivo) y las insignias de verificado/destacado
+                          se movieron acá, al lado del nombre, para no ocupar una fila
+                          completa abajo (pedido del usuario). El botón "Ver/Cerrar" se
+                          sacó: toda la fila ya es clicable para abrir o cerrar el
+                          detalle, así que era un control duplicado. */}
+                      <div className="tu-name-row">
+                        <b>{x.name}</b>
+                        {/* En la lista se muestra sólo el ícono (como la insignia azul de
+                            Instagram) para no ocupar tanto espacio; el texto completo
+                            "Verificado" se deja únicamente en la ficha del tutor. */}
+                        {x.verified && (
+                          <span className="tu-verified-ic" title={L('tu_verified')} aria-label={L('tu_verified')}>
+                            <IconVerifiedBadge size={15} />
+                          </span>
+                        )}
+                        <Pill value={x.status || 'active'} map={STATUS_TAG} L={L} />
                         {x.featured && <span className="tag w">★ {L('tu_featured')}</span>}
                       </div>
+                      <div className="note">{x.contact?.email || L('none')}</div>
                     </div>
                   </div>
                   <div className="tu-offer">
@@ -263,32 +303,46 @@ export default function Tutors({ ctx }) {
                   </div>
                   <div className="tu-price"><b>{x.pricePerHour ? fmt(x.pricePerHour) + ' ' + (x.currency || '') : L('none')}</b><div className="note">{L('tu_price')}</div></div>
                   <div className="tu-rating">{Number(x.rating)> 0 ? <Stars value={x.rating} count={x.reviewCount} /> : <span className="note">{L('none')}</span>}</div>
-                  <div className="tu-row-controls">
-                    <Pill value={x.status || 'active'} map={STATUS_TAG} L={L} />
-                    <button className="btn sec sm" aria-pressed={selectedId === x.id} onClick={() => selectedId === x.id ? setSelectedId(null) : openDetail(x)}>{L(selectedId === x.id ? 'close' : 'view')}</button>
-                  </div>
                 </article>
               ))}
             </div>
+            {/* En teléfono la ficha quedaba al final de toda la lista (había que hacer
+                mucho scroll para verla). Ahora, con el fondo (tu-detail-backdrop) y el
+                `position:fixed` que se le da a .tu-detail sólo en esa media query, la
+                ficha se abre como una ventana/hoja flotante encima de la lista, que
+                queda desenfocada detrás. En escritorio/tablet este backdrop no se
+                muestra (display:none por defecto) y la ficha sigue siendo la columna
+                de siempre. */}
+            {detail && <div className="tu-detail-backdrop" onClick={() => setSelectedIndex(null)} />}
             {detail && <aside className="tu-detail" aria-label={L('tu_detail')}>
-              <div className="flex between wrap tu-gap-8 tu-margin-bottom-12"><b>{L('tu_detail')}</b><button className="btn sec sm" onClick={() => setSelectedId(null)}>{L('close')}</button></div>
+              <div className="flex between wrap tu-gap-8 tu-margin-bottom-12 tu-detail-head">
+                {/* La flecha "‹" sólo se ve en teléfono (la ficha abierta como ventana);
+                    en escritorio/tablet queda oculta y el título sigue como antes. Las
+                    dos cumplen la misma función (volver a la lista); no hay una
+                    jerarquía de navegación más profunda que distinguirlas. */}
+                <button className="btn sec sm icon-only tu-detail-back" onClick={() => setSelectedIndex(null)} aria-label={lang === 'es' ? 'Volver' : 'Back'} title={lang === 'es' ? 'Volver' : 'Back'}><IconChevronLeft size={16} /></button>
+                <b className="tu-detail-head-title">{L('tu_detail')}</b>
+                <button className="btn sec sm icon-only" onClick={() => setSelectedIndex(null)} aria-label={L('close')} title={L('close')}><IconX size={16} /></button>
+              </div>
               {detailError && <ErrorBox msg={detailError} onRetry={() => load(filters)} L={L} />}
               <TutorDetail tutor={detail} loading={detailLoading} ctx={ctx} busy={busy} tab={detailTab} onTabChange={setDetailTab}
                 onDeleteReview={(review) => setDialog({ kind: 'review', tutor: detail, review })} />
                                 <div className="tu-actions">
-                    <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'form', tutor: detail })}>{L('edit')}</button>
+                    {/* Íconos agregados para que cada acción se reconozca de un vistazo,
+                        sobre todo en teléfono donde el texto solo ya quedaba apretado. */}
+                    <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'form', tutor: detail })}><IconEdit size={14} /> {L('edit')}</button>
                     <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'verify', tutor: detail })}>
-                      {detail.verified ? L('tu_unverify') : L('tu_verify')}
+                      <IconCheckCircle size={14} /> {detail.verified ? L('tu_unverify') : L('tu_verify')}
                     </button>
                     {/* PUT admite parches parciales: se envía solo el campo que cambia. */}
                     <button className="btn sec sm" disabled={busy || detailLoading} title={L(detail.featured ? 'tu_unfeature' : 'tu_feature')}
                       onClick={() => run(() => api.put(`/tutors/${detail.id}`, { featured: !detail.featured }), L('saved_ok'))}>
-                      {L(detail.featured ? 'tu_unfeature' : 'tu_feature')}
+                      <IconStar size={14} /> {L(detail.featured ? 'tu_unfeature' : 'tu_feature')}
                     </button>
                     {(detail.status || 'active') === 'active'
-                      ? <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'pause', tutor: detail })}>{L('tu_pause')}</button>
-                      : <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => run(() => api.put(`/tutors/${detail.id}`, { status: 'active' }), L('saved_ok'))}>{L('tu_activate')}</button>}
-                    {isAdmin && <button className="btn dgr sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'delete', tutor: detail })} aria-label={L('tu_delete')}>{L('tu_delete')}</button>}
+                      ? <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'pause', tutor: detail })}><IconPause size={14} /> {L('tu_pause')}</button>
+                      : <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => run(() => api.put(`/tutors/${detail.id}`, { status: 'active' }), L('saved_ok'))}><IconPlay size={14} /> {L('tu_activate')}</button>}
+                    {isAdmin && <button className="btn dgr sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'delete', tutor: detail })} aria-label={L('tu_delete')}><IconTrash size={14} /> {L('tu_delete')}</button>}
                   </div>
             </aside>}
           </div>
@@ -486,22 +540,27 @@ function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChan
     <div className="tu-detail-content">
       {loading ? <Loading L={L} /> : (
         <>
-          <div className="flex wrap tu-gap-12 tu-margin-bottom-14">
-            <div className="tavatar tu-width-48 tu-height-48 tu-font-size-15 tu-avatar-colors" style={{ '--tu-avatar-bg': tutor.avatarColor, '--tu-avatar-ink': tutor.textColor || '#fff' }}>
+          {/* En teléfono este bloque se centra (avatar grande arriba, nombre e
+              insignias, rating y materia debajo, en ese orden) para que la ficha se
+              vea como la ventana flotante del mockup, sin el ID técnico del tutor
+              (tu-detail-id se oculta ahí, no aporta nada a un apoderado/admin mirando
+              desde el celular). En escritorio queda igual que siempre. */}
+          <div className="flex wrap tu-gap-12 tu-margin-bottom-14 tu-detail-top">
+            <div className="tavatar tu-width-48 tu-height-48 tu-font-size-15 tu-avatar-colors tu-detail-avatar" style={{ '--tu-avatar-bg': tutor.avatarColor, '--tu-avatar-ink': tutor.textColor || '#fff' }}>
               {tutor.initials || initialsOf(tutor.name)}
             </div>
-            <div className="tu-flex-1-1-160px tu-min-width-0">
-              <div className="flex wrap tu-gap-6">
+            <div className="tu-flex-1-1-160px tu-min-width-0 tu-detail-identity">
+              <div className="flex wrap tu-gap-6 tu-detail-name-row">
                 <b className="tu-font-size-15">{tutor.name}</b>
                 {tutor.verified && <span className="tag g">✓ {L('tu_verified')}</span>}
                 {tutor.featured && <span className="tag w">★ {L('tu_featured')}</span>}
                 <Pill value={tutor.status || 'active'} map={STATUS_TAG} L={L} />
                 {tutor.online && <span className="tag g"><span className="dot ok tu-margin-right-5"  />online</span>}
               </div>
-              <div className="note mono">{tutor.id}</div>
-              <div className="note">{tutor.subjectsLabel?.[lang] || (tutor.subjects || []).join(' · ')}</div>
+              <div className="note mono tu-detail-id">{tutor.id}</div>
+              <Stars value={tutor.rating} count={tutor.reviewCount} />
+              <div className="note tu-detail-subject">{tutor.subjectsLabel?.[lang] || (tutor.subjects || []).join(' · ')}</div>
             </div>
-            <Stars value={tutor.rating} count={tutor.reviewCount} />
           </div>
 
           <Tabs active={tab} onChange={onTabChange} tabs={[
@@ -513,11 +572,11 @@ function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChan
           <div className="grid tu-facts">
             <div className="tu-fact" hidden={tab !== 'profile' }>
               <div className="section-label tu-margin-top-0">{L('tu_sec_offer')}</div>
-              <KV k={L('tu_price')} v={tutor.pricePerHour ? `${fmt(tutor.pricePerHour)} ${tutor.currency || ''}` : L('none')} />
-              <KV k={L('tu_modes')} v={(tutor.modes || []).map((m) => L(`mode_${m}`)).join(' · ')} />
-              <KV k={L('tu_country')} v={tutor.country} />
-              <KV k={L('tu_languages')} v={(tutor.languages || []).join(', ')} />
-              <KV k={L('tu_years')} v={tutor.yearsExperience} />
+              <KV ic={<IconDollarSign size={14} />} k={L('tu_price')} v={tutor.pricePerHour ? `${fmt(tutor.pricePerHour)} ${tutor.currency || ''}` : L('none')} />
+              <KV ic={<IconMapPin size={14} />} k={L('tu_modes')} v={(tutor.modes || []).map((m) => L(`mode_${m}`)).join(' · ')} />
+              <KV ic={<IconGlobe size={14} />} k={L('tu_country')} v={tutor.country} />
+              <KV ic={<IconLanguages size={14} />} k={L('tu_languages')} v={(tutor.languages || []).join(', ')} />
+              <KV ic={<IconCalendar size={14} />} k={L('tu_years')} v={tutor.yearsExperience} />
             </div>
             <div className="tu-fact" hidden={tab !== 'reputation' }>
               <div className="section-label tu-margin-top-0">{L('tu_sec_reputation')}</div>

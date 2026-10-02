@@ -156,7 +156,7 @@ input:focus,select:focus{border-color:var(--brand)}
 .hint-box{font-size:11px;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:14px;line-height:1.6}
 .center{display:grid;place-items:center;padding:40px;color:var(--muted)}
 /* ── modales ── */
-.modal-scrim{position:fixed;inset:0;background:rgba(15,39,66,.52);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+.modal-scrim{position:fixed;inset:0;background:rgba(15,39,66,.52);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);width:100%;max-width:540px;display:flex;flex-direction:column;max-height:calc(100vh - 48px);animation:pop .16s ease-out;margin:auto}
 .modal.wide{max-width:860px}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
@@ -485,8 +485,11 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
   .ov-kpis .kpi-label{font-size:.7rem;margin-bottom:3px}
   .ov-kpis .kpi-val{font-size:1.3rem}
   .ov-kpis .kpi-delta{font-size:.64rem;margin-top:4px}
-  .ov-kpis .kpi-ic{right:8px;bottom:8px}
-  .ov-kpis .kpi-ic svg{width:34px;height:34px}
+  /* Mismo tamaño/posición que .tu-page .kpi-ic más abajo (Tutores), para que
+     los íconos de fondo de las tarjetas KPI se vean igual de grandes en
+     ambas vistas en teléfono. */
+  .ov-kpis .kpi-ic{right:6px;bottom:6px}
+  .ov-kpis .kpi-ic svg{width:40px;height:40px}
 }
 
 /* Comercial: barra de rango/fecha/exportar (.com-toolbar) y tarjeta de
@@ -514,7 +517,7 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .tu-split{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
 .tu-split.has-detail{grid-template-columns:minmax(280px,.9fr) minmax(0,1.3fr)}
 .tu-list{display:grid;gap:8px;min-width:0}
-.tu-row{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0;transition:.15s ease;display:grid;grid-template-columns:minmax(180px,1.5fr) minmax(140px,1.1fr) minmax(105px,.65fr) minmax(125px,.8fr) auto;gap:16px;align-items:center}
+.tu-row{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0;transition:.15s ease;display:grid;grid-template-columns:minmax(180px,1.5fr) minmax(140px,1.1fr) minmax(105px,.65fr) minmax(125px,.8fr);gap:16px;align-items:center}
 .tu-row:hover{background:var(--soft)}
 .tu-row.sel{background:var(--soft);border-color:var(--brand)}
 .tu-identity{min-width:0;flex:1;overflow-wrap:anywhere}
@@ -527,7 +530,14 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .tu-detail-content .tabs{margin-bottom:12px;flex-wrap:wrap;overflow-x:visible}
 .tu-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;margin-top:16px}
 .tu-detail .kv{overflow-wrap:anywhere;flex-wrap:wrap}
-@media(max-width:1000px){.tu-split.has-detail{grid-template-columns:1fr}.tu-detail{order:-1}}
+/* Antes el panel de detalle se reordenaba (order:-1) por encima de la lista
+   en pantallas angostas. Como el detalle es largo (perfil, pestañas, reseñas,
+   acciones), la lista con los demás botones "Ver" quedaba empujada muy abajo
+   — daba la sensación de que había que cerrar el detalle para poder elegir
+   otro tutor, cuando en realidad el cambio de selección sí funcionaba, solo
+   que el botón para hacerlo quedaba fuera de vista. Sin el reorder, la lista
+   se mantiene arriba siempre y el detalle aparece debajo. */
+@media(max-width:1000px){.tu-split.has-detail{grid-template-columns:1fr}}
 .tu-detail-content .tab{padding:9px 10px;font-size:12px}
 .tu-detail .kv .k{flex-shrink:1}
 .tu-detail .review .rhead{flex-wrap:wrap}
@@ -577,7 +587,7 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
   .tu-page .kpi-tile .kpi-label{font-size:12px;padding-right:12px;overflow-wrap:anywhere}
   .tu-page .kpi-tile .kpi-val{font-size:23px}
   .tu-page .kpi-tile .kpi-ic{right:6px;bottom:6px}
-  .tu-page .kpi-tile .kpi-ic svg{width:34px;height:34px}
+  .tu-page .kpi-tile .kpi-ic svg{width:40px;height:40px}
   .tu-directory .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .tu-directory .filters>input{grid-column:1 / -1;width:100%;min-width:0}
   .tu-directory .filters>select{width:100%;min-width:0;max-width:100%}
@@ -767,7 +777,10 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .corrections-panel-layout-10.corrections-panel-layout-10.corrections-panel-layout-10{gap:14px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
 .corrections-panel-layout-11.corrections-panel-layout-11.corrections-panel-layout-11{background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:var(--corrections-panel-layout-11-border-bottom);font-weight:var(--corrections-panel-layout-11-font-weight);color:var(--corrections-panel-layout-11-color);font-size:13.5px}
 .corrections-panel-layout-12.corrections-panel-layout-12.corrections-panel-layout-12{width:8px;height:8px;border-radius:50%;background:var(--corrections-panel-layout-12-background)}
-.corrections-panel-layout-13.corrections-panel-layout-13.corrections-panel-layout-13{font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:12px;background:var(--corrections-panel-layout-13-background);color:var(--corrections-panel-layout-13-color)}
+/* Antes el estado activo pintaba un azul claro fijo (#eff6ff/#2563eb) que en
+   modo oscuro se veía como un círculo blanco; se deja igual que la insignia
+   de Tickets (.tickets-panel-layout-15), que ya usa variables de tema. */
+.corrections-panel-layout-13.corrections-panel-layout-13.corrections-panel-layout-13{font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:12px;background:var(--soft);color:var(--ink)}
 .corrections-panel-layout-14.corrections-panel-layout-14.corrections-panel-layout-14{display:flex;align-items:center;gap:6px;margin-bottom:12px}
 .corrections-panel-layout-15.corrections-panel-layout-15.corrections-panel-layout-15{color:var(--muted);font-size:12px}
 .corrections-panel-layout-16.corrections-panel-layout-16.corrections-panel-layout-16{width:90px}
@@ -881,3 +894,113 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .sponsor-tier.sponsor-tier.sponsor-tier-gold{background:var(--gold-bg);color:var(--gold-ink);border:1px solid var(--gold-line)}
 .sponsor-tier.sponsor-tier.sponsor-tier-silver{background:var(--silver-bg);color:var(--silver-ink);border:1px solid var(--silver-line)}
 .sponsor-tier.sponsor-tier.sponsor-tier-bronze{background:var(--bronze-bg);color:var(--bronze-ink);border:1px solid var(--bronze-line)}
+
+/* Tutors: con el panel de detalle abierto (.has-detail) cada fila de la lista
+   quedaba muy alta (avatar+nombre+correo+badges, oferta+chips, precio y
+   rating cada uno en su propia línea), así que con pocos tutores ya se
+   llenaba la pantalla y había que hacer mucho scroll. Se compacta el
+   padding/gap y los sub-elementos sólo dentro de .has-detail, sin tocar la
+   vista normal (lista sin detalle abierto). Va al final del archivo por la
+   regla de cascada: estas reglas pisan a las de arriba (misma especificidad)
+   sólo si quedan después en el archivo. */
+.tu-split.has-detail .tu-list{gap:6px}
+.tu-split.has-detail .tu-row{padding:8px 12px;gap:4px 12px}
+.tu-split.has-detail .tu-person{gap:7px}
+.tu-split.has-detail .tu-person .tavatar{width:26px;height:26px;font-size:10px}
+.tu-split.has-detail .tu-badges{margin-top:2px}
+.tu-split.has-detail .tu-identity .note{font-size:.72rem}
+.tu-split.has-detail .tu-offer .chips{margin-top:2px}
+.tu-split.has-detail .tu-price,.tu-split.has-detail .tu-rating{font-size:.82rem}
+.tu-split.has-detail .tu-price .note{font-size:.68rem}
+.tu-split.has-detail .tu-row-controls{margin-top:0}
+/* El nombre y las insignias (Activo, Verificado, Destacado) deben quedar
+   siempre en una sola línea: antes, con poco ancho (sobre todo con el
+   detalle de un tutor abierto, donde la columna de la lista se angosta),
+   "Verificado" se iba a una segunda línea en vez de quedar al lado de
+   "Activo". Se evita truncando el nombre (con "...") si no entra, en vez de
+   dejar que las insignias salten de línea. */
+.tu-name-row{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+.tu-name-row b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:24px}
+.tu-name-row .tag{flex-shrink:0}
+.tu-verified-ic{display:inline-flex;align-items:center;color:var(--brand);flex-shrink:0}
+
+/* Tutores en teléfono: antes, al apretar un tutor, la ficha se dibujaba como
+   una columna más dentro del mismo grid (apilada bajo la lista), así que
+   quedaba al final de todo y había que bajar con scroll para verla. Ahora,
+   sólo en este ancho, la ficha (.tu-detail) se saca del flujo normal con
+   position:fixed y flota encima como una ventana/hoja, con un fondo
+   (.tu-detail-backdrop) oscuro y desenfocado detrás que además cierra la
+   ficha al tocarlo. Va al final del archivo por la regla de cascada: estas
+   reglas pisan a las de .tu-detail/.tu-split de más arriba (misma
+   especificidad) sólo por ir después en el archivo. */
+.tu-detail-backdrop{display:none}
+@media(max-width:620px){
+  .tu-detail-backdrop{
+    display:block;position:fixed;inset:0;z-index:40;
+    background:rgba(5,10,20,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    animation:tu-backdrop-in .18s ease;
+  }
+  .tu-split.has-detail .tu-detail{
+    position:fixed;left:0;right:0;bottom:0;top:auto;max-height:86dvh;
+    margin:0;z-index:41;border-radius:18px 18px 0 0;
+    box-shadow:0 -10px 34px rgba(0,0,0,.45);overflow-y:auto;
+    animation:tu-sheet-in .22s ease;
+  }
+  .tu-detail-head{
+    position:sticky;top:0;background:var(--panel);margin:-12px -12px 10px;
+    padding:8px 10px;border-bottom:1px solid var(--line);z-index:1;
+  }
+  /* Los botones "‹" y "✕" quedaban del tamaño normal (34px) con todo el ancho
+     de la ficha entre medio (space-between), lo que se veía como una franja
+     vacía enorme arriba y empujaba el resto del contenido hacia abajo. Se
+     achican un poco y se reduce el padding/margen de la cabecera para que esa
+     franja quede más baja y compacta, sin tanto espacio muerto. */
+  .tu-detail-head .icon-only{width:28px;height:28px;padding:5px}
+  .tu-detail-head::before{
+    content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);
+    width:32px;height:3px;border-radius:99px;background:var(--line);
+  }
+}
+@keyframes tu-backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes tu-sheet-in{from{transform:translateY(24px);opacity:.5}to{transform:translateY(0);opacity:1}}
+
+/* Botón cuadrado de solo ícono (usado para el "Cerrar" de la ficha de
+   tutor, ahora una X en vez de texto). Genérico, reutilizable en cualquier
+   otro botón que sólo lleve ícono. */
+.btn.icon-only{padding:8px;width:34px;height:34px;flex-shrink:0}
+
+/* Ícono chico antes de la etiqueta en una fila KV (usado en la sección OFERTA
+   de la ficha de tutor: Precio/hora, Modalidad, País, Idiomas, Años de
+   experiencia). Genérico: no afecta ningún KV que no reciba la prop `ic`. */
+.kv-ic{display:inline-flex;margin-right:6px;color:var(--muted);vertical-align:-2px}
+
+/* Ficha de tutor en teléfono: la cabecera (avatar, nombre, insignias, rating,
+   materia) se centra como una ventana propia en vez de la fila de escritorio,
+   el ID técnico del tutor se oculta (no le sirve a nadie mirando desde el
+   celular) y el botón "Cerrar" de arriba se acompaña de una flecha "‹" para
+   que se sienta como volver a la lista. No hay banner de fondo: el fondo
+   sigue siendo el mismo backdrop desenfocado (.tu-detail-backdrop) de
+   siempre. Va al final del archivo por la regla de cascada de siempre:
+   pisa a .tu-width-48/.tu-height-48/.tu-font-size-15 y a los demás estilos
+   base de la ficha (misma especificidad) sólo por ir después en el archivo. */
+.tu-detail-back{display:none}
+@media(max-width:620px){
+  .tu-detail-back{display:inline-flex}
+  .tu-detail-head-title{display:none}
+  .tu-detail-top{flex-direction:column;align-items:center;text-align:center;gap:6px}
+  /* Más margen, y además se sube por encima del header (z-index) a propósito:
+     el header queda "position:sticky" con su propio z-index para quedar fijo
+     arriba al hacer scroll, y mientras tenga esa propiedad cualquier
+     solapamiento por mínimo que sea hace que se pinte encima y "corte" el
+     avatar. Subir el avatar por encima resuelve el corte pase lo que pase
+     con el espaciado exacto. */
+  .tu-detail-avatar{width:64px;height:64px;font-size:22px;position:relative;z-index:5;margin-top:4px}
+  .tu-detail-identity{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none;width:100%}
+  .tu-detail-name-row{justify-content:center}
+  .tu-detail-id{display:none}
+  .tu-detail-subject{margin-top:2px}
+  /* "Eliminar definitivamente" quedaba pegado a la izquierda, usando sólo una
+     de las dos columnas de la grilla de acciones (la columna de al lado
+     quedaba vacía). Ahora ocupa el ancho completo de las dos columnas. */
+  .tu-actions .btn.dgr{grid-column:1 / -1}
+}
