@@ -468,3 +468,43 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .tab-fade{animation:tab-fade-in .18s ease-out}
 @keyframes tab-fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.tab-fade{animation:none}}
+
+/* Resumen en teléfono: los 4 KPIs principales quedan en grilla 2x2 compacta
+   (según mockup), en vez de apilados en una sola columna como el resto de
+   las grillas .g4 de la consola — por eso va aparte, con su propia clase, y
+   no toca ningún otro uso de .g4.
+   OJO: este bloque va al FINAL del archivo a propósito. ".ov-kpis .kpi-ic"
+   y ".kpi-tile .kpi-ic" (la regla base, más arriba) tienen la misma
+   especificidad (dos clases), así que gana la que esté más abajo en el
+   archivo — si este bloque queda antes de esa regla base, esta la pisa y el
+   ícono vuelve a quedar con el offset negativo de escritorio, cortado contra
+   el borde de la tarjeta angosta. Puesto al final, gana siempre. */
+@media(max-width:620px){
+  .ov-kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+  .ov-kpis .kpi-tile{padding:12px 14px;min-height:84px;border-radius:14px}
+  .ov-kpis .kpi-label{font-size:.7rem;margin-bottom:3px}
+  .ov-kpis .kpi-val{font-size:1.3rem}
+  .ov-kpis .kpi-delta{font-size:.64rem;margin-top:4px}
+  .ov-kpis .kpi-ic{right:8px;bottom:8px}
+  .ov-kpis .kpi-ic svg{width:34px;height:34px}
+}
+
+/* Comercial: barra de rango/fecha/exportar (.com-toolbar) y tarjeta de
+   Recaudación mensual (.mrr-*) — ver Commercial.jsx. En escritorio quedan
+   igual que antes (una sola fila; valor arriba y barras abajo); el cambio es
+   solo para teléfono, al final del archivo por la misma razón que el bloque
+   .ov-kpis de arriba (empatar en especificidad con reglas base como
+   .kpi-tile .kpi-ic y perder por quedar antes en el archivo). */
+.com-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.com-toolbar-row2{flex:1;min-width:220px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mrr-val{font-size:28px;font-weight:800;font-family:'Montserrat',sans-serif;margin-top:6px}
+.mrr-chart{margin-top:4px}
+@media(max-width:620px){
+  .com-toolbar{flex-direction:column;align-items:stretch}
+  .com-dl-chart svg{height:auto}
+  .mrr-body{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .mrr-text{flex-shrink:0}
+  .mrr-val{font-size:1.4rem;margin-top:4px}
+  .mrr-chart{width:132px;flex-shrink:0;margin-top:0}
+  .mrr-chart svg{display:block}
+}

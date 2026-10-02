@@ -111,20 +111,25 @@ export default function Commercial({ ctx }) {
 
   return (
     <>
-      <div className="flex between wrap" style={{ gap: 10, marginBottom: 16 }}>
-        <div className="flex wrap" style={{ gap: 10 }}>
-          <div className="range-pills">
-            {RANGES.map((rg) => (
-              <button key={rg} type="button" className={`range-pill ${range === rg ? 'act' : ''}`} onClick={() => setRange(rg)}>
-                {L(RANGE_PILL_KEY[rg])}
-              </button>
-            ))}
-          </div>
-          <span className="date-badge"><IconCalendar size={14} /> {dateRangeLabel(range, locale)}</span>
+      {/* com-toolbar: en escritorio todo va en una sola fila (pills, fecha y
+          exportar). En teléfono se parte en dos filas — pills arriba, fecha +
+          exportar abajo uno al lado del otro — en vez de que el botón
+          "Exportar CSV" se vaya envuelto más abajo suelto (ver
+          .com-toolbar/.com-toolbar-row2 en styles.css). */}
+      <div className="com-toolbar" style={{ marginBottom: 16 }}>
+        <div className="range-pills">
+          {RANGES.map((rg) => (
+            <button key={rg} type="button" className={`range-pill ${range === rg ? 'act' : ''}`} onClick={() => setRange(rg)}>
+              {L(RANGE_PILL_KEY[rg])}
+            </button>
+          ))}
         </div>
-        <button className="btn sec sm" onClick={() => downloadCommercialCsv(d, range, isEn)}>
-          <IconDownload size={14} /> {isEn ? 'Export CSV' : 'Exportar CSV'}
-        </button>
+        <div className="com-toolbar-row2">
+          <span className="date-badge"><IconCalendar size={14} /> {dateRangeLabel(range, locale)}</span>
+          <button className="btn sec sm" onClick={() => downloadCommercialCsv(d, range, isEn)}>
+            <IconDownload size={14} /> {isEn ? 'Export CSV' : 'Exportar CSV'}
+          </button>
+        </div>
       </div>
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
@@ -136,7 +141,7 @@ export default function Commercial({ ctx }) {
             {/* Gráfico de descargas totales */}
             <Card>
               <b>{L('com_downloads_total')}</b>
-              <div style={{ marginTop: 10 }}>
+              <div className="com-dl-chart" style={{ marginTop: 10 }}>
                 <LineChartInteractive
                   vals={monthVals}
                   labels={monthLabels}
@@ -154,15 +159,23 @@ export default function Commercial({ ctx }) {
 
             {/* Fila con Recaudación mensual y Top planes */}
             <div className="grid g2">
-              <Card>
+              <Card className="mrr-card">
                 <b>{L('k_mrr')}</b>
-                <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'Montserrat, sans-serif', marginTop: 6 }}>
-                  ${fmt(d.mrr)}
+                {/* mrr-body: en escritorio el valor va arriba y las barras abajo
+                    (como antes). En teléfono pasa a fila — valor a la izquierda,
+                    gráfico angosto al costado — para que la tarjeta quede más
+                    baja en vez de alargada (ver .mrr-body en styles.css). */}
+                <div className="mrr-body">
+                  <div className="mrr-text">
+                    <div className="mrr-val">${fmt(d.mrr)}</div>
+                    {ov.mrr?.deltaPct != null && (
+                      <div className="dl up" style={{ marginTop: 2 }}>▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
+                    )}
+                  </div>
+                  <div className="mrr-chart">
+                    <MiniMonthBars vals={monthVals} labels={monthLabels} />
+                  </div>
                 </div>
-                {ov.mrr?.deltaPct != null && (
-                  <div className="dl up" style={{ marginTop: 2, marginBottom: 4 }}>▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
-                )}
-                <MiniMonthBars vals={monthVals} labels={monthLabels} />
               </Card>
               <Card>
                 <div className="flex between" style={{ marginBottom: 4 }}>

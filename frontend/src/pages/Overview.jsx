@@ -146,9 +146,11 @@ export default function Overview({ ctx }) {
 
   return (
     <>
-      {/* Barra superior con selector de rango */}
-      <div className="flex between" style={{ alignItems: 'center', marginBottom: 18 }}>
-        <h2 style={{ margin: 0 }}>{isEn ? 'Overview' : ''}</h2>
+      {/* Barra superior con selector de rango — el título "Resumen/Overview" ya
+          lo muestra el topbar (Layout.jsx), así que acá no se repite en
+          ningún idioma (antes solo se había vaciado a mano la versión en
+          español y en inglés seguía mostrando "Overview" duplicado). */}
+      <div className="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', marginBottom: 18 }}>
         <div className="flex" style={{ gap: 6 }}>
           {['7d', '30d', '90d'].map((r) => (
             <button
@@ -163,8 +165,9 @@ export default function Overview({ ctx }) {
         </div>
       </div>
 
-      {/* 4 KPIs principales */}
-      <div className="grid g4" style={{ marginBottom: 16 }}>
+      {/* 4 KPIs principales — en teléfono quedan en grilla 2x2 (ver .ov-kpis en
+          styles.css), no apiladas en una columna como el resto de los .g4. */}
+      <div className="grid g4 ov-kpis" style={{ marginBottom: 16 }}>
         <TopKpiCard
           label={isEn ? 'Total downloads' : 'Descargas totales'}
           value={fmt(d.downloads?.total)}
