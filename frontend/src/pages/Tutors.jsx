@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, qs } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import {
-  Kpi, Card, Loading, ErrorBox, EmptyState, Modal, Confirm, Field, FormGrid, Select, Check,
-  Chips, TagInput, Stars, Toast, useToast, KV, Pill,
+  TopKpiCard, Card, Loading, ErrorBox, EmptyState, Modal, Confirm, Field, FormGrid, Select, Check,
+  Chips, TagInput, Stars, Toast, useToast, KV, Pill, Tabs,
+  IconGraduationCap, IconCheckCircle, IconStar, IconUsers,
 } from '../components/ui.jsx';
 
 // Catálogos cerrados: coinciden con las constantes del backend (routes/tutors.js).
@@ -71,7 +72,7 @@ function toPayload(f, { isCreate }) {
     punctuality: numOr(f.seedPunctuality),
     mastery: numOr(f.seedMastery),
   };
-  const hasSeed = CRITERIA.some((c) => seed[c] > 0);
+  const hasSeed = CRITERIA.some((c) => seed[c]> 0);
   const payload = {
     name: f.name.trim(),
     initials: (f.initials || initialsOf(f.name) || 'TU').trim(),
@@ -118,6 +119,12 @@ export default function Tutors({ ctx }) {
   const [dialog, setDialog] = useState(null); // {kind, tutor?, review?}
   const [busy, setBusy] = useState(false);
   const seenSubjects = useRef(new Set());
+  const [selectedId, setSelectedId] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+  const [detailTab, setDetailTab] = useState('profile');
+  const detailRequest = useRef(0);
 
   const load = useCallback(async (f = filters) => {
     setErr(null);
@@ -145,7 +152,7 @@ export default function Tutors({ ctx }) {
 
   const kpis = useMemo(() => {
     const list = rows || [];
-    const rated = list.filter((x) => Number(x.rating) > 0);
+    const rated = list.filter((x) => Number(x.rating)> 0);
     return {
       total: list.length,
       active: list.filter((x) => (x.status || 'active') === 'active').length,
@@ -162,10 +169,8 @@ export default function Tutors({ ctx }) {
       setDialog(null);
       if (okMsg) t.ok(okMsg);
       await load(filters);
-      return true;
     } catch (e) {
       t.err(e.message);
-      return false;
     } finally { setBusy(false); }
   };
 
@@ -179,38 +184,54 @@ export default function Tutors({ ctx }) {
     );
   };
 
-  const openDetail = async (tutor) => {
-    setDialog({ kind: 'detail', tutor, loading: true });
-    try {
-      const r = await api.get(`/tutors/${tutor.id}`);
-      setDialog({ kind: 'detail', tutor: r.data });
-    } catch (e) {
-      t.err(e.message);
-      setDialog(null);
-    }
+  const openDetail = (tutor) => {
+    setSelectedId(tutor.id);
+    setDetailTab('profile');
   };
+
+  // Refresh the selected record after mutations, and discard stale responses.
+  useEffect(() => {
+    const request = ++detailRequest.current;
+    const tutor = rows?.find((x) => x.id === selectedId);
+    if (!tutor) {
+      setDetail(null);
+      setDetailLoading(false);
+      return;
+    }
+    setDetail(tutor);
+    setDetailLoading(true);
+    setDetailError(null);
+    api.get('/tutors/' + tutor.id).then((r) => {
+      if (request === detailRequest.current) setDetail(r.data);
+    }).catch((e) => {
+      if (request === detailRequest.current) setDetailError(e.message);
+    }).finally(() => {
+      if (request === detailRequest.current) setDetailLoading(false);
+    });
+    return () => { detailRequest.current++; };
+  }, [selectedId, rows]);
 
   if (err && !rows) return <Card><ErrorBox msg={err} onRetry={() => load(filters)} L={L} /></Card>;
   if (!rows) return <Loading L={L} />;
 
   return (
-    <>
-      <p className="sub" style={{ marginBottom: 14 }}>{L('tu_intro')}</p>
+    <div className="tu-page">
+      <p className="sub tu-margin-bottom-14">{L('tu_intro')}</p>
 
       <div className="grid g4">
-        <Kpi ic="🎓" label={L('tu_kpi_total')} value={fmt(kpis.total)} />
-        <Kpi ic="🟢" label={L('tu_kpi_active')} value={fmt(kpis.active)} />
-        <Kpi ic="✅" label={L('tu_kpi_verified')} value={fmt(kpis.verified)} />
-        <Kpi ic="⭐" label={L('tu_kpi_avg')} value={kpis.avg ? kpis.avg.toFixed(1) : '—'} />
+        <TopKpiCard icon={IconGraduationCap} tone="blue" label={L('tu_kpi_total')} value={fmt(kpis.total)} />
+        <TopKpiCard icon={IconUsers} tone="blue" label={L('tu_kpi_active')} value={fmt(kpis.active)} />
+        <TopKpiCard icon={IconCheckCircle} tone="blue" label={L('tu_kpi_verified')} value={fmt(kpis.verified)} />
+        <TopKpiCard icon={IconStar} tone="blue" label={L('tu_kpi_avg')} value={kpis.avg ? kpis.avg.toFixed(1) : '—'} />
       </div>
 
-      <Card style={{ marginTop: 16 }}>
-        <div className="flex between wrap" style={{ gap: 10, marginBottom: 12 }}>
+      <Card className="tu-directory tu-margin-top-16">
+        <div className="flex between wrap tu-gap-10 tu-margin-bottom-12">
           <b>{L('tu_table')}</b>
           <button className="btn sm" onClick={() => setDialog({ kind: 'form' })}>+ {L('tu_add')}</button>
         </div>
 
-        <div className="filters" style={{ marginBottom: 12 }}>
+        <div className="filters tu-margin-bottom-12">
           <input className="grow" placeholder={L('tu_search')} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Select value={filters.status} onChange={(v) => setF('status', v)} placeholder={`${L('tu_status')}: ${L('filter_all')}`}
             options={STATUSES.map((s) => ({ value: s, label: L(STATUS_TAG[s][1]) }))} />
@@ -222,56 +243,55 @@ export default function Tutors({ ctx }) {
         </div>
 
         {rows.length === 0 ? <EmptyState msg={L('tu_no_tutors')} ic="🎓" /> : (
-          <div className="tbl-wrap"><table>
-            <thead><tr>
-              <th>{L('tu_name')}</th><th>{L('tu_subjects')}</th><th>{L('tu_modes')}</th>
-              <th>{L('tu_price')}</th><th>{L('tu_rating')}</th><th>{L('tu_status')}</th><th />
-            </tr></thead>
-            <tbody>{rows.map((x) => (
-              <tr key={x.id}>
-                <td>
-                  <div className="flex">
-                    <div className="tavatar" style={{ background: x.avatarColor || 'var(--brand)', color: x.textColor || '#fff' }}>
-                      {x.initials || initialsOf(x.name)}
-                    </div>
-                    <div>
-                      <b style={{ fontSize: 13 }}>{x.name}</b>
-                      {x.verified && <span className="tag g" style={{ marginLeft: 6 }}>✓ {L('tu_verified')}</span>}
-                      {x.featured && <span className="tag w" style={{ marginLeft: 4 }}>★ {L('tu_featured')}</span>}
-                      <div className="note">{x.contact?.email || L('none')}</div>
+          <div className={detail ? 'tu-split has-detail' : 'tu-split'}>
+            <div className="tu-list">
+              {rows.map((x) => (
+                <article key={x.id} className={selectedId === x.id ? 'tu-row sel' : 'tu-row'}>
+                  <div className="tu-person">
+                    <div className="tavatar tu-avatar-colors" style={{ '--tu-avatar-bg': x.avatarColor || 'var(--brand)', '--tu-avatar-ink': x.textColor || '#fff' }}>{x.initials || initialsOf(x.name)}</div>
+                    <div className="tu-identity">
+                      <b>{x.name}</b><div className="note">{x.contact?.email || L('none')}</div>
+                      <div className="chips tu-badges">
+                        {x.verified && <span className="tag g">✓ {L('tu_verified')}</span>}
+                        {x.featured && <span className="tag w">★ {L('tu_featured')}</span>}
+                      </div>
                     </div>
                   </div>
-                </td>
-                <td><span className="note">{x.subjectsLabel?.[lang] || (x.subjects || []).join(' · ') || L('none')}</span></td>
-                <td>
-                  <div className="chips">
-                    {(x.modes || []).map((m) => <span key={m} className="tag">{L(`mode_${m}`)}</span>)}
+                  <div className="tu-offer">
+                    <div>{x.subjectsLabel?.[lang] || (x.subjects || []).join(' · ') || L('none')}</div>
+                    <div className="chips">{(x.modes || []).map((m) => <span key={m} className="tag">{L('mode_' + m)}</span>)}</div>
                   </div>
-                </td>
-                <td>{x.pricePerHour ? `${fmt(x.pricePerHour)} ${x.currency || ''}` : L('none')}</td>
-                <td>{Number(x.rating) > 0 ? <Stars value={x.rating} count={x.reviewCount} /> : <span className="note">{L('none')}</span>}</td>
-                <td><Pill value={x.status || 'active'} map={STATUS_TAG} L={L} /></td>
-                <td>
-                  <div className="row-acts">
-                    <button className="btn sec sm" onClick={() => openDetail(x)}>{L('view')}</button>
-                    <button className="btn sec sm" onClick={() => setDialog({ kind: 'form', tutor: x })}>{L('edit')}</button>
-                    <button className="btn sec sm" onClick={() => setDialog({ kind: 'verify', tutor: x })}>
-                      {x.verified ? L('tu_unverify') : L('tu_verify')}
+                  <div className="tu-price"><b>{x.pricePerHour ? fmt(x.pricePerHour) + ' ' + (x.currency || '') : L('none')}</b><div className="note">{L('tu_price')}</div></div>
+                  <div className="tu-rating">{Number(x.rating)> 0 ? <Stars value={x.rating} count={x.reviewCount} /> : <span className="note">{L('none')}</span>}</div>
+                  <div className="tu-row-controls">
+                    <Pill value={x.status || 'active'} map={STATUS_TAG} L={L} />
+                    <button className="btn sec sm" aria-pressed={selectedId === x.id} onClick={() => selectedId === x.id ? setSelectedId(null) : openDetail(x)}>{L(selectedId === x.id ? 'close' : 'view')}</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {detail && <aside className="tu-detail" aria-label={L('tu_detail')}>
+              <div className="flex between wrap tu-gap-8 tu-margin-bottom-12"><b>{L('tu_detail')}</b><button className="btn sec sm" onClick={() => setSelectedId(null)}>{L('close')}</button></div>
+              {detailError && <ErrorBox msg={detailError} onRetry={() => load(filters)} L={L} />}
+              <TutorDetail tutor={detail} loading={detailLoading} ctx={ctx} busy={busy} tab={detailTab} onTabChange={setDetailTab}
+                onDeleteReview={(review) => setDialog({ kind: 'review', tutor: detail, review })} />
+                                <div className="tu-actions">
+                    <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'form', tutor: detail })}>{L('edit')}</button>
+                    <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'verify', tutor: detail })}>
+                      {detail.verified ? L('tu_unverify') : L('tu_verify')}
                     </button>
                     {/* PUT admite parches parciales: se envía solo el campo que cambia. */}
-                    <button className="btn sec sm" title={L(x.featured ? 'tu_unfeature' : 'tu_feature')}
-                      onClick={() => run(() => api.put(`/tutors/${x.id}`, { featured: !x.featured }), L('saved_ok'))}>
-                      {x.featured ? '★' : '☆'}
+                    <button className="btn sec sm" disabled={busy || detailLoading} title={L(detail.featured ? 'tu_unfeature' : 'tu_feature')}
+                      onClick={() => run(() => api.put(`/tutors/${detail.id}`, { featured: !detail.featured }), L('saved_ok'))}>
+                      {L(detail.featured ? 'tu_unfeature' : 'tu_feature')}
                     </button>
-                    {(x.status || 'active') === 'active'
-                      ? <button className="btn sec sm" onClick={() => setDialog({ kind: 'pause', tutor: x })}>{L('tu_pause')}</button>
-                      : <button className="btn sec sm" onClick={() => run(() => api.put(`/tutors/${x.id}`, { status: 'active' }), L('saved_ok'))}>{L('tu_activate')}</button>}
-                    {isAdmin && <button className="btn dgr sm" onClick={() => setDialog({ kind: 'delete', tutor: x })}>🗑</button>}
+                    {(detail.status || 'active') === 'active'
+                      ? <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'pause', tutor: detail })}>{L('tu_pause')}</button>
+                      : <button className="btn sec sm" disabled={busy || detailLoading} onClick={() => run(() => api.put(`/tutors/${detail.id}`, { status: 'active' }), L('saved_ok'))}>{L('tu_activate')}</button>}
+                    {isAdmin && <button className="btn dgr sm" disabled={busy || detailLoading} onClick={() => setDialog({ kind: 'delete', tutor: detail })} aria-label={L('tu_delete')}>{L('tu_delete')}</button>}
                   </div>
-                </td>
-              </tr>
-            ))}</tbody>
-          </table></div>
+            </aside>}
+          </div>
         )}
         {err && <ErrorBox msg={err} onRetry={() => load(filters)} L={L} />}
       </Card>
@@ -279,12 +299,6 @@ export default function Tutors({ ctx }) {
       {dialog?.kind === 'form' && (
         <TutorForm tutor={dialog.tutor} ctx={ctx} busy={busy} suggestions={[...seenSubjects.current]}
           onClose={() => setDialog(null)} onSave={saveTutor} />
-      )}
-
-      {dialog?.kind === 'detail' && (
-        <TutorDetail tutor={dialog.tutor} loading={dialog.loading} ctx={ctx} busy={busy}
-          onClose={() => setDialog(null)}
-          onDeleteReview={(review) => setDialog({ kind: 'review', tutor: dialog.tutor, review })} />
       )}
 
       {dialog?.kind === 'verify' && (
@@ -313,23 +327,23 @@ export default function Tutors({ ctx }) {
       {dialog?.kind === 'review' && (
         <Confirm danger title={L('tu_del_review')} message={L('tu_del_review_msg')}
           confirmLabel={L('del')} cancelLabel={L('cancel')} busy={busy}
-          onClose={() => openDetail(dialog.tutor)}
+          onClose={() => setDialog(null)}
           onConfirm={async () => {
-            const tutor = dialog.tutor; const review = dialog.review;
-            const okDone = await run(() => api.del(`/tutors/${tutor.id}/reviews/${review.id}`), L('tu_review_deleted'));
-            if (okDone) openDetail(tutor);
+            const { tutor, review } = dialog;
+            await run(() => api.del(`/tutors/${tutor.id}/reviews/${review.id}`), L('tu_review_deleted'));
           }} />
       )}
 
       <Toast toast={t.toast} onDone={t.clear} />
-    </>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
-  const { L } = ctx;
+  const { L, lang, fmt } = ctx;
+  const [section, setSection] = useState('identity');
   const [f, setF] = useState(() => (tutor ? formFrom(tutor) : emptyForm()));
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
   const onText = (k) => (e) => set(k)(e.target.value);
@@ -339,30 +353,58 @@ function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
       onClose={onClose}
       footer={<>
         <button className="btn sec" onClick={onClose} disabled={busy}>{L('cancel')}</button>
-        <button className="btn" onClick={() => onSave(f, tutor)} disabled={busy}>{busy ? '…' : (tutor ? L('save') : L('create'))}</button>
+        <button className="btn" onClick={() => { if (!f.name.trim()) setSection('identity'); else if (!f.subjects.length) setSection('offer'); onSave(f, tutor); }} disabled={busy}>{busy ? '…' : (tutor ? L('save') : L('create'))}</button>
       </>}
-    >
-      <div className="section-label" style={{ marginTop: 0 }}>{L('tu_sec_identity')}</div>
+>
+      <div className="tu-form">
+        <div className="tu-form-preview">
+          <div className="tavatar tu-avatar-colors tu-width-52 tu-height-52 tu-font-size-18" style={{ '--tu-avatar-bg': f.avatarColor, '--tu-avatar-ink': f.textColor }}>{f.initials || initialsOf(f.name) || 'TU'}</div>
+          <div className="tu-form-preview-identity">
+            <b>{f.name.trim() || (lang === 'es' ? 'Nombre del tutor' : 'Tutor name')}</b>
+            <div className="note">{f.contactEmail || (lang === 'es' ? 'Correo de contacto' : 'Contact email')}</div>
+            <div className="chips tu-margin-top-6">
+              <Pill value={f.status} map={STATUS_TAG} L={L} />
+              {f.featured && <span className="tag w">★ {L('tu_featured')}</span>}
+              {(tutor?.verified || (!tutor && f.verified)) && <span className="tag g">✓ {L('tu_verified')}</span>}
+            </div>
+          </div>
+          <div className="tu-form-preview-offer">
+            <div>{(lang === 'es' ? f.subjectsLabelEs : f.subjectsLabelEn) || f.subjects.join(' · ') || L('tu_subjects')}</div>
+            <div className="note">{f.modes.map((m) => L('mode_' + m)).join(' · ')}</div>
+            {f.pricePerHour !== '' && <b>{fmt(Number(f.pricePerHour))} {f.currency} <span className="note">/ h</span></b>}
+          </div>
+        </div>
+        <Tabs active={section} onChange={setSection} tabs={[
+          { id: 'identity', label: L('tu_sec_identity') },
+          { id: 'offer', label: L('tu_sec_offer') },
+          { id: 'profile', label: L('tu_sec_profile') },
+          { id: 'reputation', label: lang === 'es' ? 'Reputación' : 'Reputation' },
+          { id: 'contact', label: L('tu_sec_contact') },
+        ]} />
+      <section className="tu-form-section" hidden={section !== 'identity'} aria-label={L('tu_sec_identity')}>
+        <h3 className="tu-form-heading">{L('tu_sec_identity')}</h3>
       <FormGrid>
         <Field label={`${L('tu_name')} *`}><input value={f.name} onChange={onText('name')} /></Field>
         <Field label={L('tu_initials')}>
           <input value={f.initials} onChange={onText('initials')} placeholder={initialsOf(f.name)} maxLength={3} />
         </Field>
         <Field label={L('tu_avatar_color')}>
-          <div className="flex" style={{ gap: 8 }}>
+          <div className="flex tu-gap-8">
             <input type="color" value={f.avatarColor} onChange={onText('avatarColor')} />
             <input value={f.avatarColor} onChange={onText('avatarColor')} className="mono" />
           </div>
         </Field>
         <Field label={L('tu_text_color')}>
-          <div className="flex" style={{ gap: 8 }}>
+          <div className="flex tu-gap-8">
             <input type="color" value={f.textColor} onChange={onText('textColor')} />
             <input value={f.textColor} onChange={onText('textColor')} className="mono" />
           </div>
         </Field>
       </FormGrid>
 
-      <div className="section-label">{L('tu_sec_offer')}</div>
+      </section>
+      <section className="tu-form-section" hidden={section !== 'offer'} aria-label={L('tu_sec_offer')}>
+        <h3 className="tu-form-heading">{L('tu_sec_offer')}</h3>
       <FormGrid>
         <Field wide label={`${L('tu_subjects')} *`} hint={L('tu_subjects_hint')}>
           <TagInput value={f.subjects} onChange={set('subjects')} suggestions={suggestions} placeholder="m1, b1, lectora…" />
@@ -382,7 +424,9 @@ function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
         <Field label={L('tu_currency')}><input value={f.currency} onChange={onText('currency')} maxLength={4} /></Field>
       </FormGrid>
 
-      <div className="section-label">{L('tu_sec_profile')}</div>
+      </section>
+      <section className="tu-form-section" hidden={section !== 'profile'} aria-label={L('tu_sec_profile')}>
+        <h3 className="tu-form-heading">{L('tu_sec_profile')}</h3>
       <FormGrid>
         <Field label={L('tu_country')}><input value={f.country} onChange={onText('country')} maxLength={4} /></Field>
         <Field label={L('tu_years')}><input type="number" min="0" value={f.yearsExperience} onChange={onText('yearsExperience')} /></Field>
@@ -400,8 +444,10 @@ function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
         </div>
       </FormGrid>
 
-      <div className="section-label">{L('tu_sec_reputation')}</div>
-      <p className="note" style={{ marginBottom: 8 }}>{L('tu_seed_hint')}</p>
+      </section>
+      <section className="tu-form-section" hidden={section !== 'reputation'} aria-label={L('tu_sec_reputation')}>
+        <h3 className="tu-form-heading">{L('tu_sec_reputation')}</h3>
+      <p className="note tu-margin-bottom-8">{L('tu_seed_hint')}</p>
       <FormGrid>
         {CRITERIA.map((c, i) => (
           <Field key={c} label={L(`crit_${c}`)}>
@@ -415,7 +461,9 @@ function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
         </Field>
       </FormGrid>
 
-      <div className="section-label">{L('tu_sec_contact')}</div>
+      </section>
+      <section className="tu-form-section" hidden={section !== 'contact'} aria-label={L('tu_sec_contact')}>
+        <h3 className="tu-form-heading">{L('tu_sec_contact')}</h3>
       <FormGrid>
         <Field label={L('tu_contact_email')}><input type="email" value={f.contactEmail} onChange={onText('contactEmail')} /></Field>
         <Field label="WhatsApp"><input value={f.contactWhatsapp} onChange={onText('contactWhatsapp')} placeholder="+569…" /></Field>
@@ -423,102 +471,112 @@ function TutorForm({ tutor, ctx, busy, suggestions, onClose, onSave }) {
           <Check label={L('tu_contact_sharing')} checked={f.contactSharingDefault} onChange={set('contactSharingDefault')} />
         </div>
       </FormGrid>
+      </section>
+      </div>
     </Modal>
   );
 }
 
-function TutorDetail({ tutor, loading, ctx, busy, onClose, onDeleteReview }) {
+function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChange }) {
   const { L, lang, fmt } = ctx;
   const reviews = tutor.reviews || [];
   const date = (s) => (s ? new Date(s).toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US') : L('none'));
 
   return (
-    <Modal wide busy={busy} title={L('tu_detail')} subtitle={tutor.id} onClose={onClose}
-      footer={<button className="btn sec" onClick={onClose}>{L('close')}</button>}>
+    <div className="tu-detail-content">
       {loading ? <Loading L={L} /> : (
         <>
-          <div className="flex" style={{ gap: 12, marginBottom: 14 }}>
-            <div className="tavatar" style={{ width: 48, height: 48, fontSize: 15, background: tutor.avatarColor, color: tutor.textColor || '#fff' }}>
-              {tutor.initials}
+          <div className="flex wrap tu-gap-12 tu-margin-bottom-14">
+            <div className="tavatar tu-width-48 tu-height-48 tu-font-size-15 tu-avatar-colors" style={{ '--tu-avatar-bg': tutor.avatarColor, '--tu-avatar-ink': tutor.textColor || '#fff' }}>
+              {tutor.initials || initialsOf(tutor.name)}
             </div>
-            <div style={{ flex: 1 }}>
-              <div className="flex wrap" style={{ gap: 6 }}>
-                <b style={{ fontSize: 15 }}>{tutor.name}</b>
+            <div className="tu-flex-1-1-160px tu-min-width-0">
+              <div className="flex wrap tu-gap-6">
+                <b className="tu-font-size-15">{tutor.name}</b>
                 {tutor.verified && <span className="tag g">✓ {L('tu_verified')}</span>}
                 {tutor.featured && <span className="tag w">★ {L('tu_featured')}</span>}
                 <Pill value={tutor.status || 'active'} map={STATUS_TAG} L={L} />
-                {tutor.online && <span className="tag g"><span className="dot ok" style={{ marginRight: 5 }} />online</span>}
+                {tutor.online && <span className="tag g"><span className="dot ok tu-margin-right-5"  />online</span>}
               </div>
+              <div className="note mono">{tutor.id}</div>
               <div className="note">{tutor.subjectsLabel?.[lang] || (tutor.subjects || []).join(' · ')}</div>
             </div>
             <Stars value={tutor.rating} count={tutor.reviewCount} />
           </div>
 
-          <div className="grid g2">
-            <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('tu_sec_offer')}</div>
+          <Tabs active={tab} onChange={onTabChange} tabs={[
+            { id: 'profile', label: L('tu_sec_profile') },
+            { id: 'reputation', label: lang === 'es' ? 'Reputación' : 'Reputation' },
+            { id: 'contact', label: L('tu_sec_contact') },
+            { id: 'verification', label: lang === 'es' ? 'Verificación' : 'Verification' },
+          ]} />
+          <div className="grid tu-facts">
+            <div className="tu-fact" hidden={tab !== 'profile' }>
+              <div className="section-label tu-margin-top-0">{L('tu_sec_offer')}</div>
               <KV k={L('tu_price')} v={tutor.pricePerHour ? `${fmt(tutor.pricePerHour)} ${tutor.currency || ''}` : L('none')} />
               <KV k={L('tu_modes')} v={(tutor.modes || []).map((m) => L(`mode_${m}`)).join(' · ')} />
               <KV k={L('tu_country')} v={tutor.country} />
               <KV k={L('tu_languages')} v={(tutor.languages || []).join(', ')} />
               <KV k={L('tu_years')} v={tutor.yearsExperience} />
-            </Card>
-            <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('tu_sec_reputation')}</div>
+            </div>
+            <div className="tu-fact" hidden={tab !== 'reputation' }>
+              <div className="section-label tu-margin-top-0">{L('tu_sec_reputation')}</div>
               <KV k={L('tu_rating_computed')} v={<Stars value={tutor.rating} count={tutor.reviewCount} />} />
               {CRITERIA.map((c) => <KV key={c} k={`${L(`crit_${c}`)} (histórico)`} v={tutor.ratingSeed?.[c] ?? L('none')} />)}
               <KV k={L('tu_review_count_seed')} v={tutor.reviewCountSeed ?? 0} />
-            </Card>
-            <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('tu_sec_contact')}</div>
+            </div>
+            <div className="tu-fact" hidden={tab !== 'contact' }>
+              <div className="section-label tu-margin-top-0">{L('tu_sec_contact')}</div>
               <KV k={L('tu_contact_email')} v={tutor.contact?.email} />
               <KV k="WhatsApp" v={tutor.contact?.whatsapp} />
               <KV k={L('tu_contact_sharing')} v={tutor.contactSharingDefault !== false ? L('yes') : L('no')} />
               <KV k={L('tu_contact_requests')} v={fmt(tutor.contactRequests || 0)} />
-            </Card>
-            <Card className="flat">
-              <div className="section-label" style={{ marginTop: 0 }}>{L('tu_verify_title')}</div>
+            </div>
+            <div className="tu-fact" hidden={tab !== 'verification' }>
+              <div className="section-label tu-margin-top-0">{L('tu_verify_title')}</div>
               <KV k={L('tu_verified')} v={tutor.verified ? L('yes') : L('no')} />
               <KV k={L('tu_verified_at')} v={date(tutor.verifiedAt)} />
               <KV k={L('tu_verified_by')} v={tutor.verifiedBy} />
               <KV k={L('tu_verify_note_saved')} v={tutor.verificationNote} />
-            </Card>
+            </div>
           </div>
 
-          {(tutor.bio?.es || tutor.bio?.en) && (
+          {tab === 'profile' && (tutor.bio?.es || tutor.bio?.en) && (
             <>
               <div className="section-label">{L('tu_bio_es')}</div>
-              <p style={{ fontSize: 13, lineHeight: 1.6 }}>{tutor.bio?.[lang] || tutor.bio?.es}</p>
+              <p className="tu-font-size-13 tu-line-height-1-6">{tutor.bio?.[lang] || tutor.bio?.es}</p>
             </>
           )}
 
+          <div hidden={tab !== 'reputation'}>
           <div className="section-label">{L('tu_reviews')} ({reviews.length})</div>
           {reviews.length === 0 ? <EmptyState msg={L('tu_no_reviews')} ic="💬" /> : reviews.map((rv) => (
             <div key={rv.id} className="review">
               <div className="rhead">
-                <div className="flex" style={{ gap: 8 }}>
+                <div className="flex tu-gap-8">
                   <div className="avatar">{rv.userInitials || initialsOf(rv.userName)}</div>
                   <div>
-                    <b style={{ fontSize: 12.5 }}>{rv.userName || rv.userId}</b>
+                    <b className="tu-font-size-12-5">{rv.userName || rv.userId}</b>
                     <div className="note">{date(rv.createdAt)}{rv.lessonsTaken ? ` · ${rv.lessonsTaken} clases` : ''}</div>
                   </div>
                 </div>
-                <div className="flex" style={{ gap: 8 }}>
+                <div className="flex tu-gap-8">
                   <Stars value={rv.overall ?? 0} />
-                  <button className="btn dgr sm" onClick={() => onDeleteReview(rv)}>🗑</button>
+                  <button className="btn dgr sm" disabled={busy} onClick={() => onDeleteReview(rv)} aria-label={L('tu_del_review')}>{L('del')}</button>
                 </div>
               </div>
-              {rv.comment && <p style={{ fontSize: 12.5, marginTop: 8, lineHeight: 1.55 }}>{rv.comment}</p>}
-              <div className="chips" style={{ marginTop: 8 }}>
+              {rv.comment && <p className="tu-font-size-12-5 tu-margin-top-8 tu-line-height-1-55">{rv.comment}</p>}
+              <div className="chips tu-margin-top-8">
                 {CRITERIA.map((c) => (
                   <span key={c} className="tag">{L(`crit_${c}`)}: {rv.ratings?.[c] ?? '—'}</span>
                 ))}
               </div>
             </div>
           ))}
+          </div>
         </>
       )}
-    </Modal>
+    </div>
   );
 }
 
@@ -535,7 +593,7 @@ function VerifyDialog({ tutor, ctx, busy, onClose, onConfirm }) {
           {busy ? '…' : L(turningOn ? 'tu_verify' : 'tu_unverify')}
         </button>
       </>}>
-      <p style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+      <p className="tu-font-size-13-5 tu-line-height-1-6">
         {L(turningOn ? 'tu_verify_msg' : 'tu_unverify_msg', { name: tutor.name })}
       </p>
       <Field label={L('tu_verify_note')}>

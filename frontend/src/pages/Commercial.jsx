@@ -116,7 +116,7 @@ export default function Commercial({ ctx }) {
           exportar abajo uno al lado del otro — en vez de que el botón
           "Exportar CSV" se vaya envuelto más abajo suelto (ver
           .com-toolbar/.com-toolbar-row2 en styles.css). */}
-      <div className="com-toolbar" style={{ marginBottom: 16 }}>
+      <div className="com-toolbar commercial-layout-1" >
         <div className="range-pills">
           {RANGES.map((rg) => (
             <button key={rg} type="button" className={`range-pill ${range === rg ? 'act' : ''}`} onClick={() => setRange(rg)}>
@@ -137,11 +137,11 @@ export default function Commercial({ ctx }) {
       {tab === 'resumen' && (
         <div className="com-layout tab-fade">
           {/* Columna principal izquierda */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <div className="commercial-layout-2" >
             {/* Gráfico de descargas totales */}
             <Card>
               <b>{L('com_downloads_total')}</b>
-              <div className="com-dl-chart" style={{ marginTop: 10 }}>
+              <div className="com-dl-chart commercial-layout-3" >
                 <LineChartInteractive
                   vals={monthVals}
                   labels={monthLabels}
@@ -151,9 +151,9 @@ export default function Commercial({ ctx }) {
             </Card>
 
             {/* Banner de tip insertado entre ambos bloques */}
-            <div className="tip-banner" style={{ margin: 0 }}>
+            <div className="tip-banner commercial-layout-4" >
               <span className="ic">💡</span>
-              <span style={{ flex: 1 }}>{L('com_tip')}</span>
+              <span className="commercial-layout-5" >{L('com_tip')}</span>
               <span className="chev" aria-hidden="true">›</span>
             </div>
 
@@ -169,7 +169,7 @@ export default function Commercial({ ctx }) {
                   <div className="mrr-text">
                     <div className="mrr-val">${fmt(d.mrr)}</div>
                     {ov.mrr?.deltaPct != null && (
-                      <div className="dl up" style={{ marginTop: 2 }}>▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
+                      <div className="dl up commercial-layout-6" >▲ {ov.mrr.deltaPct}% {L('vs_prev')}</div>
                     )}
                   </div>
                   <div className="mrr-chart">
@@ -178,7 +178,7 @@ export default function Commercial({ ctx }) {
                 </div>
               </Card>
               <Card>
-                <div className="flex between" style={{ marginBottom: 4 }}>
+                <div className="flex between commercial-layout-7" >
                   <b>{L('com_top_plans')}</b>
                   <span
                     className="note link-action"
@@ -224,9 +224,9 @@ export default function Commercial({ ctx }) {
               spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
             <KpiTrend label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} bigIcon={IconGift} tone="blue" />
           </div>
-          <Card style={{ marginTop: 16 }}>
+          <Card className="commercial-layout-8" >
             <b>{L('com_downloads_total')}</b>
-            <div style={{ marginTop: 10 }}>
+            <div className="commercial-layout-9" >
               <LineChartInteractive vals={monthVals} labels={monthLabels} format={(v) => fmt(v)} />
             </div>
           </Card>
@@ -244,7 +244,7 @@ export default function Commercial({ ctx }) {
               spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
             <KpiTrend label={L('k_benefits')} value={fmt(d.benefitsRedeemed)} spark={monthVals} bigIcon={IconGift} tone="blue" />
           </div>
-          <div className="grid g2" style={{ marginTop: 16 }}>
+          <div className="grid g2 commercial-layout-10" >
             <Card>
               <div className="flex between">
                 <b>{L('c_funnel')}</b>
@@ -256,7 +256,7 @@ export default function Commercial({ ctx }) {
                   {embudoView === 'steps' ? (isEn ? '◔ Circular' : '◔ Ver circular') : (isEn ? '▤ Steps' : '▤ Ver escalones')}
                 </button>
               </div>
-              <div style={{ marginTop: 10 }}>
+              <div className="commercial-layout-11" >
                 {embudoView === 'steps' ? (
                   <Funnel data={(d.funnel || []).map((f) => ({ label: f.label, value: f.value }))} format={(v) => fmt(v)} />
                 ) : (
@@ -271,7 +271,7 @@ export default function Commercial({ ctx }) {
             </Card>
             <Card>
               <b>{isEn ? 'Conversion rate' : 'Tasa de conversión'}</b>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+              <div className="commercial-layout-12" >
                 <DonutMulti
                   data={[
                     { label: isEn ? 'Converted' : 'Convertidos', value: d.converted || 0, color: 'var(--brand)', disp: fmt(d.converted || 0) },
@@ -280,7 +280,7 @@ export default function Commercial({ ctx }) {
                   centerLabel={`${d.convRate || 0}%`}
                 />
               </div>
-              <div className="note" style={{ textAlign: 'center', marginTop: 8 }}>
+              <div className="note commercial-layout-13" >
                 {fmt(d.converted)} {isEn ? 'of' : 'de'} {fmt(d.mau)} MAU
               </div>
             </Card>
@@ -298,18 +298,18 @@ export default function Commercial({ ctx }) {
             <KpiTrend label={L('k_converted')} value={`${fmt(d.converted)} · ${d.convRate}%`} spark={monthVals} bigIcon={IconStar} tone="blue" />
             <KpiTrend label={L('k_mau')} value={fmt(d.mau)} spark={monthVals} bigIcon={IconTrendingUp} tone="blue" />
           </div>
-          <Card style={{ marginTop: 16 }}>
+          <Card className="commercial-layout-14" >
             <b>{L('c_rev_plan')}</b>
-            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: '100%', maxWidth: 420 }}>
+            <div className="commercial-layout-15" >
+              <div className="commercial-layout-16" >
                 <BarsInteractive data={revBars} />
               </div>
             </div>
-            <div className="flex between note" style={{ marginTop: 6 }}><span>{L('c_rev_total')}</span><b style={{ color: 'var(--ink)' }}>${fmt(d.mrr)}{L('mo')}</b></div>
+            <div className="flex between note commercial-layout-17" ><span>{L('c_rev_total')}</span><b className="commercial-layout-18" >${fmt(d.mrr)}{L('mo')}</b></div>
           </Card>
-          <Card style={{ marginTop: 16 }}>
+          <Card className="commercial-layout-19" >
             <b>{L('c_badges_type')}</b>
-            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
+            <div className="commercial-layout-20" >
               <DonutMulti data={badgeBars} pctPill centerLabel={fmt(d.badgesByType?.reduce((a, b) => a + (b.value || 0), 0) || 0)} />
             </div>
           </Card>

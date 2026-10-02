@@ -72,22 +72,14 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
           />
         </Field>
         <Field wide label={isEn ? 'Validity / Expiration' : 'Vigencia / Fecha límite'}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <label
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  userSelect: 'none',
-                  width: 'fit-content',
-                }}
+          <div className="benefit-item-form-layout-1" >
+            <div className="benefit-item-form-layout-2" >
+              <label className="benefit-item-form-layout-3"
+                
               >
-                <input
+                <input className="benefit-item-form-layout-4"
                   type="checkbox"
-                  style={{ margin: 0, cursor: 'pointer', width: 'auto' }}
+                  
                   checked={form.noLimit}
                   onChange={(e) => {
                     const checked = e.target.checked;
@@ -103,20 +95,20 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
             </div>
 
             {!form.noLimit && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 300 }}>
-                <input
+              <div className="benefit-item-form-layout-5" >
+                <input className="benefit-item-form-layout-6"
                   type="date"
                   value={form.expiresAt}
                   onChange={(e) => set('expiresAt')(e.target.value)}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: 6 }}
+                  
                 />
                 {form.expiresAt && (
                   <button
                     type="button"
-                    className="btn sec sm"
+                    className="btn sec sm benefit-item-form-layout-7"
                     onClick={() => set('expiresAt')('')}
                     title={isEn ? 'Clear date' : 'Borrar fecha'}
-                    style={{ padding: '6px 10px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                    
                   >
                     ✕ {isEn ? 'Clear' : 'Borrar'}
                   </button>

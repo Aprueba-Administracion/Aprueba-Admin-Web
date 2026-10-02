@@ -2,33 +2,14 @@
 export function SponsorsBanner({ title, subtitle }) {
   return (
     <div
-      className="sp-banner"
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        minHeight: 110,
-        padding: '24px 30px',
-        borderRadius: 18,
-        background: 'var(--banner-grad)',
-        border: '1px solid var(--banner-border)',
-        boxShadow: '0 4px 20px var(--banner-shadow)',
-        display: 'flex',
-        alignItems: 'center',
-      }}
+      className="sp-banner sponsors-banner-layout-1"
+      
     >
       {/* Ilustración de libros + birrete dibujada en SVG con estilo marca de agua */}
       <svg
-        className="sp-banner-illustration"
+        className="sp-banner-illustration sponsors-banner-layout-2"
         viewBox="0 0 160 170"
-        style={{
-          position: 'absolute',
-          left: 12,
-          bottom: -15,
-          width: 140,
-          height: 140,
-          pointerEvents: 'none',
-          opacity: 0.55,
-        }}
+        
       >
         {/* Birrete */}
         <polygon points="75,20 135,42 75,64 15,42" fill="#b9d6f3" stroke="#8faece" strokeWidth="2.5" />
@@ -51,16 +32,9 @@ export function SponsorsBanner({ title, subtitle }) {
 
       {/* Ondas decorativas translúcidas de fondo derecho (se atenúan en modo oscuro vía CSS) */}
       <svg
-        className="sp-banner-wave"
+        className="sp-banner-wave sponsors-banner-layout-3"
         viewBox="0 0 300 120"
-        style={{
-          position: 'absolute',
-          right: -20,
-          top: -10,
-          width: 260,
-          height: 140,
-          pointerEvents: 'none',
-        }}
+        
       >
         <path d="M0,40 Q80,10 160,50 T320,30 L320,120 L0,120 Z" fill="url(#waveGrad)" />
         <defs>
@@ -72,27 +46,14 @@ export function SponsorsBanner({ title, subtitle }) {
       </svg>
 
       {/* Textos alineados dejando espacio a la ilustración izquierda */}
-      <div className="sp-banner-text" style={{ position: 'relative', zIndex: 2, paddingLeft: 105 }}>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '1.75rem',
-            fontWeight: 800,
-            color: 'var(--banner-title)',
-            letterSpacing: '-0.02em',
-            fontFamily: 'inherit',
-          }}
+      <div className="sp-banner-text sponsors-banner-layout-4" >
+        <h1 className="sponsors-banner-layout-5"
+          
         >
           {title}
         </h1>
-        <p
-          style={{
-            margin: '5px 0 0 0',
-            fontSize: '0.88rem',
-            color: 'var(--banner-sub)',
-            fontWeight: 500,
-            letterSpacing: '-0.01em',
-          }}
+        <p className="sponsors-banner-layout-6"
+          
         >
           {subtitle}
         </p>

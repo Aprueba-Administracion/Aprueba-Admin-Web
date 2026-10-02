@@ -72,7 +72,7 @@ function TopKpiCard({ label, value, delta, icon: IconComponent, tone }) {
     <div className={`kpi-tile ${tone}`}>
       <div className="kpi-ic"><IconComponent /></div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div className="overview-layout-1" >
         <div className="kpi-label">{label}</div>
         <div className="kpi-val">{value}</div>
         {delta && <div className="kpi-delta up">▲ {delta}</div>}
@@ -150,8 +150,8 @@ export default function Overview({ ctx }) {
           lo muestra el topbar (Layout.jsx), así que acá no se repite en
           ningún idioma (antes solo se había vaciado a mano la versión en
           español y en inglés seguía mostrando "Overview" duplicado). */}
-      <div className="flex" style={{ alignItems: 'center', justifyContent: 'flex-end', marginBottom: 18 }}>
-        <div className="flex" style={{ gap: 6 }}>
+      <div className="flex overview-layout-2" >
+        <div className="flex overview-layout-3" >
           {['7d', '30d', '90d'].map((r) => (
             <button
               key={r}
@@ -167,7 +167,7 @@ export default function Overview({ ctx }) {
 
       {/* 4 KPIs principales — en teléfono quedan en grilla 2x2 (ver .ov-kpis en
           styles.css), no apiladas en una columna como el resto de los .g4. */}
-      <div className="grid g4 ov-kpis" style={{ marginBottom: 16 }}>
+      <div className="grid g4 ov-kpis overview-layout-4" >
         <TopKpiCard
           label={isEn ? 'Total downloads' : 'Descargas totales'}
           value={fmt(d.downloads?.total)}
@@ -199,13 +199,13 @@ export default function Overview({ ctx }) {
       </div>
 
       {/* Fila intermedia: Descargas + Embudo */}
-      <div className="grid g3" style={{ marginBottom: 16 }}>
+      <div className="grid g3 overview-layout-5" >
         <Card className="span2">
-          <div className="flex between" style={{ marginBottom: 12 }}>
+          <div className="flex between overview-layout-6" >
             <b>{isEn ? 'Downloads per month' : 'Descargas por mes'}</b>
             <span className="note">{thisMonthText}: {fmt(d.downloads?.month)}</span>
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div className="overview-layout-7" >
             <LineChartInteractive
               vals={(d.downloadsByMonth || []).map((m) => m.value)}
               labels={(d.downloadsByMonth || []).map((m) => m.month)}
@@ -225,7 +225,7 @@ export default function Overview({ ctx }) {
               {embudoView === 'steps' ? (isEn ? '◔ Circular' : '◔ Ver circular') : (isEn ? '▤ Steps' : '▤ Ver escalones')}
             </button>
           </div>
-          <div style={{ marginTop: 10 }}>
+          <div className="overview-layout-8" >
             {embudoView === 'steps' ? (
               <Funnel
                 data={[
@@ -253,16 +253,16 @@ export default function Overview({ ctx }) {
       <div className="ov-bottom">
         {/* Salud del sistema */}
         <Card>
-          <div className="flex between" style={{ marginBottom: 12 }}>
+          <div className="flex between overview-layout-9" >
             <b>{isEn ? 'System health' : 'Estado del sistema'}</b>
           </div>
           {services.map((s) => (
-            <div key={s.id} className="flex between" style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+            <div key={s.id} className="flex between overview-layout-10" >
               <span>{s.name}</span>
               <StatusPill state={s.state} L={L} />
             </div>
           ))}
-          <div style={{ textAlign: 'right', marginTop: 12 }}>
+          <div className="overview-layout-11" >
             <span
               className="note link-action"
               onClick={() => nav('/operativa')}
@@ -274,7 +274,7 @@ export default function Overview({ ctx }) {
 
         {/* Recaudación por plan */}
         <Card>
-          <div className="flex between" style={{ marginBottom: 12 }}>
+          <div className="flex between overview-layout-12" >
             <b>{isEn ? 'Revenue by plan' : 'Recaudación por plan'}</b>
             <span className="note">›</span>
           </div>
@@ -282,7 +282,7 @@ export default function Overview({ ctx }) {
         </Card>
 
         {/* Columna derecha compacta */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="overview-layout-13" >
           <SideKpiCard
             label={isEn ? 'Active sponsors' : 'Sponsors activos'}
             value={fmt(d.sponsorsActive)}

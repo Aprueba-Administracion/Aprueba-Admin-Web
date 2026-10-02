@@ -7,18 +7,8 @@ export function checkExpired(dateStr) {
 export function DateBadge({ dateStr, isEn }) {
   if (!dateStr) {
     return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '2px 8px',
-          borderRadius: 6,
-          fontSize: '0.78rem',
-          background: 'rgba(148, 163, 184, 0.12)',
-          color: '#64748b',
-          fontWeight: 500,
-        }}
+      <span className="date-badge-layout-1"
+        
       >
         ♾️ {isEn ? 'No limit' : 'Sin límite'}
       </span>
@@ -35,19 +25,8 @@ export function DateBadge({ dateStr, isEn }) {
 
   if (isExp) {
     return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '2px 8px',
-          borderRadius: 6,
-          fontSize: '0.78rem',
-          background: 'rgba(239, 68, 68, 0.15)',
-          color: '#ef4444',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          fontWeight: 600,
-        }}
+      <span className="date-badge-layout-2"
+        
       >
         ⚠️ {isEn ? 'Expired' : 'Expiró'} ({formatted})
       </span>
@@ -56,19 +35,8 @@ export function DateBadge({ dateStr, isEn }) {
 
   if (isSoon) {
     return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '2px 8px',
-          borderRadius: 6,
-          fontSize: '0.78rem',
-          background: 'rgba(245, 158, 11, 0.15)',
-          color: '#d97706',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
-          fontWeight: 500,
-        }}
+      <span className="date-badge-layout-3"
+        
       >
         ⏳ {formatted}
       </span>
@@ -76,18 +44,8 @@ export function DateBadge({ dateStr, isEn }) {
   }
 
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '2px 8px',
-        borderRadius: 6,
-        fontSize: '0.78rem',
-        background: 'rgba(59, 130, 246, 0.1)',
-        color: '#2563eb',
-        fontWeight: 500,
-      }}
+    <span className="date-badge-layout-4"
+      
     >
       📅 {formatted}
     </span>
