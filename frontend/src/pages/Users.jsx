@@ -1,4 +1,4 @@
-import { CONFIRM_REWARD, FALLBACK_PLANS, FALLBACK_AGENTS, PAGE_SIZE, cleanText } from "./users/shared.jsx";
+import { CONFIRM_REWARD, FALLBACK_PLANS, FALLBACK_AGENTS, PAGE_SIZE, cleanText, planLabel } from "./users/shared.jsx";
 import UsersPanel from './users/UsersPanel.jsx';
 import TicketsPanel from './users/TicketsPanel.jsx';
 import CorrectionsPanel from './users/CorrectionsPanel.jsx';
@@ -51,8 +51,8 @@ export default function Users({ ctx }) {
   const [agents, setAgents] = useState(null);
   const [questionsById, setQuestionsById] = useState(null);
 
-  const planOptions = (plans || FALLBACK_PLANS).map((p) => ({ value: p.id, label: p.name }));
-  const planName = (id) => (plans || FALLBACK_PLANS).find((p) => p.id === id)?.name || id || L('none');
+  const planOptions = (plans || FALLBACK_PLANS).map((p) => ({ value: p.id, label: planLabel(p, lang) }));
+  const planName = (id) => planLabel((plans || FALLBACK_PLANS).find((p) => p.id === id), lang) || id || L('none');
   const agentOptions = (agents || FALLBACK_AGENTS).map((a) => ({ value: a.id, label: a.name }));
 
   const loadUserStats = useCallback(async () => {

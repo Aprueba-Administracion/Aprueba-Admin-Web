@@ -56,10 +56,17 @@ Elige una opción de base de datos en `.env`:
   npm run emulator      # requiere firebase-tools + Java
   ```
 
-Luego siembra datos y arranca:
+Luego siembra datos y arranca. **Los scripts de seed están protegidos**: sin
+`FIRESTORE_EMULATOR_HOST` se niegan a correr, salvo que pases `--real` a propósito
+(el plan gratuito de Firebase tiene cuota diaria y un seed lee/borra colecciones enteras).
 ```bash
-npm run seed     # carga planes, usuarios, sponsors, métricas, etc.
-npm start        # API en http://localhost:4000/api/v1
+# Terminal 1 (backend/): emulador de Firestore (requiere Java + firebase-tools)
+npm run emulator
+# Terminal 2 (backend/): siembra el EMULADOR, corre la prueba de humo y arranca la API contra el emulador
+npm run seed:emu   # planes, usuarios, sponsors + beneficios, tickets, tutor de ejemplo, métricas…
+npm run smoke      # ~40 verificaciones automáticas del modelo de datos (no gasta cuota)
+npm run dev:emu    # API en http://localhost:4000/api/v1 usando el emulador
+# Solo si de verdad quieres tocar el Firestore real:  npm run seed -- --real
 ```
 
 ### 2. Frontend
@@ -113,9 +120,8 @@ funcionalidad de backend sin interfaz.
 - **Alta vs. edición de sponsors:** `POST` recibe el array `benefits` y deriva
   `benefitsOffered`; `PATCH` solo acepta el total. El formulario refleja esa asimetría
   (lista de beneficios al crear, número al editar).
-- **Pendiente en el backend (fuera del alcance de este cambio):** el seed no crea tutores,
-  reseñas ni solicitudes de contacto, así que la vista de Tutores arranca vacía hasta que se
-  dé de alta el primero desde la consola o se siembren esas colecciones.
+- **Pendiente en el backend:** el seed crea un único tutor de ejemplo (`tut_1`) pero no
+  reseñas ni solicitudes de contacto; esas colecciones arrancan vacías.
 
 ## Despliegue en Vercel (frontend + backend en un solo proyecto)
 

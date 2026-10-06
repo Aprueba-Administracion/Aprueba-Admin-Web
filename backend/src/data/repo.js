@@ -22,9 +22,18 @@ export const COL = {
   counters: 'counters',
   questions: 'questions',
   platforms: 'platforms',
+  // Operativa (punto #5 del modelo de Max): snapshot de salud por servicio de
+  // negocio, configuración declarativa de qué medir y bloqueo de reinicios.
+  serviceStatus: 'serviceStatus',
+  opsConfig: 'opsConfig', // documentos: services, containers, sync
+  opsRestarts: 'opsRestarts', // un doc por servicio (bloqueo natural), TTL 30 días
+  // LEGADO: solo los lee scripts/migrate-ops.js. La API ya no los usa.
   services: 'services',
   containers: 'containers',
-  metrics: 'metrics', // documentos: overview, commercial
+  metrics: 'metrics', // LEGADO (respaldo): documentos overview, commercial
+  // Agregados canónicos (#2 del modelo de Max): un doc por día (YYYY-MM-DD) / mes (YYYY-MM).
+  metricsDaily: 'metricsDaily',
+  metricsMonthly: 'metricsMonthly',
   auditLog: 'auditLog', // bitácora de acciones administrativas sensibles
   // Marketplace de tutores (lo consume en modo lectura el API del alumno).
   tutors: 'tutors',

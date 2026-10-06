@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { api } from '../api/client.js';
+import { planLabel, planMonthly } from './users/shared.jsx';
 import {
   Card, Loading, ErrorBox, Modal, Confirm, Field, FormGrid, Toast, useToast,
 } from '../components/ui.jsx';
@@ -25,7 +26,9 @@ export default function Plans({ ctx }) {
   };
   useEffect(() => { load(); }, []);
 
-  const featName = (f) => (lang === 'en' ? f.name_en : f.name_es) || f.name_es;
+  // Modelo canónico: f.name = { es, en }, f.icon. Tolera el formato anterior (name_es / name_en / ic).
+  const featName = (f) => (f.name && typeof f.name === 'object' ? (f.name[lang] || f.name.es) : (lang === 'en' ? f.name_en : f.name_es) || f.name_es);
+  const featIcon = (f) => f.icon ?? f.ic;
   const featById = (id) => features.find((f) => f.id === id);
 
   // ── edición local (en memoria hasta guardar) ──
@@ -39,17 +42,26 @@ export default function Plans({ ctx }) {
   const setLimit = (pid, key, val) => update(pid, (p) => { p.limits = { ...p.limits, [key]: Math.max(0, parseInt(val || 0, 10)) }; return p; });
   const setBadge = (pid, key, val) => update(pid, (p) => { p.badges = { ...(p.badges || {}), [key]: Math.max(0, parseInt(val || 0, 10)) }; return p; });
 
+  // name {es,en}; el precio se manda como número = price.monthly (el anual lo gestiona la app).
   const payload = (p) => ({
-    name: p.name, price: Number(p.price || 0), color: p.color,
+    name: p.name, price: planMonthly(p), color: p.color,
     features: p.features, limits: p.limits, badges: p.badges,
+    // Concurrencia optimista: si otra persona editó el plan, el API responde 409 PLAN_CONFLICT.
+    updatedAt: p.updatedAt,
   });
 
   const save = async (p) => {
     try {
-      await api.put(`/plans/${p.id}`, payload(p));
+      const r = await api.put(`/plans/${p.id}`, payload(p));
+      // Se toma el updatedAt nuevo para que el siguiente guardado no choque consigo mismo.
+      setPlans((ps) => ps.map((x) => (x.id === p.id ? { ...x, updatedAt: r.data.updatedAt, updatedBy: r.data.updatedBy } : x)));
       setSavedId(p.id); setTimeout(() => setSavedId(null), 2000);
       return true;
-    } catch (e) { t.err(e.message); return false; }
+    } catch (e) {
+      t.err(e.message);
+      if (e.code === 'PLAN_CONFLICT') load(); // recarga los planes con la versión vigente
+      return false;
+    }
   };
 
   const saveAll = async () => {
@@ -59,11 +71,11 @@ export default function Plans({ ctx }) {
   };
 
   const createPlan = async (form) => {
-    if (!form.name.trim()) { t.err(L('required_field')); return; }
+    if (!form.nameEs.trim()) { t.err(L('required_field')); return; }
     setBusy(true);
     try {
       const r = await api.post('/plans', {
-        name: form.name.trim(),
+        name: { es: form.nameEs.trim(), en: (form.nameEn.trim() || form.nameEs.trim()) },
         price: Number(form.price || 0),
         color: form.color,
         features: [],
@@ -77,15 +89,22 @@ export default function Plans({ ctx }) {
   };
 
   const editMeta = async (form, plan) => {
-    if (!form.name.trim()) { t.err(L('required_field')); return; }
+    if (!form.nameEs.trim()) { t.err(L('required_field')); return; }
     setBusy(true);
     try {
-      const next = { ...plan, name: form.name.trim(), price: Number(form.price || 0), color: form.color };
+      const next = {
+        ...plan,
+        name: { es: form.nameEs.trim(), en: (form.nameEn.trim() || form.nameEs.trim()) },
+        price: Number(form.price || 0), color: form.color,
+      };
       const r = await api.put(`/plans/${plan.id}`, payload(next));
       setPlans((ps) => ps.map((p) => (p.id === plan.id ? r.data : p)));
       setDialog(null);
       t.ok(L('saved_ok'));
-    } catch (e) { t.err(e.message); } finally { setBusy(false); }
+    } catch (e) {
+      t.err(e.message);
+      if (e.code === 'PLAN_CONFLICT') { setDialog(null); load(); }
+    } finally { setBusy(false); }
   };
 
   // El API responde 409 PLAN_HAS_SUBSCRIPTIONS si el plan tiene suscriptores activos.
@@ -113,7 +132,7 @@ export default function Plans({ ctx }) {
           <b>{L('p_catalog')}</b><div className="note">{L('p_drag_hint')}</div>
           {features.map((f) => (
             <div key={f.id} className="feat" draggable onDragStart={() => { drag.current = f.id; }} onDragEnd={() => { drag.current = null; }}>
-              <span className="fi">{f.ic}</span>{featName(f)}
+              <span className="fi">{featIcon(f)}</span>{featName(f)}
             </div>
           ))}
         </Card>
@@ -130,13 +149,13 @@ export default function Plans({ ctx }) {
               <div key={p.id} className="plan-col">
                 <div className="plan-head" style={{ borderTop: `4px solid ${p.color}`, borderRadius: '14px 14px 0 0' }}>
                   <div className="flex between" style={{ gap: 6 }}>
-                    <div className="pname">{p.name}</div>
+                    <div className="pname">{planLabel(p, lang)}</div>
                     <div className="flex" style={{ gap: 4 }}>
                       <button className="btn sec icon" title={L('p_edit_meta')} onClick={() => setDialog({ kind: 'meta', plan: p })}>✏️</button>
-                      <button className="btn dgr icon" title={L('p_delete')} onClick={() => setDialog({ kind: 'delete', plan: p })}>🗑</button>
+                      {!p.system && <button className="btn dgr icon" title={L('p_delete')} onClick={() => setDialog({ kind: 'delete', plan: p })}>🗑</button>}
                     </div>
                   </div>
-                  <div className="pprice" style={{ color: p.color }}>{p.price === 0 ? L('free_price') : `$${p.price}${L('mo')}`}</div>
+                  <div className="pprice" style={{ color: p.color }}>{planMonthly(p) === 0 ? L('free_price') : `$${planMonthly(p)}${L('mo')}`}</div>
                   <div className="note">{p.id}</div>
                 </div>
                 <div className={`dropzone ${overId === p.id ? 'over' : ''}`}
@@ -145,7 +164,7 @@ export default function Plans({ ctx }) {
                   onDrop={(e) => { e.preventDefault(); dropFeat(p.id); }}>
                   {p.features.length === 0 ? <div className="empty-hint">{L('p_empty')}</div> : p.features.map((id) => {
                     const f = featById(id); if (!f) return null;
-                    return <div key={id} className="pfeat"><span>{f.ic}</span>{featName(f)}<span className="x" onClick={() => removeFeat(p.id, id)}>✕</span></div>;
+                    return <div key={id} className="pfeat"><span>{featIcon(f)}</span>{featName(f)}<span className="x" onClick={() => removeFeat(p.id, id)}>✕</span></div>;
                   })}
                 </div>
                 <div className="limits">
@@ -180,7 +199,7 @@ export default function Plans({ ctx }) {
           onSave={(f) => editMeta(f, dialog.plan)} />
       )}
       {dialog?.kind === 'delete' && (
-        <Confirm danger title={L('p_delete_title')} message={L('p_delete_msg', { name: dialog.plan.name })}
+        <Confirm danger title={L('p_delete_title')} message={L('p_delete_msg', { name: planLabel(dialog.plan, lang) })}
           confirmLabel={L('del')} cancelLabel={L('cancel')} busy={busy} onClose={() => setDialog(null)}
           onConfirm={() => deletePlan(dialog.plan)} />
       )}
@@ -193,8 +212,9 @@ export default function Plans({ ctx }) {
 function PlanMetaForm({ plan, ctx, busy, onClose, onSave }) {
   const { L } = ctx;
   const [f, setF] = useState(() => ({
-    name: plan?.name || '',
-    price: plan?.price ?? 0,
+    nameEs: (plan?.name && typeof plan.name === 'object' ? plan.name.es : plan?.name) || '',
+    nameEn: (plan?.name && typeof plan.name === 'object' ? plan.name.en : plan?.name) || '',
+    price: plan ? planMonthly(plan) : 0,
     color: plan?.color || '#6366F1',
   }));
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
@@ -206,7 +226,8 @@ function PlanMetaForm({ plan, ctx, busy, onClose, onSave }) {
         <button className="btn" onClick={() => onSave(f)} disabled={busy}>{busy ? '…' : (plan ? L('save') : L('create'))}</button>
       </>}>
       <FormGrid>
-        <Field wide label={`${L('p_name')} *`}><input value={f.name} onChange={(e) => set('name')(e.target.value)} /></Field>
+        <Field label={`${L('p_name')} (ES) *`}><input value={f.nameEs} maxLength={60} onChange={(e) => set('nameEs')(e.target.value)} /></Field>
+        <Field label={`${L('p_name')} (EN)`}><input value={f.nameEn} maxLength={60} onChange={(e) => set('nameEn')(e.target.value)} /></Field>
         <Field label={L('p_price')}><input type="number" min="0" step="0.5" value={f.price} onChange={(e) => set('price')(e.target.value)} /></Field>
         <Field label={L('p_color')}>
           <div className="flex" style={{ gap: 8 }}>

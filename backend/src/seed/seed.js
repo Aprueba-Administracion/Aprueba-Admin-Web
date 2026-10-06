@@ -1,47 +1,106 @@
 // Siembra Firestore (real o emulador) con los datos del wireframe / doc de API.
-// Uso:  npm run seed     (respeta FIRESTORE_EMULATOR_HOST o credenciales reales)
+// Uso:  npm run seed:emu   (emulador, recomendado)  |  npm run seed -- --real  (Firestore real, gasta cuota)
+// Sin FIRESTORE_EMULATOR_HOST y sin --real el script se detiene (ver lib/envGuard.js).
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { db, COL } from '../data/repo.js';
+import { assertSafeTarget } from '../lib/envGuard.js';
+import { writeSyntheticMetrics } from '../lib/syntheticMetrics.js';
 
-const hash = (p) => bcrypt.hashSync(p, 8);
 const hoursAgo = (h) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 const daysAgo = (d) => hoursAgo(d * 24);
 
+// adminUsers al pie de la ficha de Max (sección 4): emailLower, active,
+// failedLoginCount, lockedUntil, lastLoginAt, mfaSecret y createdAt/updatedAt.
+// bcrypt coste 12 (el documento lo fija). mfaSecret queda en null: el TOTP
+// cifrado con KMS no aplica aún, el MFA sigue siendo el OTP de demostración.
+const SEED_NOW = new Date();
+const mkAdmin = (id, name, email, role, mfaEnabled, password) => ({
+  id, name, email, emailLower: email.toLowerCase(), passwordHash: bcrypt.hashSync(password, 12),
+  role, mfaEnabled, mfaSecret: null, active: true,
+  failedLoginCount: 0, lockedUntil: null, lastLoginAt: null,
+  createdAt: SEED_NOW, updatedAt: SEED_NOW,
+});
 const adminUsers = [
-  { id: 'adm_1', name: 'Admin General', email: 'admin@aprueba.cl', role: 'admin', mfaEnabled: true, passwordHash: hash('admin123') },
-  { id: 'adm_2', name: 'Finanzas', email: 'finance@aprueba.cl', role: 'finance', mfaEnabled: true, passwordHash: hash('finance123') },
-  { id: 'adm_3', name: 'Operaciones', email: 'ops@aprueba.cl', role: 'ops', mfaEnabled: false, passwordHash: hash('ops123') },
-  { id: 'adm_4', name: 'Soporte', email: 'support@aprueba.cl', role: 'support', mfaEnabled: false, passwordHash: hash('support123') },
+  mkAdmin('adm_1', 'Admin General', 'admin@aprueba.cl', 'admin', true, 'admin123'),
+  mkAdmin('adm_2', 'Finanzas', 'finance@aprueba.cl', 'finance', true, 'finance123'),
+  mkAdmin('adm_3', 'Operaciones', 'ops@aprueba.cl', 'ops', false, 'ops123'),
+  mkAdmin('adm_4', 'Soporte', 'support@aprueba.cl', 'support', false, 'support123'),
 ];
 
-const features = [
-  { id: 'f1', ic: '♾️', name_es: 'Preguntas ilimitadas', name_en: 'Unlimited questions' },
-  { id: 'f2', ic: '📝', name_es: 'Modo facsímil (ensayos)', name_en: 'Facsimile mode (mocks)' },
-  { id: 'f3', ic: '📖', name_es: 'Explicaciones paso a paso', name_en: 'Step-by-step explanations' },
-  { id: 'f4', ic: '⚑', name_es: 'Recorrección de preguntas', name_en: 'Question correction requests' },
-  { id: 'f5', ic: '👥', name_es: 'Grupos de estudio', name_en: 'Study groups' },
-  { id: 'f6', ic: '📊', name_es: 'Estadísticas avanzadas', name_en: 'Advanced stats' },
-  { id: 'f7', ic: '🎁', name_es: 'Beneficios de sponsors', name_en: 'Sponsor benefits' },
-  { id: 'f8', ic: '🚫', name_es: 'Sin anuncios', name_en: 'No ads' },
-  { id: 'f9', ic: '⬇️', name_es: 'Descarga offline', name_en: 'Offline download' },
-  { id: 'f10', ic: '⭐', name_es: 'Soporte prioritario', name_en: 'Priority support' },
+// features/{fN} al pie de la ficha de Max (sección 5): key estable, name {es,en},
+// description (null), icon (emoji), order (1–10) y active.
+const FEATURE_ROWS = [
+  ['f1', 'unlimited_questions', '♾️', 'Preguntas ilimitadas', 'Unlimited questions'],
+  ['f2', 'mock_mode', '📝', 'Modo facsímil (ensayos)', 'Facsimile mode (mocks)'],
+  ['f3', 'explanations', '📖', 'Explicaciones paso a paso', 'Step-by-step explanations'],
+  ['f4', 'corrections', '⚑', 'Recorrección de preguntas', 'Question correction requests'],
+  ['f5', 'study_groups', '👥', 'Grupos de estudio', 'Study groups'],
+  ['f6', 'advanced_stats', '📊', 'Estadísticas avanzadas', 'Advanced stats'],
+  ['f7', 'sponsor_benefits', '🎁', 'Beneficios de sponsors', 'Sponsor benefits'],
+  ['f8', 'no_ads', '🚫', 'Sin anuncios', 'No ads'],
+  ['f9', 'offline', '⬇️', 'Descarga offline', 'Offline download'],
+  ['f10', 'priority_support', '⭐', 'Soporte prioritario', 'Priority support'],
 ];
+const features = FEATURE_ROWS.map(([id, key, icon, es, en], i) => ({
+  id, key, name: { es, en }, description: null, icon, order: i + 1, active: true,
+}));
 
-// Planes con el NUEVO campo badges{login, purchase, correct} (badges por acción).
+// plans/{planId} al pie de la ficha de Max (sección 4.x): name {es,en}, nameLower,
+// nameKey, price {monthly,yearly}, currency, system, published/popular/order,
+// stripeProductId/stripePriceIds (null: aún sin Stripe) y createdAt/updatedAt.
+// `yearly` lo gestiona la app del alumno; se siembran los valores del ejemplo de Max.
+const mkPlan = (id, order, es, en, nameKey, monthly, yearly, color, feats, limits, badges, popular) => ({
+  id, name: { es, en }, nameLower: es.toLowerCase(), nameKey,
+  price: { monthly, yearly }, currency: 'USD', color, features: feats, limits, badges,
+  system: true, published: true, popular, order,
+  stripeProductId: null, stripePriceIds: { monthly: null, yearly: null },
+  createdAt: SEED_NOW, updatedAt: SEED_NOW, createdBy: null, updatedBy: null,
+});
 const plans = [
-  { id: 'free', name: 'Gratis', price: 0, color: '#64748B', features: ['f3'], limits: { qDay: 20, groups: 1, tests: 1 }, badges: { login: 1, purchase: 0, correct: 1 } },
-  { id: 'uni', name: '1 prueba ilimitada', price: 1, color: '#1A365D', features: ['f1', 'f3', 'f4'], limits: { qDay: 0, groups: 3, tests: 1 }, badges: { login: 1, purchase: 5, correct: 1 } },
-  { id: 'all', name: 'Todas las pruebas', price: 5, color: '#F5B041', features: ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'], limits: { qDay: 0, groups: 0, tests: 99 }, badges: { login: 2, purchase: 10, correct: 2 } },
+  mkPlan('free', 1, 'Gratis', 'Free', 'pl_free', 0, null, '#64748B', ['f3'], { qDay: 20, groups: 1, tests: 1 }, { login: 1, purchase: 0, correct: 1 }, false),
+  mkPlan('uni', 2, '1 prueba ilimitada', '1 test unlimited', 'pl_uni', 1, 10, '#1A365D', ['f1', 'f3', 'f4'], { qDay: 0, groups: 3, tests: 1 }, { login: 1, purchase: 5, correct: 1 }, false),
+  mkPlan('all', 3, 'Todas las pruebas', 'All tests', 'pl_all', 5, 48, '#F5B041', ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'], { qDay: 0, groups: 0, tests: 99 }, { login: 2, purchase: 10, correct: 2 }, true),
 ];
 
+// Campos canónicos de sponsors (modelo de Max, Fase 1): búsqueda case-insensitive,
+// contacto, borrado lógico y trazabilidad. nameLower se calcula abajo.
+const SPONSOR_CANON = { contactEmail: null, deletedAt: null, createdBy: 'seed', updatedBy: 'seed' };
 const sponsors = [
-  { id: 'spo_1', name: 'Preuniversitario Pedro de V.', tier: 'Gold', monthlyFee: 3200, benefitsOffered: 4, benefitsRedeemed: 640, status: 'ok' },
-  { id: 'spo_2', name: 'Librería Antártica', tier: 'Silver', monthlyFee: 1800, benefitsOffered: 2, benefitsRedeemed: 410, status: 'ok' },
-  { id: 'spo_3', name: 'Banco Estudiantil', tier: 'Gold', monthlyFee: 2400, benefitsOffered: 3, benefitsRedeemed: 520, status: 'ok' },
-  { id: 'spo_4', name: 'Café Cultura', tier: 'Bronze', monthlyFee: 900, benefitsOffered: 1, benefitsRedeemed: 180, status: 'deg' },
-  { id: 'spo_5', name: 'EdiTextos PAES', tier: 'Silver', monthlyFee: 1300, benefitsOffered: 2, benefitsRedeemed: 170, status: 'ok' },
+  { id: 'spo_1', name: 'Preuniversitario Pedro de V.', tier: 'Gold', monthlyFee: 3200, benefitsOffered: 4, benefitsRedeemed: 640, status: 'ok', ...SPONSOR_CANON },
+  { id: 'spo_2', name: 'Librería Antártica', tier: 'Silver', monthlyFee: 1800, benefitsOffered: 2, benefitsRedeemed: 410, status: 'ok', ...SPONSOR_CANON },
+  { id: 'spo_3', name: 'Banco Estudiantil', tier: 'Gold', monthlyFee: 2400, benefitsOffered: 3, benefitsRedeemed: 520, status: 'ok', ...SPONSOR_CANON },
+  { id: 'spo_4', name: 'Café Cultura', tier: 'Bronze', monthlyFee: 900, benefitsOffered: 1, benefitsRedeemed: 180, status: 'deg', ...SPONSOR_CANON },
+  { id: 'spo_5', name: 'EdiTextos PAES', tier: 'Silver', monthlyFee: 1300, benefitsOffered: 2, benefitsRedeemed: 170, status: 'ok', ...SPONSOR_CANON },
 ];
+for (const sp of sponsors) sp.nameLower = sp.name.toLowerCase();
+
+// Beneficios: colección raíz `benefits` (ids fijos bnf_seedNN => el seed es idempotente).
+// Por sponsor se reparten sus `benefitsOffered` beneficios y sus canjes acumulados.
+const BENEFIT_NAMES = {
+  spo_1: ['Clase de prueba gratis', '10% en cursos PAES', 'Ensayo presencial', 'Asesoría vocacional'],
+  spo_2: ['15% en libros', 'Cuaderno de regalo'],
+  spo_3: ['Cuenta estudiantil sin costo', 'Tarjeta sin mantención', 'Descuento en seguros'],
+  spo_4: ['Café gratis'],
+  spo_5: ['Guía PAES digital', '20% en textos'],
+};
+const benefits = [];
+let bn = 0;
+for (const sp of sponsors) {
+  const names = BENEFIT_NAMES[sp.id] || [];
+  names.forEach((name, i) => {
+    bn += 1;
+    const redeemedCount = Math.floor(sp.benefitsRedeemed / names.length) + (i === 0 ? sp.benefitsRedeemed % names.length : 0);
+    benefits.push({
+      id: `bnf_seed${String(bn).padStart(4, '0')}`,
+      sponsorId: sp.id, sponsorName: sp.name, name,
+      description: null, icon: null,
+      costPlatinum: 50 * (i + 1), stock: 100 + 20 * i, redeemedCount,
+      active: true, expiresAt: null,
+      createdAt: daysAgo(30), updatedAt: daysAgo(30),
+    });
+  });
+}
 
 // users/{uid} al pie de la letra del modelo canónico de Max (modelo.txt):
 // se agregan nameLower/emailLower, authProvider, planStatus/planSource,
@@ -216,29 +275,62 @@ const questions = [
   { id: 'qst_4d22', testId: 'b1', axis: 'Célula', difficulty: 'd1', statement: '¿Cuál es la unidad básica de la vida?', options: ['Átomo', 'Célula', 'Tejido', 'Órgano', 'Molécula'], correctAnswer: 'B', explanation: 'La célula es la unidad estructural y funcional.', requiredSkill: 'Conceptos básicos de biología.', status: 'published' },
 ];
 
+// ── Operativa (sección 8 del modelo de Max) ─────────────────────────────────
+// platforms: se añaden downloadsDelta, syncedAt y syncSource; fechas como timestamp;
+// downloads es null para la PWA. storeUrl queda null (aún no hay URLs públicas reales).
+const hoursAgoD = (h) => new Date(Date.now() - h * 60 * 60 * 1000);
 const platforms = [
-  { id: 'ios', platform: 'iOS · App Store', version: '2.4.1', available: true, downloads: 58200, updatedAt: '2026-05-28' },
-  { id: 'android', platform: 'Android · Google Play', version: '2.4.0', available: true, downloads: 70340, updatedAt: '2026-05-30' },
-  { id: 'web', platform: 'Web App (PWA)', version: '1.9.3', available: true, downloads: 0, updatedAt: '2026-06-02' },
+  { id: 'ios', name: 'iOS · App Store', version: '2.4.1', available: true, downloads: 58200, downloadsDelta: 140, storeUrl: null, updatedAt: new Date('2026-05-28T00:00:00Z'), syncedAt: hoursAgoD(2), syncSource: 'app_store_connect' },
+  { id: 'android', name: 'Android · Google Play', version: '2.4.0', available: true, downloads: 70340, downloadsDelta: 170, storeUrl: null, updatedAt: new Date('2026-05-30T00:00:00Z'), syncedAt: hoursAgoD(2), syncSource: 'google_play' },
+  { id: 'web', name: 'Web App (PWA)', version: '1.9.3', available: true, downloads: null, downloadsDelta: 0, storeUrl: null, updatedAt: new Date('2026-06-02T00:00:00Z'), syncedAt: hoursAgoD(2), syncSource: 'pwa_manifest' },
 ];
 
-const services = [
-  { id: 'login', key: 'login', name: 'Inicio de sesión', state: 'ok', uptime: '99.98%', latency: '118 ms' },
-  { id: 'badges', key: 'badges', name: 'Asignación de badges', state: 'ok', uptime: '99.95%', latency: '90 ms' },
-  { id: 'questions', key: 'questions', name: 'Entrega de preguntas', state: 'deg', uptime: '99.40%', latency: '410 ms' },
-  { id: 'payments', key: 'payments', name: 'Pagos', state: 'ok', uptime: '100%', latency: '160 ms' },
-  { id: 'notif', key: 'notif', name: 'Notificaciones', state: 'down', uptime: '97.10%', latency: null },
-];
+// serviceStatus/{login|badges|questions|payments|notif}: último snapshot de salud.
+// uptimePct pasa a número; latencyMs a número (null si down); + consecutiveFailures, checkedAt, source.
+const SVC_REGION = 'southamerica-west1';
+const serviceStatus = [
+  ['login', 'Inicio de sesión', 'Login', 'ok', 99.98, 118, 0],
+  ['badges', 'Asignación de badges', 'Badge assignment', 'ok', 99.95, 90, 0],
+  ['questions', 'Entrega de preguntas', 'Question delivery', 'deg', 99.4, 410, 2],
+  ['payments', 'Pagos', 'Payments', 'ok', 100, 160, 0],
+  ['notif', 'Notificaciones', 'Notifications', 'down', 97.1, null, 6],
+].map(([id, es, en, state, uptimePct, latencyMs, consecutiveFailures]) => ({
+  id, name: { es, en }, state, uptimePct, latencyMs, consecutiveFailures,
+  checkedAt: hoursAgoD(0.05), source: 'cloud_monitoring',
+}));
 
-const containers = [
-  { id: 'api-gateway', name: 'api-gateway', state: 'ok', cpu: 34, mem: 51, region: 'us-east' },
-  { id: 'auth-svc', name: 'auth-svc', state: 'ok', cpu: 22, mem: 40, region: 'us-east' },
-  { id: 'content-svc', name: 'content-svc', state: 'deg', cpu: 78, mem: 69, region: 'us-east' },
-  { id: 'badge-worker', name: 'badge-worker', state: 'ok', cpu: 18, mem: 33, region: 'us-east' },
-  { id: 'db-primary', name: 'db-primary', state: 'ok', cpu: 46, mem: 72, region: 'us-east' },
-  { id: 'notif-worker', name: 'notif-worker', state: 'down', cpu: 0, mem: 0, region: 'us-east' },
-  { id: 'redis-cache', name: 'redis-cache', state: 'ok', cpu: 12, mem: 28, region: 'us-east' },
-  { id: 'cdn-edge', name: 'cdn-edge', state: 'ok', cpu: 8, mem: 14, region: 'global' },
+// opsConfig/{services|containers|sync}: qué se mide y marcas de sincronización.
+const opsConfig = [
+  {
+    id: 'services',
+    items: [
+      ['login', 'Inicio de sesión', 'Login', 'login-https-check', 'auth-svc'],
+      ['badges', 'Asignación de badges', 'Badge assignment', 'badges-health', 'badge-worker'],
+      ['questions', 'Entrega de preguntas', 'Question delivery', 'content-health', 'content-svc'],
+      ['payments', 'Pagos', 'Payments', 'payments-health', 'payments-svc'],
+      ['notif', 'Notificaciones', 'Notifications', 'notif-health', 'notif-worker'],
+    ].map(([key, es, en, uptimeCheckId, cloudRunService], i) => ({
+      key, name: { es, en }, uptimeCheckId, cloudRunService, region: SVC_REGION, order: i + 1,
+    })),
+    updatedAt: SEED_NOW, updatedBy: 'seed',
+  },
+  {
+    id: 'containers',
+    items: [
+      ['api-gateway', 'cloud_run', true, null],
+      ['auth-svc', 'cloud_run', true, null],
+      ['content-svc', 'cloud_run', true, null],
+      ['badge-worker', 'cloud_run', true, null],
+      ['db-primary', 'firestore', false, { cpu: null, mem: 'firestore.googleapis.com/document/read_count' }],
+      ['notif-worker', 'cloud_run', true, null],
+      ['redis-cache', 'memorystore', false, { cpu: 'redis.googleapis.com/stats/cpu_utilization', mem: 'redis.googleapis.com/stats/memory/usage_ratio' }],
+      ['cdn-edge', 'cdn', false, { cpu: null, mem: null }],
+    ].map(([name, kind, restartable, metric], i) => ({
+      name, kind, region: kind === 'cdn' ? 'global' : SVC_REGION, restartable, metric, order: i + 1,
+    })),
+    updatedAt: SEED_NOW, updatedBy: 'seed',
+  },
+  { id: 'sync', storesSyncedAt: hoursAgoD(2), metricsAggregatedThrough: null, updatedAt: SEED_NOW },
 ];
 
 const tutors = [
@@ -371,22 +463,34 @@ async function seedCorrections(rows) {
 }
 
 async function run() {
+  assertSafeTarget('seed');
   console.log('Sembrando Firestore…');
   await seedCollection(COL.adminUsers, adminUsers);
   await seedCollection(COL.features, features);
   await seedCollection(COL.plans, plans);
   await seedCollection(COL.sponsors, sponsors);
+  await seedCollection(COL.benefits, benefits);
   await seedCollection(COL.users, users);
+  // El seed pisa users/{uid} pero NO sus subcolecciones: sin esto, los asientos de
+  // medalLedger de corridas anteriores (p. ej. del smoke) se acumulan entre seeds.
+  for (const u of users) {
+    const led = await db.collection(COL.users).doc(u.id).collection('medalLedger').get();
+    await Promise.all(led.docs.map((d) => d.ref.delete()));
+  }
   await seedTickets(ticketsRaw);
   await seedCorrections(correctionsRaw);
   await seedCollection(COL.questions, questions);
   await seedCollection(COL.platforms, platforms);
-  await seedCollection(COL.services, services);
-  await seedCollection(COL.containers, containers);
+  await seedCollection(COL.serviceStatus, serviceStatus);
+  await seedCollection(COL.opsConfig, opsConfig);
+  await clearCollection(COL.opsRestarts); // sin bloqueos de reinicio heredados de corridas anteriores
+  console.log(`  ✓ ${COL.opsRestarts}: vaciada`);
   await seedCollection(COL.tutors, tutors);
   await db.collection(COL.metrics).doc('overview').set(metrics.overview);
   await db.collection(COL.metrics).doc('commercial').set(metrics.commercial);
   console.log('  ✓ metrics: 2 docs (overview, commercial)');
+  const mm = await writeSyntheticMetrics(db, { sponsorIds: sponsors.filter((x) => !x.deletedAt).map((x) => x.id) });
+  console.log(`  ✓ metricsDaily: ${mm.daily} docs · metricsMonthly: ${mm.monthly} docs (sintéticos)`);
   console.log('Listo. Usuarios admin de prueba:');
   console.log('  admin@aprueba.cl / admin123 (MFA otp 123456)');
   console.log('  finance@aprueba.cl / finance123 (MFA otp 123456)');

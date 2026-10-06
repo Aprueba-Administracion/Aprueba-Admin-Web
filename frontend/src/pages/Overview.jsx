@@ -258,7 +258,7 @@ export default function Overview({ ctx }) {
           </div>
           {services.map((s) => (
             <div key={s.id} className="flex between overview-layout-10" >
-              <span>{s.name}</span>
+              <span>{s.name && typeof s.name === 'object' ? (isEn ? s.name.en : s.name.es) : s.name}</span>
               <StatusPill state={s.state} L={L} />
             </div>
           ))}

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ok, fail } from '../lib/envelope.js';
 import { wrap } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
-import { COL, listAll, getDoc, patchDoc, FieldValue } from '../data/repo.js';
+import { COL, listAll, db, FieldValue } from '../data/repo.js';
 import { logAudit } from '../lib/audit.js';
 
 const r = Router();
@@ -24,14 +24,8 @@ r.patch('/corrections/:id', requireRole('support'), wrap(async (req, res) => {
   if (!['confirmed', 'rejected'].includes(resolution)) {
     return fail(res, 400, 'VALIDATION', "resolution debe ser 'confirmed' o 'rejected'");
   }
-  const cor = await getDoc(COL.corrections, req.params.id);
-  if (!cor) return fail(res, 404, 'NOT_FOUND', 'Solicitud no encontrada');
-  if ((cor.status || 'pending') !== 'pending') {
-    return fail(res, 409, 'ALREADY_RESOLVED', 'Esta solicitud ya fue resuelta');
-  }
-
-  let rewardGranted = null;
-  const patch = {
+  const corRef = db.collection(COL.corrections).doc(req.params.id);
+  const basePatch = {
     status: resolution,
     resolvedBy: req.user.id,
     resolvedByName: req.user.name,
@@ -39,39 +33,70 @@ r.patch('/corrections/:id', requireRole('support'), wrap(async (req, res) => {
     note: note?.trim() || null,
   };
 
-  if (resolution === 'confirmed') {
-    // Otorga recompensa al alumno y, opcionalmente, corrige la pregunta.
-    // Modelo canónico de Max: badgesTotal/medals.bronze (no el `badges` plano
-    // que usaba la versión anterior de users/{uid}, ver MODELO_CAMBIOS.md).
-    const user = await getDoc(COL.users, cor.userId);
+  // Todo en UNA transacción (modelo de Max, #4): corrección + saldo del
+  // alumno (medals/badgesTotal) + asiento en users/{uid}/medalLedger +
+  // parche de la pregunta. Así el saldo y el ledger nunca quedan
+  // desincronizados, y dos admins no pueden resolver la misma solicitud.
+  const result = await db.runTransaction(async (tx) => {
+    const corSnap = await tx.get(corRef);
+    if (!corSnap.exists) return { error: [404, 'NOT_FOUND', 'Solicitud no encontrada'] };
+    const cor = { id: corSnap.id, ...corSnap.data() };
+    if ((cor.status || 'pending') !== 'pending') {
+      return { error: [409, 'ALREADY_RESOLVED', 'Esta solicitud ya fue resuelta'] };
+    }
+
+    let rewardGranted = null;
+    let userRef = null;
+    let user = null;
+    if (resolution === 'confirmed' && cor.userId) {
+      userRef = db.collection(COL.users).doc(cor.userId);
+      const uSnap = await tx.get(userRef);
+      if (uSnap.exists) user = uSnap.data();
+    }
+
+    // --- escrituras (todas las lecturas ya terminaron) ---
+    const patch = { ...basePatch };
     if (user) {
+      const now = new Date().toISOString();
       const medals = { bronze: 0, silver: 0, gold: 0, diamond: 0, platinum: 0, ...(user.medals || {}) };
       medals.bronze += CONFIRM_REWARD.amount;
-      await patchDoc(COL.users, cor.userId, {
+      tx.set(userRef, {
         medals,
         badgesTotal: (user.badgesTotal || 0) + CONFIRM_REWARD.amount,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
+      }, { merge: true });
+      const ledgerRef = userRef.collection('medalLedger').doc();
+      tx.set(ledgerRef, {
+        event: 'reward',
+        tier: CONFIRM_REWARD.tier,
+        amount: CONFIRM_REWARD.amount,
+        reason: 'correction_confirmed',
+        refType: 'correction',
+        refId: cor.id,
+        by: req.user.id,
+        createdAt: now,
       });
-      rewardGranted = { userId: cor.userId, ...CONFIRM_REWARD };
+      rewardGranted = { userId: cor.userId, ...CONFIRM_REWARD, ledgerId: ledgerRef.id };
     }
-    if (questionPatch && cor.questionId) {
-      await patchDoc(COL.questions, cor.questionId, {
+    if (resolution === 'confirmed' && questionPatch && cor.questionId) {
+      tx.set(db.collection(COL.questions).doc(cor.questionId), {
         ...questionPatch,
         updatedAt: new Date().toISOString(),
         updatedBy: req.user.id,
-        lastCorrectionId: req.params.id,
-        // FieldValue.increment evita la lectura extra (y la condición de
-        // carrera si dos recorrecciones de la misma pregunta se resuelven
-        // casi al mismo tiempo) que tenía el `getDoc` + 1 manual anterior.
+        lastCorrectionId: cor.id,
         correctionsCount: FieldValue.increment(1),
-      });
+      }, { merge: true });
     }
-  }
-  patch.rewardGranted = rewardGranted;
+    patch.rewardGranted = rewardGranted;
+    tx.set(corRef, patch, { merge: true });
+    return { patch, rewardGranted };
+  });
 
-  await patchDoc(COL.corrections, req.params.id, patch);
-  await logAudit(req, resolution, `corrections/${req.params.id}`, { rewardGranted, note: patch.note, questionPatch });
-  return ok(res, { id: req.params.id, ...patch });
+  if (result.error) return fail(res, ...result.error);
+  await logAudit(req, resolution, `corrections/${req.params.id}`, {
+    rewardGranted: result.rewardGranted, note: result.patch.note, questionPatch,
+  });
+  return ok(res, { id: req.params.id, ...result.patch });
 }));
 
 export default r;

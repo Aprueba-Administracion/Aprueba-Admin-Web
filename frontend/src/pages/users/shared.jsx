@@ -21,7 +21,18 @@ export const REASON_OPTIONS = [
 
 export const CONFIRM_REWARD = 250;
 
-export const FALLBACK_PLANS = [{ id: 'free', name: 'Gratis' }, { id: 'uni', name: '1 prueba' }, { id: 'all', name: 'Todas' }];
+export const FALLBACK_PLANS = [
+  { id: 'free', name: { es: 'Gratis', en: 'Free' } },
+  { id: 'uni', name: { es: '1 prueba', en: '1 test' } },
+  { id: 'all', name: { es: 'Todas', en: 'All' } },
+];
+
+// Modelo canónico: plan.name = { es, en } y plan.price = { monthly, yearly }.
+// Estos helpers también toleran el formato anterior (string / número).
+export const planLabel = (p, lang = 'es') =>
+  (p?.name && typeof p.name === 'object' ? (p.name[lang] || p.name.es || p.name.en) : p?.name) || p?.id || '';
+
+export const planMonthly = (p) => Number(p?.price && typeof p.price === 'object' ? p.price.monthly : p?.price) || 0;
 
 export const FALLBACK_AGENTS = [{ id: 'adm_1', name: 'Admin General', role: 'admin' }, { id: 'adm_4', name: 'Soporte', role: 'support' }];
 

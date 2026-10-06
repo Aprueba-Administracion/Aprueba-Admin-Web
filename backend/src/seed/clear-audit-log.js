@@ -6,6 +6,7 @@
 //                                 igual que `npm run seed`)
 import 'dotenv/config';
 import { db, COL } from '../data/repo.js';
+import { assertSafeTarget } from '../lib/envGuard.js';
 
 async function clearCollection(colName, batchSize = 300) {
   const colRef = db.collection(colName);
@@ -25,6 +26,7 @@ async function clearCollection(colName, batchSize = 300) {
 }
 
 (async () => {
+  assertSafeTarget('clear:audit');
   console.log(`Vaciando la colección "${COL.auditLog}"…`);
   const total = await clearCollection(COL.auditLog);
   console.log(`Listo: ${total} documentos borrados de "${COL.auditLog}".`);

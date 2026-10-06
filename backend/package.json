@@ -12,7 +12,14 @@
     "emulator": "firebase emulators:start --only firestore",
     "migrate:sponsor-benefits": "node src/scripts/migrate-sponsor-benefits.js",
     "fix:benefits-schema": "node src/scripts/fix-benefits-schema.js",
-    "backfill:sponsor-fields": "node src/scripts/backfill-sponsor-fields.js"
+    "backfill:sponsor-fields": "node src/scripts/backfill-sponsor-fields.js",
+    "seed:emu": "cross-env-shell FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node src/seed/seed.js",
+    "smoke": "cross-env-shell FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node src/scripts/smoke-test.js",
+    "dev:emu": "cross-env-shell FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 node --watch src/index.js",
+    "backfill:admin-fields": "node src/scripts/backfill-admin-fields.js",
+    "migrate:plans": "node src/scripts/migrate-plans.js",
+    "migrate:ops": "node src/scripts/migrate-ops.js",
+    "generate:metrics": "node src/scripts/generate-metrics.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -23,6 +30,7 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "firebase-tools": "^13.29.1"
+    "firebase-tools": "^13.29.1",
+    "cross-env": "^7.0.3"
   }
 }

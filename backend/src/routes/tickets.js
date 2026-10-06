@@ -28,7 +28,7 @@ function withAge(t) {
 r.get('/agents', requireRole('support'), wrap(async (req, res) => {
   const all = await listAll(COL.adminUsers);
   const agents = all
-    .filter((u) => ['support', 'admin'].includes(u.role))
+    .filter((u) => ['support', 'admin'].includes(u.role) && u.active !== false)
     .map((u) => ({ id: u.id, name: u.name, role: u.role }));
   return ok(res, agents);
 }));
@@ -87,7 +87,7 @@ r.patch('/tickets/:id', requireRole('support'), wrap(async (req, res) => {
       upd.assigneeId = null; upd.assigneeName = null;
     } else {
       const agent = await getDoc(COL.adminUsers, assigneeId);
-      if (!agent || !['support', 'admin'].includes(agent.role)) {
+      if (!agent || !['support', 'admin'].includes(agent.role) || agent.active === false) {
         return fail(res, 422, 'ASSIGNEE_INVALID', 'El agente indicado no existe o no puede recibir tickets.');
       }
       upd.assigneeId = agent.id; upd.assigneeName = agent.name;
