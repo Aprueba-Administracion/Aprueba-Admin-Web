@@ -1004,3 +1004,99 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
      quedaba vacía). Ahora ocupa el ancho completo de las dos columnas. */
   .tu-actions .btn.dgr{grid-column:1 / -1}
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Planes y productos: íconos de línea, cabecera de plan con menú "…"
+   y marca de cambios sin guardar. (Va al final: debe ganar la cascada
+   sobre las reglas .feat/.pfeat/.plan-head de más arriba.)
+   ───────────────────────────────────────────────────────────── */
+.pi{--tn:var(--ink);display:inline-grid;place-items:center;flex:none;width:28px;height:28px;border-radius:8px;color:var(--tn);background:color-mix(in srgb,var(--tn) 12%,transparent)}
+.pi.tone-blue{--tn:#2563EB}.pi.tone-rose{--tn:#DB2777}.pi.tone-purple{--tn:#7C3AED}.pi.tone-green{--tn:#059669}
+.pi.tone-red{--tn:#DC2626}.pi.tone-orange{--tn:#EA580C}.pi.tone-amber{--tn:#D97706}.pi.tone-ink{--tn:#475569}
+.dark .pi.tone-blue{--tn:#60A5FA}.dark .pi.tone-rose{--tn:#F472B6}.dark .pi.tone-purple{--tn:#A78BFA}.dark .pi.tone-green{--tn:#34D399}
+.dark .pi.tone-red{--tn:#F87171}.dark .pi.tone-orange{--tn:#FB923C}.dark .pi.tone-amber{--tn:#FBBF24}.dark .pi.tone-ink{--tn:#CBD5E1}
+
+.feat{gap:10px;padding:9px 11px}
+.pfeat{gap:9px;padding:7px 8px 7px 7px}
+.pfeat .pi{width:24px;height:24px;border-radius:7px}
+.pfeat .x{display:grid;place-items:center;margin-left:auto;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.pfeat .x:hover{background:var(--down-bg);color:var(--danger)}
+
+.plan-col{position:relative}
+.plan-head{position:relative;padding:14px 14px 12px;border-top:4px solid var(--pc,var(--brand));border-radius:14px 14px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--pc,var(--brand)) 9%,transparent),transparent 75%)}
+.plan-head-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.plan-icon{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,currentColor 13%,transparent)}
+.plan-head .pname{font-size:15px}
+.plan-head .mono-id{font-size:10.5px;margin-top:2px;opacity:.75}
+.plan-menu{position:relative}
+.plan-menu .btn.icon-only{width:32px;height:32px;padding:0}
+.plan-menu-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:15;min-width:210px;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.plan-menu-pop button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:var(--ink);font:600 12.5px 'Inter',sans-serif;text-align:left;cursor:pointer}
+.plan-menu-pop button:hover{background:var(--soft)}
+.plan-menu-pop button.danger{color:#DC2626}
+.plan-menu-pop button.danger:hover{background:var(--down-bg)}
+.dark .plan-menu-pop button.danger{color:#F87171}
+
+.section-label.with-ico{display:inline-flex;align-items:center;gap:6px}
+.plans-status{display:inline-flex;align-items:center;min-height:20px}
+.plans-status .ok-txt,.plans-status .dirty-txt{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.plans-status .ok-txt{color:var(--accent)}
+.plans-status .dirty-txt{color:var(--warn)}
+.dirty-dot{width:8px;height:8px;border-radius:50%;background:var(--warn)}
+.btn.sm svg{vertical-align:-2px;margin-right:5px}
+
+.plans-intro{max-width:760px;margin:0 0 18px}
+.feature-catalog{padding:14px 12px!important;border-radius:16px!important;box-shadow:0 10px 24px rgba(15,23,42,.04)}
+.catalog-title{padding:2px 4px 7px}.catalog-title b{display:block;font-family:'Montserrat',sans-serif;font-size:14px;letter-spacing:-.01em}.catalog-title .note{margin-top:3px}
+.plans-workspace{min-width:0}.plans-toolbar{min-height:38px;margin-bottom:12px!important}
+.plan-cols{gap:12px;padding:1px 2px 12px}
+.plan-col{min-width:238px;border:1px solid color-mix(in srgb,var(--pc,var(--line)) 42%,var(--line));border-radius:18px;box-shadow:0 12px 28px rgba(15,23,42,.07);overflow:visible}
+.plan-head{padding:17px 16px 15px;border-top-width:4px;border-radius:17px 17px 0 0;background:linear-gradient(145deg,color-mix(in srgb,var(--pc,var(--brand)) 25%,white),color-mix(in srgb,var(--pc,var(--brand)) 7%,var(--panel)) 68%,var(--panel))}
+.dark .plan-head{background:linear-gradient(145deg,color-mix(in srgb,var(--pc,var(--brand)) 27%,var(--panel)),var(--panel) 70%)}
+.plan-head-top{margin-bottom:14px}.plan-icon{width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,currentColor 17%,white);box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 16%,transparent)}
+.plan-name-row{display:flex;align-items:center;gap:8px}
+.plan-head .pname{font-size:16px;line-height:1.25}.plan-price-row{display:flex;align-items:baseline;gap:6px;margin-top:7px}.plan-head .pprice{font-size:27px;letter-spacing:-.055em;line-height:1;margin:0}.plan-price-caption{font-size:11px;font-weight:700;color:var(--muted)}.plan-head .mono-id{display:none}
+.dropzone{min-height:142px;padding:13px;background:linear-gradient(180deg,color-mix(in srgb,var(--pc,var(--brand)) 4%,transparent),transparent 45%)}.dropzone.over{background:color-mix(in srgb,var(--pc,var(--brand)) 13%,transparent);outline-color:var(--pc,var(--brand))}
+.empty-hint{display:grid;place-items:center;min-height:104px;padding:14px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:12px;text-align:center}
+.pfeat{min-height:40px;margin-bottom:7px;border:1px solid color-mix(in srgb,var(--pc,var(--line)) 18%,var(--line));background:color-mix(in srgb,var(--pc,var(--panel)) 5%,var(--panel));box-shadow:0 1px 2px rgba(15,23,42,.025)}
+.limits{padding:13px;border-top:1px solid var(--line);background:rgba(148,163,184,.025)}
+.limits .section-label{font-size:10px;letter-spacing:.035em;color:var(--muted)}
+.limit-row{gap:8px}.limit-row label{font-size:11.5px}.limit-row input{max-width:48px}
+.plan-col > div:last-child{padding:12px 13px!important;background:var(--panel);border-radius:0 0 15px 15px}
+.plan-col:focus-within{border-color:color-mix(in srgb,var(--pc,var(--brand)) 50%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--pc,var(--brand)) 10%,transparent),0 10px 24px rgba(15,23,42,.07)}
+
+.builder>*{min-width:0} /* evita que las 4 columnas de planes ensanchen la página en el teléfono */
+@media(max-width:620px){
+  /* En teléfono el constructor se lee de arriba hacia abajo. Se elimina el
+     carrusel horizontal de tarjetas: cada plan ocupa el ancho completo y
+     conserva todos sus controles con espacio táctil suficiente. */
+  .main-wrap,.content{overflow-x:hidden}
+  .plans-intro{margin-bottom:14px;font-size:12px}
+  .builder{gap:14px}
+  .feature-catalog{position:static!important;padding:13px!important}
+  .catalog-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:1px 2px 9px}
+  .catalog-title .note{text-align:right;font-size:10.5px}
+  .feature-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .feature-list .feat{min-width:0;min-height:48px;margin:0;padding:7px 8px;gap:7px;font-size:11px;line-height:1.25;align-items:flex-start}
+  .feature-list .feat .pi{width:25px;height:25px;border-radius:7px}
+  .plans-toolbar{align-items:stretch;gap:8px;margin-bottom:10px!important}
+  .plans-toolbar .plans-status{display:none}
+  .plans-toolbar>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+  .plans-toolbar .btn{width:100%;min-height:40px;padding:8px 9px}
+  .plan-cols{display:grid;grid-template-columns:1fr;gap:14px;overflow:visible;padding:0 0 20px}
+  .plan-col{width:100%;min-width:0;border-radius:16px}
+  .plan-head{padding:15px;border-radius:15px 15px 0 0}
+  .plan-menu-pop{min-width:184px}
+  .dropzone{min-height:0;padding:12px}
+  .empty-hint{min-height:78px}
+  .pfeat{min-height:42px;font-size:12px;padding:7px}
+  .limits{padding:12px}
+  .limit-row{min-height:34px;margin-top:6px}
+  .limit-row input{width:62px;min-height:34px;font-size:14px}
+  .plan-col > div:last-child{padding:12px!important;border-radius:0 0 15px 15px}
+  .plan-col > div:last-child .btn{min-height:42px}
+}
+@media(max-width:390px){
+  .feature-list{grid-template-columns:1fr}
+  .catalog-title{align-items:flex-start;flex-direction:column;gap:2px}.catalog-title .note{text-align:left}
+}

@@ -2,8 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { api } from '../api/client.js';
 import { planLabel, planMonthly } from './users/shared.jsx';
 import {
-  Card, Loading, ErrorBox, Modal, Confirm, Field, FormGrid, Toast, useToast,
+  Card, Loading, ErrorBox, Modal, Confirm, Field, FormGrid, Toast, useToast, IconEdit, IconTrash,
 } from '../components/ui.jsx';
+import {
+  FeatureIcon, PlanIcon, planIconKey, IconMore, IconX, IconCheck, IconMedal,
+} from './plans/planIcons.jsx';
 
 export default function Plans({ ctx }) {
   const { L, lang } = ctx;
@@ -16,19 +19,31 @@ export default function Plans({ ctx }) {
   const [busy, setBusy] = useState(false);
   const drag = useRef(null);
   const [overId, setOverId] = useState(null);
+  const [menuId, setMenuId] = useState(null); // menú "…" abierto de un plan
+  // Foto de lo último guardado de cada plan, para marcar los que tienen cambios sin guardar.
+  const base = useRef({});
+  const sig = (p) => JSON.stringify([p.name, planMonthly(p), p.color, p.features, p.limits, p.badges]);
+  const isDirty = (p) => base.current[p.id] !== sig(p);
+  useEffect(() => {
+    if (!menuId) return undefined;
+    const close = () => setMenuId(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [menuId]);
 
   const load = async () => {
     setErr(null);
     try {
       setFeatures((await api.get('/features')).data);
-      setPlans((await api.get('/plans')).data);
+      const ps = (await api.get('/plans')).data;
+      base.current = Object.fromEntries(ps.map((x) => [x.id, sig(x)]));
+      setPlans(ps);
     } catch (e) { setErr(e.message); }
   };
   useEffect(() => { load(); }, []);
 
   // Modelo canónico: f.name = { es, en }, f.icon. Tolera el formato anterior (name_es / name_en / ic).
   const featName = (f) => (f.name && typeof f.name === 'object' ? (f.name[lang] || f.name.es) : (lang === 'en' ? f.name_en : f.name_es) || f.name_es);
-  const featIcon = (f) => f.icon ?? f.ic;
   const featById = (id) => features.find((f) => f.id === id);
 
   // ── edición local (en memoria hasta guardar) ──
@@ -54,6 +69,7 @@ export default function Plans({ ctx }) {
     try {
       const r = await api.put(`/plans/${p.id}`, payload(p));
       // Se toma el updatedAt nuevo para que el siguiente guardado no choque consigo mismo.
+      base.current[p.id] = sig(p);
       setPlans((ps) => ps.map((x) => (x.id === p.id ? { ...x, updatedAt: r.data.updatedAt, updatedBy: r.data.updatedBy } : x)));
       setSavedId(p.id); setTimeout(() => setSavedId(null), 2000);
       return true;
@@ -82,6 +98,7 @@ export default function Plans({ ctx }) {
         limits: { qDay: 0, groups: 0, tests: 1 },
         badges: { login: 1, purchase: 0, correct: 1 },
       });
+      base.current[r.data.id] = sig(r.data);
       setPlans((ps) => [...ps, r.data]);
       setDialog(null);
       t.ok(L('created_ok'));
@@ -98,7 +115,9 @@ export default function Plans({ ctx }) {
         price: Number(form.price || 0), color: form.color,
       };
       const r = await api.put(`/plans/${plan.id}`, payload(next));
-      setPlans((ps) => ps.map((p) => (p.id === plan.id ? r.data : p)));
+      // Se conservan las ediciones locales (funciones, límites) y se actualizan solo los datos del plan.
+      base.current[plan.id] = sig({ ...plan, name: r.data.name, price: r.data.price, color: r.data.color });
+      setPlans((ps) => ps.map((p) => (p.id === plan.id ? { ...p, name: r.data.name, price: r.data.price, color: r.data.color, updatedAt: r.data.updatedAt, updatedBy: r.data.updatedBy } : p)));
       setDialog(null);
       t.ok(L('saved_ok'));
     } catch (e) {
@@ -126,19 +145,24 @@ export default function Plans({ ctx }) {
 
   return (
     <>
-      <p className="sub" style={{ marginBottom: 6 }}>{L('p_intro')}</p>
+      <p className="sub plans-intro">{L('p_intro')}</p>
       <div className="builder">
-        <Card style={{ position: 'sticky', top: 78 }}>
-          <b>{L('p_catalog')}</b><div className="note">{L('p_drag_hint')}</div>
-          {features.map((f) => (
-            <div key={f.id} className="feat" draggable onDragStart={() => { drag.current = f.id; }} onDragEnd={() => { drag.current = null; }}>
-              <span className="fi">{featIcon(f)}</span>{featName(f)}
-            </div>
-          ))}
+        <Card className="feature-catalog" style={{ position: 'sticky', top: 78 }}>
+          <div className="catalog-title"><b>{L('p_catalog')}</b><div className="note">{L('p_drag_hint')}</div></div>
+          <div className="feature-list">
+            {features.map((f) => (
+              <div key={f.id} className="feat" draggable onDragStart={() => { drag.current = f.id; }} onDragEnd={() => { drag.current = null; }}>
+                <FeatureIcon feature={f} />{featName(f)}
+              </div>
+            ))}
+          </div>
         </Card>
-        <div>
-          <div className="flex between" style={{ marginBottom: 10 }}>
-            <span className="note">{savedId === 'ALL' ? `✓ ${L('p_saved')}` : ''}</span>
+        <div className="plans-workspace">
+          <div className="flex between plans-toolbar">
+            <span className="note plans-status">
+              {savedId === 'ALL' && <span className="ok-txt"><IconCheck />{L('p_saved')}</span>}
+              {savedId !== 'ALL' && plans.some(isDirty) && <span className="dirty-txt"><i className="dirty-dot" />{L('p_unsaved')}</span>}
+            </span>
             <div className="flex" style={{ gap: 8 }}>
               <button className="btn sec sm" onClick={() => setDialog({ kind: 'new' })}>{L('p_add_plan')}</button>
               <button className="btn sm" onClick={saveAll}>{L('p_save')}</button>
@@ -147,16 +171,28 @@ export default function Plans({ ctx }) {
           <div className="plan-cols">
             {plans.map((p) => (
               <div key={p.id} className="plan-col">
-                <div className="plan-head" style={{ borderTop: `4px solid ${p.color}`, borderRadius: '14px 14px 0 0' }}>
-                  <div className="flex between" style={{ gap: 6 }}>
-                    <div className="pname">{planLabel(p, lang)}</div>
-                    <div className="flex" style={{ gap: 4 }}>
-                      <button className="btn sec icon" title={L('p_edit_meta')} onClick={() => setDialog({ kind: 'meta', plan: p })}>✏️</button>
-                      {!p.system && <button className="btn dgr icon" title={L('p_delete')} onClick={() => setDialog({ kind: 'delete', plan: p })}>🗑</button>}
+                <div className="plan-head" style={{ '--pc': p.color }}>
+                  <div className="plan-head-top">
+                    <span className="plan-icon" style={{ color: p.color }}><PlanIcon name={planIconKey(p, plans)} /></span>
+                    <div className="plan-menu">
+                      <button className="btn sec icon-only" aria-label={L('p_menu')} title={L('p_menu')}
+                        onClick={(e) => { e.stopPropagation(); setMenuId(menuId === p.id ? null : p.id); }}>
+                        <IconMore />
+                      </button>
+                      {menuId === p.id && (
+                        <div className="plan-menu-pop" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => { setMenuId(null); setDialog({ kind: 'meta', plan: p }); }}><IconEdit />{L('p_edit_meta')}</button>
+                          {!p.system && <button className="danger" onClick={() => { setMenuId(null); setDialog({ kind: 'delete', plan: p }); }}><IconTrash />{L('p_delete')}</button>}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="pprice" style={{ color: p.color }}>{planMonthly(p) === 0 ? L('free_price') : `$${planMonthly(p)}${L('mo')}`}</div>
-                  <div className="note">{p.id}</div>
+                  <div className="plan-name-row"><div className="pname">{planLabel(p, lang)}</div></div>
+                  <div className="plan-price-row">
+                    <div className="pprice" style={{ color: p.color }}>{planMonthly(p) === 0 ? L('free_price') : `$${planMonthly(p)}`}</div>
+                    {planMonthly(p) > 0 && <span className="plan-price-caption">{L('mo')}</span>}
+                  </div>
+                  <div className="note mono-id">{p.id}</div>
                 </div>
                 <div className={`dropzone ${overId === p.id ? 'over' : ''}`}
                   onDragOver={(e) => { e.preventDefault(); setOverId(p.id); }}
@@ -164,7 +200,12 @@ export default function Plans({ ctx }) {
                   onDrop={(e) => { e.preventDefault(); dropFeat(p.id); }}>
                   {p.features.length === 0 ? <div className="empty-hint">{L('p_empty')}</div> : p.features.map((id) => {
                     const f = featById(id); if (!f) return null;
-                    return <div key={id} className="pfeat"><span>{featIcon(f)}</span>{featName(f)}<span className="x" onClick={() => removeFeat(p.id, id)}>✕</span></div>;
+                    return (
+                      <div key={id} className="pfeat">
+                        <FeatureIcon feature={f} size={15} />{featName(f)}
+                        <button type="button" className="x" aria-label={L('del')} onClick={() => removeFeat(p.id, id)}><IconX size={13} /></button>
+                      </div>
+                    );
                   })}
                 </div>
                 <div className="limits">
@@ -176,14 +217,16 @@ export default function Plans({ ctx }) {
                 </div>
                 {/* Badges por acción (campo `badges` del modelo de planes). */}
                 <div className="limits">
-                  <div className="section-label" style={{ margin: '0 0 2px' }}>🏅 {L('p_badges')}</div>
+                  <div className="section-label with-ico" style={{ margin: '0 0 2px' }}><IconMedal />{L('p_badges')}</div>
                   <div className="limit-row"><label>{L('bdg_login')}</label><input type="number" min="0" value={p.badges?.login ?? 0} onChange={(e) => setBadge(p.id, 'login', e.target.value)} /></div>
                   <div className="limit-row"><label>{L('bdg_purchase')}</label><input type="number" min="0" value={p.badges?.purchase ?? 0} onChange={(e) => setBadge(p.id, 'purchase', e.target.value)} /></div>
                   <div className="limit-row"><label>{L('bdg_correct')}</label><input type="number" min="0" value={p.badges?.correct ?? 0} onChange={(e) => setBadge(p.id, 'correct', e.target.value)} /></div>
                   <div className="note" style={{ marginTop: 8 }}>{L('badges_unit')} / {lang === 'es' ? 'acción' : 'action'}</div>
                 </div>
                 <div style={{ padding: 12, borderTop: '1px solid var(--line)' }}>
-                  <button className="btn sm" style={{ width: '100%' }} onClick={() => save(p)}>{savedId === p.id ? `✓ ${L('p_saved')}` : L('p_save')}</button>
+                  <button className={`btn sm ${isDirty(p) || savedId === p.id ? '' : 'sec'}`} style={{ width: '100%' }} onClick={() => save(p)}>
+                    {savedId === p.id ? <><IconCheck />{L('p_saved')}</> : L('p_save')}
+                  </button>
                 </div>
               </div>
             ))}
@@ -192,10 +235,10 @@ export default function Plans({ ctx }) {
       </div>
 
       {dialog?.kind === 'new' && (
-        <PlanMetaForm ctx={ctx} busy={busy} onClose={() => setDialog(null)} onSave={(f) => createPlan(f)} />
+        <PlanMetaForm ctx={ctx} plans={plans} busy={busy} onClose={() => setDialog(null)} onSave={(f) => createPlan(f)} />
       )}
       {dialog?.kind === 'meta' && (
-        <PlanMetaForm plan={dialog.plan} ctx={ctx} busy={busy} onClose={() => setDialog(null)}
+        <PlanMetaForm plan={dialog.plan} ctx={ctx} plans={plans} busy={busy} onClose={() => setDialog(null)}
           onSave={(f) => editMeta(f, dialog.plan)} />
       )}
       {dialog?.kind === 'delete' && (
@@ -209,7 +252,7 @@ export default function Plans({ ctx }) {
   );
 }
 
-function PlanMetaForm({ plan, ctx, busy, onClose, onSave }) {
+function PlanMetaForm({ plan, plans, ctx, busy, onClose, onSave }) {
   const { L } = ctx;
   const [f, setF] = useState(() => ({
     nameEs: (plan?.name && typeof plan.name === 'object' ? plan.name.es : plan?.name) || '',
@@ -218,6 +261,10 @@ function PlanMetaForm({ plan, ctx, busy, onClose, onSave }) {
     color: plan?.color || '#6366F1',
   }));
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
+  // Vista previa del ícono automático según el precio que se está escribiendo.
+  const previewPlan = { id: plan?.id || '__new__', price: Number(f.price || 0) };
+  const others = plans.filter((x) => x.id !== plan?.id);
+  const iconName = planIconKey(previewPlan, [...others, previewPlan]);
 
   return (
     <Modal busy={busy} title={plan ? L('p_edit_meta') : L('p_add_plan')} subtitle={plan?.id} onClose={onClose}
@@ -234,6 +281,9 @@ function PlanMetaForm({ plan, ctx, busy, onClose, onSave }) {
             <input type="color" value={f.color} onChange={(e) => set('color')(e.target.value)} />
             <input value={f.color} className="mono" onChange={(e) => set('color')(e.target.value)} />
           </div>
+        </Field>
+        <Field label={L('p_icon_auto')} hint={L('p_icon_hint')}>
+          <span className="plan-icon" style={{ color: f.color }}><PlanIcon name={iconName} /></span>
         </Field>
       </FormGrid>
     </Modal>

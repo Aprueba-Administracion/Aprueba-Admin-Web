@@ -23,14 +23,31 @@ export const CONFIRM_REWARD = 250;
 
 export const FALLBACK_PLANS = [
   { id: 'free', name: { es: 'Gratis', en: 'Free' } },
-  { id: 'uni', name: { es: '1 prueba', en: '1 test' } },
-  { id: 'all', name: { es: 'Todas', en: 'All' } },
+  { id: 'uni', name: { es: '1 prueba ilimitada', en: '1 test unlimited' } },
+  { id: 'all', name: { es: 'Todas las pruebas', en: 'All tests' } },
 ];
+
+// Los planes de sistema existen desde antes de que el nombre fuera bilingüe.
+// Este mapa evita que una ficha antigua que sólo tenga el nombre en español
+// bloquee el cambio de idioma en la interfaz.
+export const SYSTEM_PLAN_NAMES = Object.fromEntries(FALLBACK_PLANS.map((p) => [p.id, p.name]));
 
 // Modelo canónico: plan.name = { es, en } y plan.price = { monthly, yearly }.
 // Estos helpers también toleran el formato anterior (string / número).
-export const planLabel = (p, lang = 'es') =>
-  (p?.name && typeof p.name === 'object' ? (p.name[lang] || p.name.es || p.name.en) : p?.name) || p?.id || '';
+export const planLabel = (p, lang = 'es') => {
+  const systemName = SYSTEM_PLAN_NAMES[p?.id];
+  // Estos tres identificadores son fijos. Se prioriza su catálogo canónico
+  // porque hay registros históricos cuyo campo `name.en` fue almacenado con
+  // el texto en español.
+  if (systemName) return systemName[lang] || systemName.es;
+  if (p?.name && typeof p.name === 'object') {
+    return p.name[lang] || p.name.es || p.name.en || p.id || '';
+  }
+  // Los datos previos usaban `name` como string y, por tanto, no tienen una
+  // alternativa en inglés. Sólo se traduce el catálogo fijo; los planes
+  // creados por una persona conservan su nombre original.
+  return p?.name || p?.id || '';
+};
 
 export const planMonthly = (p) => Number(p?.price && typeof p.price === 'object' ? p.price.monthly : p?.price) || 0;
 

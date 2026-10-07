@@ -149,6 +149,7 @@ export const T = {
     p_edit_meta:'Editar nombre, precio y color', p_name:'Nombre del plan', p_price:'Precio mensual (USD)', p_color:'Color',
     p_delete:'Eliminar plan', p_delete_title:'Eliminar plan',
     p_delete_msg:'Se eliminará el plan «{name}». El API lo rechaza si tiene suscripciones activas.',
+    p_menu:'Opciones del plan', p_unsaved:'Cambios sin guardar', p_icon_auto:'Ícono', p_icon_hint:'Se asigna solo según el precio: regalo (gratis), capas, rayo o corona (el más alto).',
     p_deleted:'Plan eliminado',
 
     // ── login ──
@@ -299,6 +300,7 @@ export const T = {
     p_edit_meta:'Edit name, price and color', p_name:'Plan name', p_price:'Monthly price (USD)', p_color:'Color',
     p_delete:'Delete plan', p_delete_title:'Delete plan',
     p_delete_msg:'Plan “{name}” will be deleted. The API rejects this if it has active subscriptions.',
+    p_menu:'Plan options', p_unsaved:'Unsaved changes', p_icon_auto:'Icon', p_icon_hint:'Assigned automatically by price: gift (free), layers, bolt or crown (highest).',
     p_deleted:'Plan deleted',
 
     login_title:'Admin console', login_email:'Email', login_pass:'Password', login_otp:'MFA code (if required)', login_btn:'Sign in',
