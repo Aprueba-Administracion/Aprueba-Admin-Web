@@ -91,6 +91,49 @@ export const formatDateOnly = (dateStr, lang = 'es') => {
   return d.toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US');
 };
 
+// País del usuario: pin + nombre del país y, debajo, "Ciudad (CÓDIGO)".
+// `code` es el ISO 3166-1 alfa-2 que guarda el backend en users.country.
+// El modelo no guarda ciudad; si la ficha trae `city` se muestra, si no
+// sólo el código.
+export const countryName = (code, lang = 'es') => {
+  try {
+    return new Intl.DisplayNames([lang], { type: 'region' }).of(String(code).toUpperCase()) || code;
+  } catch {
+    return code;
+  }
+};
+
+const PIN_COLORS = { CL: '#1d4ed8', PE: '#dc2626' };
+
+const SvgPin = ({ color, size = 18 }) => (
+  <svg width={size} height={size} style={{ flexShrink: 0 }} viewBox="0 0 24 24" fill={color} aria-hidden="true">
+    <path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+  </svg>
+);
+
+export function CountryCell({ code, city, lang = 'es', compact = false, inline = false }) {
+  const cc = String(code || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(cc)) return null;
+  const color = PIN_COLORS[cc] || 'var(--brand)';
+  if (inline) {
+    return (
+      <span className="note" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <SvgPin color={color} size={14} />
+        <span>{countryName(cc, lang)}{city ? ` · ${city}` : ''} ({cc})</span>
+      </span>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+      <SvgPin color={color} />
+      <div style={{ lineHeight: 1.2 }}>
+        <div style={{ fontWeight: 700, fontSize: compact ? 13 : 14 }}>{countryName(cc, lang)}</div>
+        <div className="note" style={{ fontSize: 11.5 }}>{city ? `${city} (${cc})` : cc}</div>
+      </div>
+    </div>
+  );
+}
+
 export const SvgSearch = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />

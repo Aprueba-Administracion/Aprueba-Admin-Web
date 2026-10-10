@@ -1,5 +1,5 @@
 import { Card, ErrorBox, EmptyState, Select, Pill, Pager, IconUsers, IconTicket, IconFlag } from "../../components/ui.jsx";
-import { USER_STATES, STATE_TAG, TICKET_TAG, COR_TAG, initials, SvgSearch, SvgEdit, SvgCreditCard, SvgClock, SvgAward, SvgCalendar } from "./shared.jsx";
+import { USER_STATES, STATE_TAG, TICKET_TAG, COR_TAG, initials, CountryCell, SvgSearch, SvgEdit, SvgCreditCard, SvgClock, SvgAward, SvgCalendar } from "./shared.jsx";
 
 export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters, planOptions, uErr, loadUsers, cursors, page, users, selectedUser, setSelectedUser, setUserSubTab, uTotal, uNext, goNext, goPrev, openUser, busy, patchUser, userSubTab, planName, fmt, lang, allTickets, corrections }) {
   return (
@@ -26,7 +26,8 @@ export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters
                   {(users || []).map((x) => {
                     const isSel = selectedUser?.id === x.id;
                     return (
-                      <div key={x.id} className={`u-row ${isSel ? 'sel' : ''}`}>
+                      <div key={x.id} className={`u-row ${isSel ? 'sel' : ''}`}
+                        style={{ display: 'grid', alignItems: 'center', columnGap: 14, gridTemplateColumns: selectedUser ? 'minmax(0,1fr) 104px 96px' : 'minmax(0,1fr) 190px 120px 110px' }}>
                         <div className="flex users-panel-layout-5" >
                           <div className="avatar">{initials(x.name)}</div>
                           <div className="users-panel-layout-6" >
@@ -34,8 +35,9 @@ export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters
                             <div className="note users-panel-layout-8" >{x.email}</div>
                           </div>
                         </div>
-                        <Pill value={x.state} map={STATE_TAG} L={L} />
-                        <button type="button" className={(`btn sm ${isSel ? '' : 'sec'}` || '') + ' users-panel-layout-9'}
+                        {!selectedUser && <CountryCell code={x.country} city={x.city} lang={lang} />}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><Pill value={x.state} map={STATE_TAG} L={L} /></div>
+                        <button type="button" className={(`btn sm ${isSel ? '' : 'sec'}` || '') + ' users-panel-layout-9'} style={{ width: '100%' }}
                           onClick={() => { setSelectedUser(isSel ? null : x); setUserSubTab('summary'); }}
                           >
                           {isSel ? L('u_close_detail') : L('u_view_detail')}
@@ -60,6 +62,7 @@ export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters
                           <Pill value={selectedUser.state} map={STATE_TAG} L={L} />
                         </div>
                         <span className="note">{selectedUser.email}</span>
+                        <div style={{ marginTop: 4 }}><CountryCell code={selectedUser.country} city={selectedUser.city} lang={lang} inline /></div>
                       </div>
                     </div>
                     <div className="flex users-panel-layout-15" >
