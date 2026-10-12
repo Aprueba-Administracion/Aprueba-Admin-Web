@@ -55,6 +55,10 @@ export default function App() {
     document.body.classList.toggle('dark', dark);
   }, [dark]);
 
+  // Mantiene <html lang> sincronizado con el idioma de la interfaz (lectores de
+  // pantalla y componentes sin acceso a `L`, como Modal).
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+
   if (!user) return <Login ctx={ctx} />;
 
   return (

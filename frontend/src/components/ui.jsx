@@ -1,4 +1,9 @@
 import { useMemo, useEffect, useState, useRef } from 'react';
+import { makeL } from '../i18n.js';
+
+// Traducción para componentes que no reciben `L` (Modal, gráficos): toma el
+// idioma de <html lang>, que App.jsx mantiene sincronizado.
+const uiL = (k) => makeL(typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'en' : 'es')(k);
 
 export function Kpi({ label, value, delta, up, ic }) {
   return (
@@ -216,7 +221,7 @@ export function Modal({ title, subtitle, children, onClose, footer, wide, busy }
             <div className="modal-title">{title}</div>
             {subtitle && <div className="note">{subtitle}</div>}
           </div>
-          <button className="modal-x" onClick={onClose} disabled={busy} aria-label="Cerrar">✕</button>
+          <button className="modal-x" onClick={onClose} disabled={busy} aria-label={uiL('close')}>✕</button>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
@@ -457,7 +462,7 @@ export function BarsInteractive({ data = [] }) {
       {hd && (
         <div className="chart-tip" style={{ top: 6, left: `${((hover + 0.5) / data.length) * 100}%` }}>
           <b>{hd.label}</b>
-          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% del total</span>
+          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% {uiL('chart_of_total')}</span>
         </div>
       )}
     </div>
@@ -471,7 +476,7 @@ export function Donut({ pct }) {
       <circle cx="52" cy="52" r={r} fill="none" stroke="var(--line)" strokeWidth="12" />
       <circle cx="52" cy="52" r={r} fill="none" stroke="var(--accent)" strokeWidth="12" strokeLinecap="round" strokeDasharray={c.toFixed(1)} strokeDashoffset={off.toFixed(1)} transform="rotate(-90 52 52)" />
       <text x="52" y="50" fontSize="19" fontWeight="800" fill="var(--ink)" textAnchor="middle" fontFamily="Montserrat">{pct}%</text>
-      <text x="52" y="67" fontSize="8" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">conv.</text>
+      <text x="52" y="67" fontSize="8" fill="var(--muted)" textAnchor="middle" fontFamily="Inter">{uiL('chart_conv_short')}</text>
     </svg>
   );
 }
@@ -528,7 +533,7 @@ export function HBarsInteractive({ data = [] }) {
       {hd && (
         <div className="chart-tip" style={{ top: hover * rowH + 4, left: `${(labW / w) * 100}%` }}>
           <b>{hd.label}</b>
-          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% del total</span>
+          <span>{hd.disp} · {((hd.value / total) * 100).toFixed(0)}% {uiL('chart_of_total')}</span>
         </div>
       )}
     </div>

@@ -250,7 +250,7 @@ export default function Users({ ctx }) {
 
   return (
     <>
-      <div className="grid g4">
+      <div className="grid g4 u-kpis">
         <TopKpiCard label={L('u_total')} value={fmt(uStats?.total ?? uTotal)} icon={IconUsers} tone="blue" />
         <TopKpiCard label={L('u_active')} value={uStats ? fmt(uStats.active) : '…'} icon={IconCheckCircle} tone="blue" />
         <TopKpiCard label={L('u_suspended')} value={uStats ? fmt(uStats.suspended) : '…'} icon={IconBan} tone="blue" />

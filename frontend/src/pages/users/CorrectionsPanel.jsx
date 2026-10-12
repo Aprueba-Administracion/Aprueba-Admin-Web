@@ -1,17 +1,17 @@
 import { Card, Loading, ErrorBox, EmptyState, Field, Select, Pill, IconFlag, IconInfo } from "../../components/ui.jsx";
-import { COR_TAG, REASON_OPTIONS, SvgSearch } from "./shared.jsx";
+import { COR_TAG, REASON_KEYS, SvgSearch } from "./shared.jsx";
 
 export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCReason, cDate, setCDate, setCFilters, correctionCounts, cFilters, isAdmin, L, cErr, loadCorrections, filteredCorrections, questionsById, lang, setDialog }) {
   return (
 <Card className="tab-fade corrections-panel-layout-1" >
           <div className="flex corrections-panel-layout-2" >
-            <h2 className="corrections-panel-layout-3" >Recorrecciones</h2>
+            <h2 className="corrections-panel-layout-3" >{L('tab_corrections')}</h2>
             <div className="corrections-panel-layout-4" >
               <input
                 type="text"
                 className="grow corrections-panel-layout-5"
                 
-                placeholder="Buscar por pregunta, alumno o ID..."
+                placeholder={L('cp_search')}
                 value={cSearch}
                 onChange={(e) => setCSearch(e.target.value)}
               />
@@ -23,15 +23,15 @@ export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCRea
 
           {/* Filtros: Motivo, Fecha y Limpiar (sin el dropdown de Estado) */}
           <div className="corrections-panel-layout-7" >
-            <Field label="Motivo">
+            <Field label={L('co_reason')}>
               <Select
                 value={cReason}
                 onChange={setCReason}
-                options={REASON_OPTIONS}
+                options={[{ value: '', label: L('filter_all') }, ...REASON_KEYS.map((k) => ({ value: k, label: L(`reason_${k}`) }))]}
               />
             </Field>
 
-            <Field label="Fecha">
+            <Field label={L('cp_date')}>
               <input className="corrections-panel-layout-8"
                 type="date"
                 value={cDate}
@@ -50,17 +50,17 @@ export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCRea
                 setCFilters({ status: '' });
               }}
             >
-              Limpiar filtros
+              {L('clear_filters')}
             </button>
           </div>
 
           {/* Pestañas de estado con contadores en píldora */}
           <div className="flex corrections-panel-layout-10" >
             {[
-              { id: '', label: 'Todos', count: correctionCounts.all, dotColor: '#3b82f6' },
-              { id: 'pending', label: 'Pendientes', count: correctionCounts.pending, dotColor: '#f59e0b' },
-              { id: 'confirmed', label: 'Confirmadas', count: correctionCounts.confirmed, dotColor: '#10b981' },
-              { id: 'rejected', label: 'Rechazadas', count: correctionCounts.rejected, dotColor: '#ef4444' },
+              { id: '', label: L('filter_all'), count: correctionCounts.all, dotColor: '#3b82f6' },
+              { id: 'pending', label: L('co_pending_kpi'), count: correctionCounts.pending, dotColor: '#f59e0b' },
+              { id: 'confirmed', label: L('cp_confirmed'), count: correctionCounts.confirmed, dotColor: '#10b981' },
+              { id: 'rejected', label: L('cp_rejected'), count: correctionCounts.rejected, dotColor: '#ef4444' },
             ].map((tabItem) => {
               const active = (cFilters.status || '') === tabItem.id;
               return (
@@ -93,16 +93,16 @@ export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCRea
             <EmptyState msg={L('co_no_items')} ic={<IconFlag size={22} />} />
           ) : (
             <div className="tbl-wrap pretty">
-              <table>
+              <table className="tbl-cards">
                 <thead>
                   <tr className="corrections-panel-layout-15" >
                     <th className="corrections-panel-layout-16" >#</th>
-                    <th>Pregunta</th>
-                    <th>Alumno</th>
-                    <th>Motivo</th>
-                    <th>Estado</th>
-                    <th>Recibido</th>
-                    <th className="corrections-panel-layout-17" >Acciones</th>
+                    <th>{L('co_question')}</th>
+                    <th>{L('co_user')}</th>
+                    <th>{L('co_reason')}</th>
+                    <th>{L('u_state')}</th>
+                    <th>{L('cp_received')}</th>
+                    <th className="corrections-panel-layout-17" >{L('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -113,28 +113,28 @@ export default function CorrectionsPanel({ cSearch, setCSearch, cReason, setCRea
 
                     return (
                       <tr className="corrections-panel-layout-18" key={c.id} >
-                        <td className="note corrections-panel-layout-19" >
+                        <td className="note corrections-panel-layout-19 cell-id" >
                           {c.questionId || c.id}
                         </td>
-                        <td>
+                        <td className="cell-main">
                           <div className="corrections-panel-layout-20" >
                             {q?.statement || c.questionStatement || c.questionId}
                           </div>
                         </td>
-                        <td className="corrections-panel-layout-21" >{c.userName || c.userId}</td>
-                        <td className="note">{L(`reason_${c.reason}`) || c.reason}</td>
-                        <td>
+                        <td className="corrections-panel-layout-21" data-label={L('co_user')}>{c.userName || c.userId}</td>
+                        <td className="note" data-label={L('co_reason')}>{L(`reason_${c.reason}`) || c.reason}</td>
+                        <td data-label={L('u_state')}>
                           <Pill value={c.status || 'pending'} map={COR_TAG} L={L} />
                         </td>
-                        <td className="note">{dateText}</td>
-                        <td className="corrections-panel-layout-22" >
+                        <td className="note" data-label={L('cp_received')}>{dateText}</td>
+                        <td className="corrections-panel-layout-22 cell-actions" >
                           <button
                             type="button"
                             className={(`btn sm ${isPending ? '' : 'sec'}` || '') + ' corrections-panel-layout-23'}
                             onClick={() => setDialog({ kind: 'correction', correction: c, question: q })}
                             
                           >
-                            {isPending ? 'Resolver' : 'Ver'}
+                            {isPending ? L('co_resolve') : L('view')}
                           </button>
                         </td>
                       </tr>

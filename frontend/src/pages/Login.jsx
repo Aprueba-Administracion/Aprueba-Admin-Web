@@ -68,7 +68,7 @@ export default function Login({ ctx }) {
                 type="button"
                 className="pw-toggle"
                 onClick={() => setShowPass((v) => !v)}
-                aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-label={showPass ? L('pw_hide') : L('pw_show')}
                 tabIndex={-1}
               >
                 {showPass ? <IconEyeOff size={16} /> : <IconEye size={16} />}
@@ -100,7 +100,7 @@ export default function Login({ ctx }) {
             style={{ gap: 6 }}
             onClick={() => setDark(!dark)}
           >
-            {dark ? <IconSunFilled size={15} /> : <IconMoonFilled size={14} />} {dark ? 'Claro' : 'Oscuro'}
+            {dark ? <IconSunFilled size={15} /> : <IconMoonFilled size={14} />} {dark ? L('theme_light_short') : L('theme_dark_short')}
           </button>
         </div>
       </div>

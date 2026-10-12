@@ -1100,3 +1100,82 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
   .feature-list{grid-template-columns:1fr}
   .catalog-title{align-items:flex-start;flex-direction:column;gap:2px}.catalog-title .note{text-align:left}
 }
+
+/* ===== Micro-interacciones al pasar el mouse (efecto de elevación) ===== */
+.kpi-tile,.kpi,.u-row,.u-mini-row,.tu-row,.plan-col,.feat,.svc-row,.au-hero-card,.au-sub-card,.au-history-card{transition:transform .18s ease,box-shadow .18s ease,background-color .15s ease,border-color .15s ease}
+.btn{transition:transform .15s ease,box-shadow .15s ease,filter .12s,background-color .12s,border-color .12s}
+.nav-item{transition:transform .15s ease,background .15s}
+@media (hover:hover) and (pointer:fine){
+  .kpi-tile:hover,.kpi:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(15,23,42,.16)}
+  .u-row:hover,.tu-row:hover,.plan-col:hover,.feat:hover,.au-hero-card:hover,.au-sub-card:hover,.au-history-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,23,42,.12)}
+  .u-mini-row:hover,.svc-row:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,23,42,.10)}
+  .btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,23,42,.18)}
+  .btn:not(:disabled):active{transform:translateY(0);box-shadow:none}
+  .nav-item:hover{transform:translateX(3px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .kpi-tile,.kpi,.u-row,.u-mini-row,.tu-row,.plan-col,.feat,.svc-row,.au-hero-card,.au-sub-card,.au-history-card,.btn,.nav-item{transition:none}
+  .kpi-tile:hover,.kpi:hover,.u-row:hover,.u-mini-row:hover,.tu-row:hover,.plan-col:hover,.feat:hover,.svc-row:hover,.au-hero-card:hover,.au-sub-card:hover,.au-history-card:hover,.btn:hover,.nav-item:hover{transform:none}
+}
+
+/* ===== Menu lateral: seccion activa en amarillo (texto e icono) ===== */
+.nav-item.act,.nav-item.act .ico,.nav-item.act svg{color:var(--cta)}
+.nav-item .ico,.nav-item svg{transition:color .15s}
+
+/* ===== Usuarios y soporte: lista de usuarios (la distribución en grilla antes estaba en línea) ===== */
+.u-row.u-row-g{display:grid;align-items:center;column-gap:14px;grid-template-columns:minmax(0,1fr) 190px 120px 110px}
+.u-split.has-detail .u-row.u-row-g{grid-template-columns:minmax(0,1fr) 104px 96px}
+.u-row-g .u-state{display:flex;justify-content:center}
+.u-row-g .u-btn{width:100%}
+.u-back{display:none}
+
+/* ===== Usuarios y soporte: adaptación a tablet y teléfono (el escritorio no cambia) ===== */
+@media(max-width:900px){
+  .u-split.has-detail.users-panel-layout-4.users-panel-layout-4.users-panel-layout-4{grid-template-columns:minmax(0,1fr)}
+  .u-split.has-detail .u-list{display:none}
+  .u-detail{position:static;padding:16px}
+  .u-back{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--brand);font-weight:700;font-size:13px;padding:0 0 12px;cursor:pointer}
+  .users-panel-layout-11.users-panel-layout-11.users-panel-layout-11{flex-wrap:wrap;gap:10px}
+  .users-panel-layout-17.users-panel-layout-17.users-panel-layout-17{min-width:36px;min-height:36px}
+  .u-subtabs{overflow-x:auto;gap:16px}
+  .u-subtab{white-space:nowrap}
+}
+@media(max-width:900px){
+  .u-row.u-row-g{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who state" "country btn";row-gap:10px}
+  .u-row-g .u-who{grid-area:who}
+  .u-row-g .u-state{grid-area:state;justify-self:end}
+  .u-row-g .u-country{grid-area:country;min-width:0}
+  .u-row-g .u-btn{grid-area:btn;width:auto;min-width:110px;justify-self:end}
+  .tickets-panel-layout-1.tickets-panel-layout-1.tickets-panel-layout-1,.corrections-panel-layout-1.corrections-panel-layout-1.corrections-panel-layout-1{padding:14px}
+  .tickets-panel-layout-2.tickets-panel-layout-2.tickets-panel-layout-2,.corrections-panel-layout-2.corrections-panel-layout-2.corrections-panel-layout-2{flex-wrap:wrap;gap:10px}
+  .tickets-panel-layout-4.tickets-panel-layout-4.tickets-panel-layout-4,.corrections-panel-layout-4.corrections-panel-layout-4.corrections-panel-layout-4{width:100%}
+  .tickets-panel-layout-7.tickets-panel-layout-7.tickets-panel-layout-7,.corrections-panel-layout-7.corrections-panel-layout-7.corrections-panel-layout-7{grid-template-columns:1fr 1fr}
+  .tickets-panel-layout-7.tickets-panel-layout-7.tickets-panel-layout-7>:nth-child(n+3),.corrections-panel-layout-7.corrections-panel-layout-7.corrections-panel-layout-7>:last-child{grid-column:1/-1}
+  .tickets-panel-layout-12.tickets-panel-layout-12.tickets-panel-layout-12,.corrections-panel-layout-10.corrections-panel-layout-10.corrections-panel-layout-10{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .tickets-panel-layout-13.tickets-panel-layout-13.tickets-panel-layout-13,.corrections-panel-layout-11.corrections-panel-layout-11.corrections-panel-layout-11{white-space:nowrap;flex-shrink:0}
+  /* tablas de tickets y recorrecciones: una tarjeta por fila */
+  .tbl-wrap.pretty{overflow:visible}
+  table.tbl-cards,table.tbl-cards tbody{display:block;width:100%}
+  table.tbl-cards thead{display:none}
+  .tbl-wrap.pretty table.tbl-cards tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .tbl-wrap.pretty table.tbl-cards tbody tr:nth-child(even){background:var(--panel)}
+  .tbl-wrap.pretty table.tbl-cards tbody tr:hover{background:var(--soft)}
+  .tbl-wrap.pretty table.tbl-cards td{display:block;padding:0;border:0;width:auto;max-width:none;min-width:0;text-align:left;white-space:normal}
+  table.tbl-cards td[data-label]::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  table.tbl-cards td.cell-id{grid-column:1/-1;font-size:11.5px}
+  table.tbl-cards td.cell-main,table.tbl-cards td.cell-actions{grid-column:1/-1}
+  table.tbl-cards td.cell-actions button{width:100%}
+  table.tbl-cards td.cell-actions button[title]{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:8px;color:var(--ink);font-size:13px}
+  table.tbl-cards td.cell-actions button[title]::after{content:attr(title);margin-left:8px;font-weight:600}
+  .corrections-panel-layout-20.corrections-panel-layout-20.corrections-panel-layout-20{white-space:normal;max-width:none}
+}
+@media(max-width:620px){
+  .u-kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .u-kpis .kpi-tile{min-height:92px;padding:12px 14px}
+  .u-kpis .kpi-val{font-size:1.4rem}
+  .u-kpis .kpi-ic{right:6px;bottom:6px}
+  .u-kpis .kpi-ic svg{width:40px;height:40px}
+}
+@media(max-width:480px){
+  .u-stats{grid-template-columns:1fr}
+}

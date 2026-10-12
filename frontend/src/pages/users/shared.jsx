@@ -10,14 +10,9 @@ export const COR_TAG = { pending: ['w', 'cs_pending'], confirmed: ['g', 'cs_conf
 
 export const TICKET_CATEGORIES = ['account', 'payments', 'content', 'login', 'other'];
 
-export const REASON_OPTIONS = [
-  { value: '', label: 'Todas' },
-  { value: 'incorrect_answer', label: 'Respuesta incorrecta' },
-  { value: 'typo', label: 'Error de tipeo' },
-  { value: 'ambiguous_statement', label: 'Enunciado ambiguo' },
-  { value: 'poor_explanation', label: 'Explicación deficiente' },
-  { value: 'incomplete_answer', label: 'Respuesta incompleta' },
-];
+// Valores reales de `corrections.reason` en el backend (ver seed). Las etiquetas
+// salen de i18n (`reason_<valor>`).
+export const REASON_KEYS = ['wrong_answer', 'ambiguous', 'typo', 'bad_explanation', 'other'];
 
 export const CONFIRM_REWARD = 250;
 

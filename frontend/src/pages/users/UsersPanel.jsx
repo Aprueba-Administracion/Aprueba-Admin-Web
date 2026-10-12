@@ -20,24 +20,23 @@ export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters
           </div>
           {uErr && <ErrorBox msg={uErr} onRetry={() => loadUsers(uFilters, cursors[page])} L={L} />}
           {users?.length === 0 ? <EmptyState msg={L('u_no_users')} ic={<IconUsers size={22} />} /> : (
-            <div className="u-split users-panel-layout-4" style={{ "--users-panel-layout-4-grid-template-columns": ((value) => typeof value === 'number' ? value + 'px' : value)(selectedUser ? '460px 1fr' : '1fr') }}>
+            <div className={`u-split users-panel-layout-4${selectedUser ? ' has-detail' : ''}`} style={{ "--users-panel-layout-4-grid-template-columns": ((value) => typeof value === 'number' ? value + 'px' : value)(selectedUser ? '460px 1fr' : '1fr') }}>
               <div className="u-list">
                 <div className="u-rows">
                   {(users || []).map((x) => {
                     const isSel = selectedUser?.id === x.id;
                     return (
-                      <div key={x.id} className={`u-row ${isSel ? 'sel' : ''}`}
-                        style={{ display: 'grid', alignItems: 'center', columnGap: 14, gridTemplateColumns: selectedUser ? 'minmax(0,1fr) 104px 96px' : 'minmax(0,1fr) 190px 120px 110px' }}>
-                        <div className="flex users-panel-layout-5" >
+                      <div key={x.id} className={`u-row u-row-g ${isSel ? 'sel' : ''}`}>
+                        <div className="flex users-panel-layout-5 u-who" >
                           <div className="avatar">{initials(x.name)}</div>
                           <div className="users-panel-layout-6" >
                             <div className="users-panel-layout-7" >{x.name}</div>
                             <div className="note users-panel-layout-8" >{x.email}</div>
                           </div>
                         </div>
-                        {!selectedUser && <CountryCell code={x.country} city={x.city} lang={lang} />}
-                        <div style={{ display: 'flex', justifyContent: 'center' }}><Pill value={x.state} map={STATE_TAG} L={L} /></div>
-                        <button type="button" className={(`btn sm ${isSel ? '' : 'sec'}` || '') + ' users-panel-layout-9'} style={{ width: '100%' }}
+                        {!selectedUser && <div className="u-country"><CountryCell code={x.country} city={x.city} lang={lang} /></div>}
+                        <div className="u-state"><Pill value={x.state} map={STATE_TAG} L={L} /></div>
+                        <button type="button" className={(`btn sm ${isSel ? '' : 'sec'}` || '') + ' users-panel-layout-9 u-btn'}
                           onClick={() => { setSelectedUser(isSel ? null : x); setUserSubTab('summary'); }}
                           >
                           {isSel ? L('u_close_detail') : L('u_view_detail')}
@@ -53,6 +52,7 @@ export default function UsersPanel({ L, search, setSearch, uFilters, setUFilters
 
               {selectedUser && (
                 <div className="u-detail">
+                  <button type="button" className="u-back" onClick={() => setSelectedUser(null)}>← {L('back')}</button>
                   <div className="flex users-panel-layout-11" >
                     <div className="flex users-panel-layout-12" >
                       <div className="avatar lg">{initials(selectedUser.name)}</div>

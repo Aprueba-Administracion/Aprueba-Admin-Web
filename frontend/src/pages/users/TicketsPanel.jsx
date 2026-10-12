@@ -49,7 +49,7 @@ export default function TicketsPanel({ L, tFilters, setTFilters, ticketCounts, t
                   <button className="tickets-panel-layout-10"
                     type="button"
                     onClick={() => setTFilters((f) => ({ ...f, date: '' }))}
-                    title="Quitar fecha"
+                    title={L('tp_clear_date')}
                     
                   >
                     ✕
@@ -69,10 +69,10 @@ export default function TicketsPanel({ L, tFilters, setTFilters, ticketCounts, t
 
           <div className="flex tickets-panel-layout-12" >
             {[
-              { id: '', label: 'Todos', color: '#2563eb', count: ticketCounts.total },
-              { id: 'open', label: 'Abiertos', color: '#ef4444', count: ticketCounts.open },
-              { id: 'progress', label: 'En curso', color: '#f59e0b', count: ticketCounts.progress },
-              { id: 'closed', label: 'Cerrados', color: '#10b981', count: ticketCounts.closed },
+              { id: '', label: L('filter_all'), color: '#2563eb', count: ticketCounts.total },
+              { id: 'open', label: L('tp_open'), color: '#ef4444', count: ticketCounts.open },
+              { id: 'progress', label: L('ts_progress'), color: '#f59e0b', count: ticketCounts.progress },
+              { id: 'closed', label: L('tp_closed'), color: '#10b981', count: ticketCounts.closed },
             ].map((tabItem) => {
               const active = tFilters.status === tabItem.id;
               return (
@@ -95,7 +95,7 @@ export default function TicketsPanel({ L, tFilters, setTFilters, ticketCounts, t
           {tErr && <ErrorBox msg={tErr} onRetry={loadTickets} L={L} />}
           {!filteredTickets ? <Loading L={L} /> : filteredTickets.length === 0 ? <EmptyState msg={L('t_no_tickets')} ic={<IconTicket size={22} />} /> : (
             <div className="tbl-wrap pretty">
-              <table>
+              <table className="tbl-cards">
                 <thead>
                   <tr>
                     <th className="tickets-panel-layout-16" >#</th>
@@ -111,8 +111,8 @@ export default function TicketsPanel({ L, tFilters, setTFilters, ticketCounts, t
                 <tbody>
                   {filteredTickets.map((x) => (
                     <tr key={x.id}>
-                      <td className="note">#{x.number ?? x.id}</td>
-                      <td>
+                      <td className="note cell-id">#{x.number ?? x.id}</td>
+                      <td className="cell-main">
                         <div className="flex tickets-panel-layout-18" >
                           <div className="avatar sm tickets-panel-layout-19" >
                             {initials(x.userName || x.user)}
@@ -120,12 +120,12 @@ export default function TicketsPanel({ L, tFilters, setTFilters, ticketCounts, t
                           <span className="tickets-panel-layout-20" >{x.subject}</span>
                         </div>
                       </td>
-                      <td className="tickets-panel-layout-21" >{x.userName || x.user}</td>
-                      <td className="note">{x.category ? tr(L, `cat_${x.category}`, x.category) : '—'}</td>
-                      <td><Pill value={x.priority || 'med'} map={PRI_TAG} L={L} /></td>
-                      <td><Pill value={x.status || 'open'} map={TICKET_TAG} L={L} /></td>
-                      <td className="note">{formatDateOnly(x.createdAt, lang)}</td>
-                      <td className="tickets-panel-layout-22" >
+                      <td className="tickets-panel-layout-21" data-label={tr(L, 't_user', 'Usuario')}>{x.userName || x.user}</td>
+                      <td className="note" data-label={tr(L, 't_category', 'Categoría')}>{x.category ? tr(L, `cat_${x.category}`, x.category) : '—'}</td>
+                      <td data-label={tr(L, 't_pri', 'Prioridad')}><Pill value={x.priority || 'med'} map={PRI_TAG} L={L} /></td>
+                      <td data-label={tr(L, 't_state', 'Estado')}><Pill value={x.status || 'open'} map={TICKET_TAG} L={L} /></td>
+                      <td className="note" data-label={tr(L, 't_created_col', 'Fecha emitida')}>{formatDateOnly(x.createdAt, lang)}</td>
+                      <td className="tickets-panel-layout-22 cell-actions" >
                         <button className="tickets-panel-layout-23"
                           type="button"
                           title={tr(L, 't_manage', 'Gestionar')}

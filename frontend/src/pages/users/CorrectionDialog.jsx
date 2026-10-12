@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { Modal, Field, Select } from "../../components/ui.jsx";
+import { CONFIRM_REWARD } from "./shared.jsx";
 
 export default function CorrectionDialog({ correction, question, ctx, busy, isAdmin, onClose, onResolve }) {
   const { L } = ctx;
@@ -23,7 +24,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
         text: opt,
       }));
     }
-    return ['A', 'B', 'C', 'D', 'E'].map((l) => ({ letter: l, label: `Alternativa ${l}`, text: '' }));
+    return ['A', 'B', 'C', 'D', 'E'].map((l) => ({ letter: l, label: L('cd_option_n', { l }), text: '' }));
   }, [options]);
 
   const selectOptions = useMemo(() => {
@@ -53,7 +54,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
     <Modal
       wide
       busy={busy}
-      title="Resolver solicitud"
+      title={L('cd_title')}
       subtitle={`${correction.questionId || correction.id} · ${correction.userName || correction.userId}`}
       onClose={onClose}
     >
@@ -62,7 +63,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
         <div className="correction-dialog-layout-2" >
           <div>
             <div className="section-label tight correction-dialog-layout-3" >
-              PREGUNTA
+              {L('cd_question')}
             </div>
             <p className="correction-dialog-layout-4" >
               {question?.statement || correction.questionStatement || correction.questionId}
@@ -71,7 +72,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
 
           {options.length > 0 && (
             <div>
-              <div className="note correction-dialog-layout-5" >Alternativas (resaltada la correcta actual):</div>
+              <div className="note correction-dialog-layout-5" >{L('cd_options_hint')}</div>
               <div className="correction-dialog-layout-6" >
                 {options.map((optText, i) => {
                   const letter = letters[i];
@@ -92,22 +93,22 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
 
           <div>
             <div className="section-label tight correction-dialog-layout-9" >
-              Respuesta propuesta por el alumno
+              {L('co_proposed_answer')}
             </div>
             <div className="correction-dialog-layout-10" >
-              <span>{correction.proposedAnswer || 'No especificada'}</span>
+              <span>{correction.proposedAnswer || L('cd_unspecified')}</span>
               {isProposedValid && (
-                <span className="tag correction-dialog-layout-11" >Opción {proposedClean}</span>
+                <span className="tag correction-dialog-layout-11" >{L('cd_option')} {proposedClean}</span>
               )}
             </div>
           </div>
 
           <div>
             <div className="section-label tight correction-dialog-layout-12" >
-              Comentario del alumno
+              {L('cd_student_comment')}
             </div>
             <div className="correction-dialog-layout-13" >
-              {correction.comment || 'Sin comentarios adicionales.'}
+              {correction.comment || L('cd_no_comment')}
             </div>
           </div>
         </div>
@@ -115,7 +116,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
         {/* Columna Derecha: Decisión y corrección con selector */}
         <div className="correction-dialog-layout-14" >
           <div className="section-label tight correction-dialog-layout-15" >
-            DECISIÓN
+            {L('cd_decision')}
           </div>
 
           <div className="correction-dialog-layout-16" >
@@ -125,9 +126,9 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
             >
               <div className="flex correction-dialog-layout-18" >
                 <span className="correction-dialog-layout-19" >✓</span>
-                <span className="correction-dialog-layout-20" >Confirmar</span>
+                <span className="correction-dialog-layout-20" >{L('cd_confirm')}</span>
               </div>
-              <div className="correction-dialog-layout-21" >El alumno recibe 250 badges</div>
+              <div className="correction-dialog-layout-21" >{L('cd_confirm_hint', { n: CONFIRM_REWARD })}</div>
             </div>
 
             <div className="correction-dialog-layout-22"
@@ -136,9 +137,9 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
             >
               <div className="flex correction-dialog-layout-23" >
                 <span className="correction-dialog-layout-24" >✕</span>
-                <span className="correction-dialog-layout-25" >Rechazar</span>
+                <span className="correction-dialog-layout-25" >{L('co_reject')}</span>
               </div>
-              <div className="correction-dialog-layout-26" >No se otorgan badges</div>
+              <div className="correction-dialog-layout-26" >{L('cd_reject_hint')}</div>
             </div>
           </div>
 
@@ -151,25 +152,25 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
                   onChange={(e) => setFix(e.target.checked)}
                   disabled={isReadOnly}
                 />
-                <span>Corregir la pregunta al confirmar</span>
+                <span>{L('co_fix_question')}</span>
               </label>
               <div className="note correction-dialog-layout-29" >
-                Opcional. Se envía como questionPatch y solo se aplica si confirmas.
+                {L('co_fix_hint')}
               </div>
 
               {fix && (
                 <div className="correction-dialog-layout-30" >
-                  <Field label="Enunciado">
+                  <Field label={L('cd_statement')}>
                     <textarea rows={2} value={statement} onChange={(e) => setStatement(e.target.value)} />
                   </Field>
 
                   {/* Selector de alternativas seguras */}
-                  <Field label="Alternativa correcta">
+                  <Field label={L('cd_correct_answer')}>
                     <Select
                       value={correctAnswer}
                       onChange={setCorrectAnswer}
                       options={selectOptions}
-                      placeholder="Seleccionar alternativa correcta..."
+                      placeholder={L('cd_select_correct')}
                     />
                     <div className="correction-dialog-layout-31" >
                       {availableOptionItems.map((item) => {
@@ -188,7 +189,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
                     </div>
                   </Field>
 
-                  <Field label="Explicación">
+                  <Field label={L('cd_explanation')}>
                     <textarea rows={2} value={explanation} onChange={(e) => setExplanation(e.target.value)} />
                   </Field>
                 </div>
@@ -197,10 +198,10 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
           )}
 
           <div className="correction-dialog-layout-33" >
-            <Field label="Nota del revisor (opcional)">
+            <Field label={L('cd_note_label')}>
               <textarea className="correction-dialog-layout-34"
                 rows={3}
-                placeholder="Escribe una nota interna o respuesta..."
+                placeholder={L('cd_note_ph')}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 disabled={isReadOnly}
@@ -208,13 +209,13 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
               />
             </Field>
             <div className="note correction-dialog-layout-35" >
-              El alumno la verá en la notificación de resolución.
+              {L('cd_note_hint')}
             </div>
           </div>
 
           <div className="flex correction-dialog-layout-36" >
             <button type="button" className="btn sec" onClick={onClose} disabled={busy}>
-              Cancelar
+              {L('cancel')}
             </button>
             {!isReadOnly && (
               <button
@@ -223,7 +224,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
                 onClick={submit}
                 disabled={busy}
               >
-                {busy ? '…' : 'Confirmar resolución'}
+                {busy ? '…' : L('cd_confirm_resolution')}
               </button>
             )}
           </div>

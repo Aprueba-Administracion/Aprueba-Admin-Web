@@ -581,7 +581,7 @@ function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChan
             <div className="tu-fact" hidden={tab !== 'reputation' }>
               <div className="section-label tu-margin-top-0">{L('tu_sec_reputation')}</div>
               <KV k={L('tu_rating_computed')} v={<Stars value={tutor.rating} count={tutor.reviewCount} />} />
-              {CRITERIA.map((c) => <KV key={c} k={`${L(`crit_${c}`)} (histórico)`} v={tutor.ratingSeed?.[c] ?? L('none')} />)}
+              {CRITERIA.map((c) => <KV key={c} k={`${L(`crit_${c}`)} (${L('tu_historic')})`} v={tutor.ratingSeed?.[c] ?? L('none')} />)}
               <KV k={L('tu_review_count_seed')} v={tutor.reviewCountSeed ?? 0} />
             </div>
             <div className="tu-fact" hidden={tab !== 'contact' }>
@@ -616,7 +616,7 @@ function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChan
                   <div className="avatar">{rv.userInitials || initialsOf(rv.userName)}</div>
                   <div>
                     <b className="tu-font-size-12-5">{rv.userName || rv.userId}</b>
-                    <div className="note">{date(rv.createdAt)}{rv.lessonsTaken ? ` · ${rv.lessonsTaken} clases` : ''}</div>
+                    <div className="note">{date(rv.createdAt)}{rv.lessonsTaken ? ` · ${rv.lessonsTaken} ${L('tu_lessons')}` : ''}</div>
                   </div>
                 </div>
                 <div className="flex tu-gap-8">

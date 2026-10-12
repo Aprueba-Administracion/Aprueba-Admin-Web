@@ -55,7 +55,7 @@ export default function Layout({ ctx, children }) {
       <div className={`scrim ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />
       <div className="main-wrap">
         <header className="topbar">
-          <button className="hamb" onClick={() => setOpen(true)} aria-label={L('menu') || 'Menú'}><IconMenuFilled size={18} /></button>
+          <button className="hamb" onClick={() => setOpen(true)} aria-label={L('menu')}><IconMenuFilled size={18} /></button>
           <div className="page-title">{L('nav_' + current.id)}</div>
           <div className="tb-right">
             <span className="ctl-group">
@@ -64,7 +64,7 @@ export default function Layout({ ctx, children }) {
                 <option value="es">ES</option><option value="en">EN</option>
               </select>
             </span>
-            <button className="ctl ctl-icon" onClick={() => setDark(!dark)} aria-label={dark ? 'Modo claro' : 'Modo oscuro'}>
+            <button className="ctl ctl-icon" onClick={() => setDark(!dark)} aria-label={dark ? L('theme_light') : L('theme_dark')}>
               {dark ? <IconSunFilled size={16} /> : <IconMoonFilled size={15} />}
             </button>
           </div>

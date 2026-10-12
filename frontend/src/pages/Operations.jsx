@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client.js';
-import { Card, StatusPill, Loading } from '../components/ui.jsx';
+import { Card, StatusPill, Loading, ErrorBox, Toast, useToast } from '../components/ui.jsx';
 
 export default function Operations({ ctx }) {
   const { L, fmt, lang } = ctx;
@@ -8,7 +8,7 @@ export default function Operations({ ctx }) {
   const [services, setServices] = useState([]);
   const [containers, setContainers] = useState([]);
   const [err, setErr] = useState(null);
-  const [msg, setMsg] = useState(null);
+  const t = useToast();
 
   const loaded = useRef(false);
   const load = async () => {
@@ -18,7 +18,7 @@ export default function Operations({ ctx }) {
       loaded.current = true; setErr(null);
     } catch (e) {
       // Una falla al refrescar NO debe reemplazar toda la vista si ya había datos.
-      if (loaded.current) { setMsg({ ok: false, text: e.message }); setTimeout(() => setMsg(null), 3500); } else setErr(e.message);
+      if (loaded.current) t.err(e.message); else setErr(e.message);
     }
   };
   useEffect(() => { load(); }, []);
@@ -36,10 +36,9 @@ export default function Operations({ ctx }) {
   const restart = async (name) => {
     try {
       await api.post(`/containers/${encodeURIComponent(name)}/restart`);
-      setMsg({ ok: true, text: `${L('restarted')}: ${name}` });
-    } catch (e) { setMsg({ ok: false, text: e.message }); }
+      t.ok(`${L('restarted')}: ${name}`);
+    } catch (e) { t.err(e.message); }
     load();
-    setTimeout(() => setMsg(null), 3500);
   };
 
   // Modelo canónico: name {es,en}, uptimePct y latencyMs numéricos. Tolera el formato anterior.
@@ -48,13 +47,12 @@ export default function Operations({ ctx }) {
   const svcLatency = (s) => (s.latencyMs != null ? `${s.latencyMs} ms` : s.latency);
   const day = (v) => (v ? String(v).slice(0, 10) : '—');
 
-  if (err) return <Card><b>⛔ {err}</b></Card>;
+  if (err) return <Card><ErrorBox msg={err} onRetry={load} L={L} /></Card>;
   if (!platforms) return <Loading L={L} />;
   const dotClass = (st) => (st === 'ok' ? 'ok' : st === 'deg' ? 'deg' : 'down');
 
   return (
     <>
-      {msg && <div className={`tag ${msg.ok ? 'g' : 'd'}`} style={{ marginBottom: 12 }}>{msg.text}</div>}
       <Card>
         <b>{L('o_stores')}</b>
         <div className="tbl-wrap" style={{ marginTop: 8 }}><table>
@@ -92,6 +90,7 @@ export default function Operations({ ctx }) {
           </table></div>
         </Card>
       </div>
+      <Toast toast={t.toast} onDone={t.clear} />
     </>
   );
 }

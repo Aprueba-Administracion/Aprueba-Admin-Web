@@ -75,7 +75,7 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
     <Modal
       wide
       busy={busy}
-      title="Gestionar ticket"
+      title={L('t_manage')}
       subtitle={`#${t.number ?? t.id} · ${t.userName || t.user}`}
       onClose={onClose}
     >
@@ -101,15 +101,15 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
             )}
           </div>
 
-          <Field label="Asunto *">
+          <Field label={`${L('t_subj')} *`}>
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Asunto del ticket"
+              placeholder={L('td_subject_ph')}
             />
           </Field>
 
-          <Field label="Categoría *">
+          <Field label={`${L('t_category')} *`}>
             <Select
               value={category}
               onChange={setCategory}
@@ -118,14 +118,14 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
           </Field>
 
           <div className="ticket-dialog-layout-9" >
-            <Field label="Estado">
+            <Field label={L('u_state')}>
               <Select
                 value={status}
                 onChange={setStatus}
                 options={Object.keys(TICKET_TAG).map((s) => ({ value: s, label: L(TICKET_TAG[s][1]) }))}
               />
             </Field>
-            <Field label="Prioridad">
+            <Field label={L('t_pri')}>
               <Select
                 value={priority}
                 onChange={setPriority}
@@ -134,12 +134,12 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
             </Field>
           </div>
 
-          <Field label="Asignado a">
+          <Field label={L('t_assignee')}>
             <div className="flex ticket-dialog-layout-10" >
               <Select className="ticket-dialog-layout-11"
                 value={assigneeId}
                 onChange={setAssigneeId}
-                placeholder="Sin asignar"
+                placeholder={L('t_unassigned')}
                 options={agentOptions}
                 
               />
@@ -158,14 +158,14 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
             <div className="flex ticket-dialog-layout-14" >
               <SvgClock />
               <div>
-                <div className="note ticket-dialog-layout-15" >Fecha emitida</div>
+                <div className="note ticket-dialog-layout-15" >{L('td_issued')}</div>
                 <div className="ticket-dialog-layout-16" >{formatDateTime(t.createdAt, lang)}</div>
               </div>
             </div>
             <div className="flex ticket-dialog-layout-17" >
               <SvgCalendar />
               <div>
-                <div className="note ticket-dialog-layout-18" >Cerrado</div>
+                <div className="note ticket-dialog-layout-18" >{L('ts_closed')}</div>
                 <div className="ticket-dialog-layout-19" >
                   {t.closedAt ? formatDateTime(t.closedAt, lang) : '—'}
                 </div>
@@ -200,7 +200,7 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
                 {!detail && !loadErr ? (
                   <Loading L={L} />
                 ) : (t.messages || []).length === 0 ? (
-                  <p className="note ticket-dialog-layout-26" >Sin mensajes registrados</p>
+                  <p className="note ticket-dialog-layout-26" >{L('t_no_messages')}</p>
                 ) : (
                   (t.messages || []).map((m) => {
                     const isStaff = m.authorType === 'agent' || m.authorType === 'admin';
@@ -239,12 +239,12 @@ export default function TicketDialog({ ticket, ctx, busy, me, agentOptions, onCl
 
               <div className="ticket-dialog-layout-34" >
                 <Field
-                  label="Respuesta al alumno"
-                  hint={sendingMsg ? 'Enviando mensaje…' : 'Presiona Enter para enviar (Shift + Enter para salto de línea)'}
+                  label={L('t_reply')}
+                  hint={sendingMsg ? L('td_sending') : L('td_enter_hint')}
                 >
                   <textarea className="ticket-dialog-layout-35"
                     rows={3}
-                    placeholder="Escribe una respuesta y presiona Enter..."
+                    placeholder={L('td_reply_ph')}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                     onKeyDown={handleKeyDown}
