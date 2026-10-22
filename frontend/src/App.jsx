@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
 import { makeL, fmt } from './i18n.js';
 import Layout from './components/Layout.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Login from './pages/Login.jsx';
 import Overview from './pages/Overview.jsx';
 import Commercial from './pages/Commercial.jsx';
@@ -85,5 +86,5 @@ function Guard({ view, ctx }) {
     return <Navigate to="/" replace />;
   }
   const El = view.el;
-  return <El ctx={ctx} key={loc.pathname} />;
+  return <ErrorBoundary L={ctx.L} key={loc.pathname}><El ctx={ctx} /></ErrorBoundary>;
 }

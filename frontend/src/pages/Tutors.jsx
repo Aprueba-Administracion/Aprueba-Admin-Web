@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import {
   TopKpiCard, Card, Loading, ErrorBox, EmptyState, Modal, Confirm, Field, FormGrid, Select, Check,
   Chips, TagInput, Stars, Toast, useToast, KV, Pill, Tabs,
-  IconGraduationCap, IconCheckCircle, IconVerifiedBadge, IconStar, IconUsers,
+  IconGraduationCap, IconMessage, IconCheckCircle, IconVerifiedBadge, IconStar, IconUsers,
   IconEdit, IconTrash, IconX, IconPause, IconPlay,
   IconChevronLeft, IconMapPin, IconLanguages, IconDollarSign, IconCalendar, IconGlobe,
 } from '../components/ui.jsx';
@@ -263,7 +263,7 @@ export default function Tutors({ ctx }) {
           <button className="btn sec sm" onClick={clearFilters}>{L('clear_filters')}</button>
         </div>
 
-        {rows.length === 0 ? <EmptyState msg={L('tu_no_tutors')} ic="🎓" /> : (
+        {rows.length === 0 ? <EmptyState msg={L('tu_no_tutors')} ic={<IconGraduationCap size={22} />} /> : (
           <div className={detail ? 'tu-split has-detail' : 'tu-split'}>
             <div className="tu-list">
               {rows.map((x, i) => (
@@ -609,7 +609,7 @@ function TutorDetail({ tutor, loading, ctx, busy, onDeleteReview, tab, onTabChan
 
           <div hidden={tab !== 'reputation'}>
           <div className="section-label">{L('tu_reviews')} ({reviews.length})</div>
-          {reviews.length === 0 ? <EmptyState msg={L('tu_no_reviews')} ic="💬" /> : reviews.map((rv) => (
+          {reviews.length === 0 ? <EmptyState msg={L('tu_no_reviews')} ic={<IconMessage size={22} />} /> : reviews.map((rv) => (
             <div key={rv.id} className="review">
               <div className="rhead">
                 <div className="flex tu-gap-8">

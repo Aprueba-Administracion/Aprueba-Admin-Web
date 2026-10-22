@@ -80,7 +80,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
                   return (
                     <div className="correction-dialog-layout-7"
                       key={letter}
-                      style={{ "--correction-dialog-layout-7-font-weight": isCurrentCorrect ? 700 : 500, "--correction-dialog-layout-7-background": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '#1d4ed8' : '#f1f5f9'), "--correction-dialog-layout-7-color": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '#ffffff' : 'var(--ink)'), "--correction-dialog-layout-7-border": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '1px solid #1d4ed8' : '1px solid var(--line)') }}
+                      style={{ "--correction-dialog-layout-7-font-weight": isCurrentCorrect ? 700 : 500, "--correction-dialog-layout-7-background": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '#1d4ed8' : 'var(--soft)'), "--correction-dialog-layout-7-color": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '#ffffff' : 'var(--ink)'), "--correction-dialog-layout-7-border": ((value) => typeof value === 'number' ? value + 'px' : value)(isCurrentCorrect ? '1px solid #1d4ed8' : '1px solid var(--line)') }}
                     >
                       <span className="correction-dialog-layout-8" >{letter}.</span>
                       <span>{optText}</span>
@@ -122,7 +122,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
           <div className="correction-dialog-layout-16" >
             <div className="correction-dialog-layout-17"
               onClick={() => !isReadOnly && setResolution('confirmed')}
-              style={{ "--correction-dialog-layout-17-cursor": ((value) => typeof value === 'number' ? value + 'px' : value)(isReadOnly ? 'default' : 'pointer'), "--correction-dialog-layout-17-border": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'confirmed' ? '2px solid #10b981' : '1px solid var(--line)'), "--correction-dialog-layout-17-background": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'confirmed' ? '#f0fdf4' : '#fff') }}
+              style={{ "--correction-dialog-layout-17-cursor": ((value) => typeof value === 'number' ? value + 'px' : value)(isReadOnly ? 'default' : 'pointer'), "--correction-dialog-layout-17-border": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'confirmed' ? '2px solid #10b981' : '1px solid var(--line)'), "--correction-dialog-layout-17-background": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'confirmed' ? 'var(--ok-bg)' : 'var(--panel)') }}
             >
               <div className="flex correction-dialog-layout-18" >
                 <span className="correction-dialog-layout-19" >✓</span>
@@ -133,7 +133,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
 
             <div className="correction-dialog-layout-22"
               onClick={() => !isReadOnly && setResolution('rejected')}
-              style={{ "--correction-dialog-layout-22-cursor": ((value) => typeof value === 'number' ? value + 'px' : value)(isReadOnly ? 'default' : 'pointer'), "--correction-dialog-layout-22-border": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'rejected' ? '2px solid #ef4444' : '1px solid var(--line)'), "--correction-dialog-layout-22-background": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'rejected' ? '#fef2f2' : '#fff') }}
+              style={{ "--correction-dialog-layout-22-cursor": ((value) => typeof value === 'number' ? value + 'px' : value)(isReadOnly ? 'default' : 'pointer'), "--correction-dialog-layout-22-border": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'rejected' ? '2px solid #ef4444' : '1px solid var(--line)'), "--correction-dialog-layout-22-background": ((value) => typeof value === 'number' ? value + 'px' : value)(resolution === 'rejected' ? 'var(--down-bg)' : 'var(--panel)') }}
             >
               <div className="flex correction-dialog-layout-23" >
                 <span className="correction-dialog-layout-24" >✕</span>
@@ -180,7 +180,7 @@ export default function CorrectionDialog({ correction, question, ctx, busy, isAd
                             key={item.letter}
                             type="button"
                             onClick={() => setCorrectAnswer(item.letter)}
-                            style={{ "--correction-dialog-layout-32-border": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '2px solid #2563eb' : '1px solid var(--line)'), "--correction-dialog-layout-32-background": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '#2563eb' : '#fff'), "--correction-dialog-layout-32-color": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '#fff' : 'var(--ink)') }}
+                            style={{ "--correction-dialog-layout-32-border": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '2px solid #2563eb' : '1px solid var(--line)'), "--correction-dialog-layout-32-background": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '#2563eb' : 'var(--panel)'), "--correction-dialog-layout-32-color": ((value) => typeof value === 'number' ? value + 'px' : value)(isChosen ? '#fff' : 'var(--ink)') }}
                           >
                             {item.letter}
                           </button>

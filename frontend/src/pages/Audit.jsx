@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { api, qs } from '../api/client.js';
-import { Card, Loading, ErrorBox, EmptyState, Select } from '../components/ui.jsx';
+import { Card, Loading, ErrorBox, EmptyState, Select, IconTool, IconCalendar } from '../components/ui.jsx';
 
 const ACTIONS = [
   'view', 'create', 'update', 'delete', 'restart',
@@ -9,7 +9,7 @@ const ACTIONS = [
 
 // Diccionario de acciones
 const ACTION_LABELS = {
-  view: { es: 'Ver', en: 'View' },
+  view: { es: 'Consulta', en: 'Viewed' },
   create: { es: 'Crear', en: 'Create' },
   update: { es: 'Actualizar', en: 'Update' },
   delete: { es: 'Eliminar', en: 'Delete' },
@@ -245,7 +245,7 @@ export default function Audit({ ctx }) {
               </div>
 
               <div className="au-detail-badge">
-                <span className="ico">⚙️</span>
+                <span className="ico"><IconTool size={14} /></span>
                 <span>{latestAction.formattedDetail}</span>
               </div>
             </div>
@@ -324,10 +324,10 @@ export default function Audit({ ctx }) {
           {processedRows.length === 0 ? (
             <EmptyState
               msg={isEn ? 'No records found' : 'No se encontraron registros con los filtros seleccionados'}
-              ic="📅"
+              ic={<IconCalendar size={22} />}
             />
           ) : (
-            <div className="tbl-wrap">
+            <div className="tbl-wrap cards-m">
               <table>
                 <thead>
                   <tr>
@@ -344,14 +344,14 @@ export default function Audit({ ctx }) {
                       key={a.id}
                       className={i === 0 && !appliedDate ? 'au-row-highlight' : undefined}
                     >
-                      <td><span className="note">{a.formattedDate}</span></td>
-                      <td>
+                      <td className="cell-id"><span className="note">{a.formattedDate}</span></td>
+                      <td data-label={L('au_actor')}>
                         <b>{a.actorName || a.actorId || L('none')}</b>
                         {a.roleLabel && <div className="note">{a.roleLabel}</div>}
                       </td>
-                      <td><span className="tag">{a.actionLabel}</span></td>
-                      <td><span className="note">{a.resource}</span></td>
-                      <td>
+                      <td data-label={L('au_action')}><span className="tag">{a.actionLabel}</span></td>
+                      <td data-label={L('au_resource')}><span className="note">{a.resource}</span></td>
+                      <td className="cell-full" data-label={L('au_detail')}>
                         <span className="au-table-detail">
                           {a.formattedDetail}
                         </span>

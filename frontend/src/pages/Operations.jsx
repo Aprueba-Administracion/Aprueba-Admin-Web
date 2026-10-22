@@ -55,12 +55,12 @@ export default function Operations({ ctx }) {
     <>
       <Card>
         <b>{L('o_stores')}</b>
-        <div className="tbl-wrap" style={{ marginTop: 8 }}><table>
+        <div className="tbl-wrap cards-m" style={{ marginTop: 8 }}><table>
           <thead><tr><th>{L('o_platform')}</th><th>{L('o_version')}</th><th>{L('o_available')}</th><th>{L('o_dl')}</th><th>{L('o_updated')}</th></tr></thead>
           <tbody>{platforms.map((p) => (
-            <tr key={p.id}><td><b>{p.name || p.platform}</b></td><td><span className="tag">v{p.version}</span></td>
-              <td>{p.available ? <span className="tag g">{L('yes')}</span> : <span className="tag d">{L('no')}</span>}</td>
-              <td>{p.downloads ? fmt(p.downloads) : '—'}</td><td className="note">{day(p.updatedAt)}</td></tr>
+            <tr key={p.id}><td className="cell-main"><b>{p.name || p.platform}</b></td><td data-label={L('o_version')}><span className="tag">v{p.version}</span></td>
+              <td data-label={L('o_available')}>{p.available ? <span className="tag g">{L('yes')}</span> : <span className="tag d">{L('no')}</span>}</td>
+              <td data-label={L('o_dl')}>{p.downloads ? fmt(p.downloads) : '—'}</td><td className="note" data-label={L('o_updated')}>{day(p.updatedAt)}</td></tr>
           ))}</tbody>
         </table></div>
       </Card>
@@ -77,14 +77,14 @@ export default function Operations({ ctx }) {
         </Card>
         <Card>
           <b>{L('o_containers')}</b>
-          <div className="tbl-wrap" style={{ marginTop: 8 }}><table>
+          <div className="tbl-wrap cards-m" style={{ marginTop: 8 }}><table>
             <thead><tr><th></th><th>{L('o_cpu')}</th><th>{L('o_mem')}</th><th></th></tr></thead>
             <tbody>{containers.map((c) => (
               <tr key={c.id}>
-                <td><span className={`dot ${dotClass(c.state)}`} style={{ marginRight: 7 }} /><b style={{ fontSize: 12.5 }}>{c.name}</b><div className="note">{c.region} · {c.state === 'down' ? L('st_stop') : L('st_run')}</div></td>
-                <td style={{ minWidth: 70 }}><div className="note">{c.cpu}%</div><div className="bar"><i style={{ width: `${c.cpu}%`, background: c.cpu > 75 ? 'var(--down)' : 'var(--brand)' }} /></div></td>
-                <td style={{ minWidth: 70 }}><div className="note">{c.mem}%</div><div className="bar"><i style={{ width: `${c.mem}%`, background: c.mem > 80 ? 'var(--down)' : 'var(--accent)' }} /></div></td>
-                <td>{c.restartable !== false && <button className="btn sec sm" disabled={c.restarting} onClick={() => restart(c.name)}>{L('o_restart')}</button>}</td>
+                <td className="cell-main"><span className={`dot ${dotClass(c.state)}`} style={{ marginRight: 7 }} /><b style={{ fontSize: 12.5 }}>{c.name}</b><div className="note">{c.region} · {c.state === 'down' ? L('st_stop') : L('st_run')}</div></td>
+                <td data-label={L('o_cpu')} style={{ minWidth: 70 }}><div className="note">{c.cpu}%</div><div className="bar"><i style={{ width: `${c.cpu}%`, background: c.cpu > 75 ? 'var(--down)' : 'var(--brand)' }} /></div></td>
+                <td data-label={L('o_mem')} style={{ minWidth: 70 }}><div className="note">{c.mem}%</div><div className="bar"><i style={{ width: `${c.mem}%`, background: c.mem > 80 ? 'var(--down)' : 'var(--accent)' }} /></div></td>
+                <td className="cell-actions">{c.restartable !== false && <button className="btn sec sm" disabled={c.restarting} onClick={() => restart(c.name)}>{L('o_restart')}</button>}</td>
               </tr>
             ))}</tbody>
           </table></div>

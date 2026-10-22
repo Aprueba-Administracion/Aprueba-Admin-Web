@@ -1,3 +1,5 @@
+import { IconInfinity, IconAlertTriangle, IconHourglass, IconCalendar } from '../../components/ui.jsx';
+
 export function checkExpired(dateStr) {
   if (!dateStr) return false;
   const expDate = new Date(`${dateStr}T23:59:59`);
@@ -10,7 +12,7 @@ export function DateBadge({ dateStr, isEn }) {
       <span className="date-badge-layout-1"
         
       >
-        ♾️ {isEn ? 'No limit' : 'Sin límite'}
+        <IconInfinity size={13} /> {isEn ? 'No limit' : 'Sin límite'}
       </span>
     );
   }
@@ -28,7 +30,7 @@ export function DateBadge({ dateStr, isEn }) {
       <span className="date-badge-layout-2"
         
       >
-        ⚠️ {isEn ? 'Expired' : 'Expiró'} ({formatted})
+        <IconAlertTriangle size={13} /> {isEn ? 'Expired' : 'Expiró'} ({formatted})
       </span>
     );
   }
@@ -38,7 +40,7 @@ export function DateBadge({ dateStr, isEn }) {
       <span className="date-badge-layout-3"
         
       >
-        ⏳ {formatted}
+        <IconHourglass size={13} /> {formatted}
       </span>
     );
   }
@@ -47,7 +49,7 @@ export function DateBadge({ dateStr, isEn }) {
     <span className="date-badge-layout-4"
       
     >
-      📅 {formatted}
+      <IconCalendar size={13} /> {formatted}
     </span>
   );
 }

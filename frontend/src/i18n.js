@@ -8,7 +8,7 @@ export const T = {
 
     // ── genéricos ──
     save:'Guardar', cancel:'Cancelar', close:'Cerrar', create:'Crear', edit:'Editar', del:'Eliminar', view:'Ver',
-    apply:'Aplicar', retry:'Reintentar', clear_filters:'Limpiar filtros', filter_all:'Todos', required_field:'Campo obligatorio',
+    apply:'Aplicar', retry:'Reintentar', err_view_title:'Esta vista no pudo mostrarse', err_view_msg:'Ocurrió un error inesperado al cargarla. Puedes reintentar o volver a otra sección.', clear_filters:'Limpiar filtros', filter_all:'Todos', required_field:'Campo obligatorio',
     actions:'Acciones', saved_ok:'Cambios guardados', created_ok:'Creado correctamente', deleted_ok:'Eliminado', none:'—',
     pg_showing:'Mostrando {shown} de {total}', pg_prev:'Anterior', pg_next:'Siguiente',
     no_perm_section:'Tu rol no tiene acceso a esta sección del API.',
@@ -25,7 +25,7 @@ export const T = {
     com_range_7d:'Últimos 7 días', com_range_30d:'30 días', com_range_90d:'90 días', com_range_12m:'12 meses',
 
     // ── sponsors ──
-    s_intro:'Marcas que financian beneficios para los alumnos.', s_table:'Detalle de sponsors', sp_name:'Sponsor', sp_tier:'Nivel', sp_monthly:'Aporte mensual', sp_offered:'Beneficios ofrecidos', sp_redeemed:'Beneficios cobrados', sp_status:'Estado', s_rev_chart:'Aporte mensual por sponsor', s_add:'Agregar sponsor',
+    s_intro:'Marcas que financian beneficios para los alumnos.', s_table:'Detalle de sponsors', sp_name:'Sponsor', sp_contact:'Correo de contacto', sp_tier:'Nivel', sp_monthly:'Aporte mensual', sp_offered:'Beneficios ofrecidos', sp_redeemed:'Beneficios cobrados', sp_status:'Estado', s_rev_chart:'Aporte mensual por sponsor', s_add:'Agregar sponsor',
     s_new:'Nuevo sponsor', s_edit:'Editar sponsor', s_no_sponsors:'Todavía no hay sponsors registrados.',
     s_benefits:'Beneficios ofrecidos', s_benefits_hint:'Escribe un beneficio y pulsa Enter. El total se guarda como «beneficios ofrecidos».',
     s_offered_num:'N.º de beneficios ofrecidos', s_offered_hint:'El API de edición solo acepta el total, no el listado.',
@@ -213,7 +213,7 @@ export const T = {
     nav_resumen:'Overview', nav_comercial:'Commercial', nav_sponsors:'Sponsors', nav_operativa:'Operations', nav_usuarios:'Users & support', nav_tutores:'Tutors', nav_contenido:'Content', nav_planes:'Plans & products', nav_auditoria:'Audit log',
 
     save:'Save', cancel:'Cancel', close:'Close', create:'Create', edit:'Edit', del:'Delete', view:'View',
-    apply:'Apply', retry:'Retry', clear_filters:'Clear filters', filter_all:'All', required_field:'Required field',
+    apply:'Apply', retry:'Retry', err_view_title:'This view could not be displayed', err_view_msg:'An unexpected error occurred while loading it. You can retry or go to another section.', clear_filters:'Clear filters', filter_all:'All', required_field:'Required field',
     actions:'Actions', saved_ok:'Changes saved', created_ok:'Created', deleted_ok:'Deleted', none:'—',
     pg_showing:'Showing {shown} of {total}', pg_prev:'Previous', pg_next:'Next',
     no_perm_section:'Your role has no access to this section of the API.',
@@ -229,7 +229,7 @@ export const T = {
     com_tip:'Tip: hover over the chart to see each month’s detail.',
     com_range_7d:'Last 7 days', com_range_30d:'30 days', com_range_90d:'90 days', com_range_12m:'12 months',
 
-    s_intro:'Brands funding student benefits.', s_table:'Sponsor detail', sp_name:'Sponsor', sp_tier:'Tier', sp_monthly:'Monthly fee', sp_offered:'Benefits offered', sp_redeemed:'Benefits redeemed', sp_status:'Status', s_rev_chart:'Monthly fee by sponsor', s_add:'Add sponsor',
+    s_intro:'Brands funding student benefits.', s_table:'Sponsor detail', sp_name:'Sponsor', sp_contact:'Contact email', sp_tier:'Tier', sp_monthly:'Monthly fee', sp_offered:'Benefits offered', sp_redeemed:'Benefits redeemed', sp_status:'Status', s_rev_chart:'Monthly fee by sponsor', s_add:'Add sponsor',
     s_new:'New sponsor', s_edit:'Edit sponsor', s_no_sponsors:'No sponsors registered yet.',
     s_benefits:'Benefits offered', s_benefits_hint:'Type a benefit and press Enter. The count is stored as “benefits offered”.',
     s_offered_num:'Number of benefits offered', s_offered_hint:'The edit endpoint only accepts the total, not the list.',

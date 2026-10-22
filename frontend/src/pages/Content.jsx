@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, qs } from '../api/client.js';
 import {
-  Kpi, Card, Loading, ErrorBox, EmptyState, Modal, Field, FormGrid, Select,
+  TopKpiCard, IconUpload, IconBook, IconCheckCircle, IconEdit, IconClipboardList, Card, Loading, ErrorBox, EmptyState, Modal, Field, FormGrid, Select,
   Toast, useToast, Pill,
 } from '../components/ui.jsx';
 
@@ -97,18 +97,18 @@ export default function Content({ ctx }) {
     <>
       <p className="sub" style={{ marginBottom: 14 }}>{L('q_intro')}</p>
 
-      <div className="grid g4">
-        <Kpi ic="📚" label={L('q_kpi_total')} value={fmt(kpis.total)} />
-        <Kpi ic="✅" label={L('q_kpi_published')} value={fmt(kpis.published)} />
-        <Kpi ic="✏️" label={L('q_kpi_draft')} value={fmt(kpis.draft)} />
-        <Kpi ic="🧪" label={L('q_kpi_tests')} value={fmt(kpis.tests)} />
+      <div className="grid g4 u-kpis">
+        <TopKpiCard label={L('q_kpi_total')} value={fmt(kpis.total)} icon={IconBook} tone="blue" />
+        <TopKpiCard label={L('q_kpi_published')} value={fmt(kpis.published)} icon={IconCheckCircle} tone="blue" />
+        <TopKpiCard label={L('q_kpi_draft')} value={fmt(kpis.draft)} icon={IconEdit} tone="blue" />
+        <TopKpiCard label={L('q_kpi_tests')} value={fmt(kpis.tests)} icon={IconClipboardList} tone="blue" />
       </div>
 
       <Card style={{ marginTop: 16 }}>
         <div className="flex between wrap" style={{ gap: 10, marginBottom: 12 }}>
           <b>{L('q_table')}</b>
           <div className="flex" style={{ gap: 8 }}>
-            <button className="btn sec sm" onClick={() => setDialog({ kind: 'import' })}>⬆️ {L('q_import')}</button>
+            <button className="btn sec sm" onClick={() => setDialog({ kind: 'import' })}><IconUpload size={14} /> {L('q_import')}</button>
             <button className="btn sm" onClick={() => setDialog({ kind: 'form' })}>+ {L('q_add')}</button>
           </div>
         </div>
@@ -125,24 +125,24 @@ export default function Content({ ctx }) {
           <button className="btn sec sm" onClick={() => setFilters({ testId: '', axis: '', difficulty: '', status: '' })}>{L('clear_filters')}</button>
         </div>
 
-        {rows.length === 0 ? <EmptyState msg={L('q_no_questions')} ic="📚" /> : (
-          <div className="tbl-wrap"><table>
+        {rows.length === 0 ? <EmptyState msg={L('q_no_questions')} ic={<IconBook size={22} />} /> : (
+          <div className="tbl-wrap cards-m"><table>
             <thead><tr>
               <th>{L('q_statement')}</th><th>{L('q_test')}</th><th>{L('q_axis')}</th>
               <th>{L('q_difficulty')}</th><th>{L('q_correct')}</th><th>{L('q_status')}</th><th />
             </tr></thead>
             <tbody>{rows.map((q) => (
               <tr key={q.id}>
-                <td>
+                <td className="cell-main">
                   <b className="clamp" style={{ fontSize: 13 }}>{q.statement}</b>
                   <div className="note">{q.id}</div>
                 </td>
-                <td><span className="tag">{q.testId || L('none')}</span></td>
-                <td><span className="note">{q.axis || L('none')}</span></td>
-                <td><span className="tag">{String(q.difficulty || '').toUpperCase() || L('none')}</span></td>
-                <td><b>{q.correctAnswer}</b></td>
-                <td><Pill value={q.status || 'draft'} map={STATUS_TAG} L={L} /></td>
-                <td><div className="row-acts">
+                <td data-label={L('q_test')}><span className="tag">{q.testId || L('none')}</span></td>
+                <td data-label={L('q_axis')}><span className="note">{q.axis || L('none')}</span></td>
+                <td data-label={L('q_difficulty')}><span className="tag">{String(q.difficulty || '').toUpperCase() || L('none')}</span></td>
+                <td data-label={L('q_correct')}><b>{q.correctAnswer}</b></td>
+                <td data-label={L('q_status')}><Pill value={q.status || 'draft'} map={STATUS_TAG} L={L} /></td>
+                <td className="cell-actions"><div className="row-acts">
                   <button className="btn sec sm" onClick={() => setDialog({ kind: 'form', question: q })}>{L('edit')}</button>
                 </div></td>
               </tr>

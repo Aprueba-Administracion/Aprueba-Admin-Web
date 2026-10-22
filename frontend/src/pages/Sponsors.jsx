@@ -4,13 +4,14 @@ import { api } from '../api/client.js';
 import {
   Card, StatusPill, Loading, HBarsInteractive, DonutMulti, CAT_COLORS,
   ErrorBox, EmptyState, Confirm, Toast, useToast,
-  IconEdit, IconTrash, IconUsers, IconWallet, IconGift, IconZap, IconDiamond,
+  IconEdit, IconTrash, IconUsers, IconWallet, IconGift, IconZap, IconDiamond, IconMegaphone,
 } from '../components/ui.jsx';
 
 import { TierBadge } from './sponsors/TierBadge.jsx';
 import { DateBadge, checkExpired } from './sponsors/DateBadge.jsx';
 import { SponsorForm } from './sponsors/SponsorForm.jsx';
 import { BenefitItemForm } from './sponsors/BenefitItemForm.jsx';
+import { RedeemBenefitForm } from './sponsors/RedeemBenefitForm.jsx';
 
 // ── Tarjeta KPI: fondo predominantemente blanco con degradado suave del color de
 // la métrica (mismo espíritu que el banner de arriba) y un ícono gigante detrás,
@@ -66,10 +67,11 @@ export default function Sponsors({ ctx }) {
     if (sponsor) {
       run(() => api.patch(`/sponsors/${sponsor.id}`, {
         name: form.name.trim(), tier: form.tier, monthlyFee: Number(form.monthlyFee || 0), status: form.status,
+        contactEmail: form.contactEmail.trim() || null,
       }), L('saved_ok'));
     } else {
       run(() => api.post('/sponsors', {
-        name: form.name.trim(), tier: form.tier, monthlyFee: Number(form.monthlyFee || 0), benefits: [],
+        name: form.name.trim(), tier: form.tier, monthlyFee: Number(form.monthlyFee || 0), contactEmail: form.contactEmail.trim() || null, benefits: [],
       }), L('created_ok'));
     }
   };
@@ -97,7 +99,7 @@ export default function Sponsors({ ctx }) {
       t.err(isEn ? 'This benefit has expired' : 'Este beneficio ha expirado');
       return;
     }
-    run(() => api.post(`/sponsors/${sponsor.id}/benefits/${benefit.id}/redeem`, { cantidad: 1 }), L('saved_ok'));
+    setDialog({ kind: 'redeem', sponsor, benefit });
   };
 
   const toggleAccordion = (id) => {
@@ -128,7 +130,7 @@ export default function Sponsors({ ctx }) {
         <div className="sponsors-layout-2" >
 
           {/* Tarjetas KPI sin icono pequeño superior */}
-          <div className="grid g3 sponsors-layout-3" >
+          <div className="grid g3 sponsors-layout-3 u-kpis sp-kpis" >
             <SponsorKpiCard
               label={L('k_sponsors')}
               value={fmt(rows.length)}
@@ -188,7 +190,7 @@ export default function Sponsors({ ctx }) {
                 </div>
 
                 {rows.length === 0 ? <EmptyState msg={L('s_no_sponsors')} ic={<IconUsers size={22} />} /> : (
-                  <div className="tbl-wrap sponsors-layout-9" >
+                  <div className="tbl-wrap cards-m sponsors-layout-9" >
                     <table className="sponsors-layout-10" >
                       <thead><tr>
                         <th>{L('sp_name')}</th><th>{L('sp_tier')}</th><th>{L('sp_monthly')}</th>
@@ -196,13 +198,13 @@ export default function Sponsors({ ctx }) {
                       </tr></thead>
                       <tbody>{rows.map((s) => (
                         <tr key={s.id}>
-                          <td><b>{s.name}</b></td>
-                          <td><TierBadge tier={s.tier} /></td>
-                          <td>${fmt(s.monthlyFee)}</td>
-                          <td>{fmt(s.benefitsOffered ?? 0)}</td>
-                          <td>{fmt(s.benefitsRedeemed ?? 0)}</td>
-                          <td><StatusPill state={s.status} L={L} /></td>
-                          <td>
+                          <td className="cell-main"><b>{s.name}</b></td>
+                          <td data-label={L('sp_tier')}><TierBadge tier={s.tier} /></td>
+                          <td data-label={L('sp_monthly')}>${fmt(s.monthlyFee)}</td>
+                          <td data-label={L('sp_offered')}>{fmt(s.benefitsOffered ?? 0)}</td>
+                          <td data-label={L('sp_redeemed')}>{fmt(s.benefitsRedeemed ?? 0)}</td>
+                          <td data-label={L('sp_status')}><StatusPill state={s.status} L={L} /></td>
+                          <td className="cell-actions">
                             <div className="row-acts sponsors-layout-12" >
                               <button className="btn sec sm" onClick={() => setDialog({ kind: 'form', sponsor: s })} title={L('edit')}>
                                 <IconEdit />
@@ -272,7 +274,7 @@ export default function Sponsors({ ctx }) {
                                   {isEn ? 'No benefits registered.' : 'Sin beneficios cargados.'}
                                 </p>
                               ) : (
-                                <div className="tbl-wrap sponsors-layout-24" >
+                                <div className="tbl-wrap cards-m sponsors-layout-24" >
                                   <table className="sponsors-layout-25" >
                                     <thead>
                                       <tr>
@@ -290,14 +292,14 @@ export default function Sponsors({ ctx }) {
 
                                         return (
                                           <tr className="sponsors-layout-32" key={b.id || idx} style={{ "--sponsors-layout-32-opacity": isExpired ? 0.65 : 1 }}>
-                                            <td><b>{b.name}</b></td>
-                                            <td className="sponsors-layout-33" ><IconDiamond size={13} /> {fmt(b.costPlatinum || 0)} {isEn ? 'plat.' : 'plat.'}</td>
-                                            <td>{fmt(b.stock || 0)} u.</td>
-                                            <td>{fmt(b.redeemedCount || 0)}</td>
-                                            <td>
+                                            <td className="cell-main"><b>{b.name}</b></td>
+                                            <td className="sponsors-layout-33" data-label={isEn ? 'COST' : 'COSTO'}><IconDiamond size={13} /> {fmt(b.costPlatinum || 0)} {isEn ? 'plat.' : 'plat.'}</td>
+                                            <td data-label="STOCK">{fmt(b.stock || 0)} u.</td>
+                                            <td data-label={isEn ? 'REDEEMED' : 'CANJEADOS'}>{fmt(b.redeemedCount || 0)}</td>
+                                            <td className="cell-full" data-label={isEn ? 'EXPIRATION' : 'FECHA LÍMITE'}>
                                               <DateBadge dateStr={b.expiresAt} isEn={isEn} />
                                             </td>
-                                            <td>
+                                            <td className="cell-actions">
                                               <div
                                                 className="row-acts sponsors-layout-34"
                                                 
@@ -373,7 +375,7 @@ export default function Sponsors({ ctx }) {
               <div className="sponsors-layout-42"
                 
               >
-                📣
+                <IconMegaphone size={24} />
               </div>
               <p className="sponsors-layout-43" >
                 {isEn
@@ -403,6 +405,21 @@ export default function Sponsors({ ctx }) {
           busy={busy}
           onClose={() => setDialog(null)}
           onSave={saveSingleBenefit}
+        />
+      )}
+
+      {dialog?.kind === 'redeem' && (
+        <RedeemBenefitForm
+          sponsor={dialog.sponsor}
+          benefit={dialog.benefit}
+          isEn={isEn}
+          fmt={fmt}
+          onClose={() => setDialog(null)}
+          onCompleted={() => {
+            setDialog(null);
+            t.ok(isEn ? 'Redemption completed' : 'Canje completado');
+            load();
+          }}
         />
       )}
 

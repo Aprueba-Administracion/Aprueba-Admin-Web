@@ -3,7 +3,7 @@ import { api } from '../api/client.js';
 import {
   KpiTrend, Card, Loading, ErrorBox, Tabs,
   LineChartInteractive, RankList, MiniMonthBars, Funnel, BarsInteractive, DonutMulti, CAT_COLORS,
-  IconDownload, IconCalendar, IconUsers, IconTrendingUp, IconStar, IconGift, IconWallet,
+  IconDownload, IconCalendar, IconLightbulb, IconUsers, IconTrendingUp, IconStar, IconGift, IconWallet,
 } from '../components/ui.jsx';
 
 const RANGES = ['7d', '30d', '90d', '12m'];
@@ -152,7 +152,7 @@ export default function Commercial({ ctx }) {
 
             {/* Banner de tip insertado entre ambos bloques */}
             <div className="tip-banner commercial-layout-4" >
-              <span className="ic">💡</span>
+              <span className="ic"><IconLightbulb size={15} /></span>
               <span className="commercial-layout-5" >{L('com_tip')}</span>
               <span className="chev" aria-hidden="true">›</span>
             </div>

@@ -9,6 +9,7 @@ export function SponsorForm({ sponsor, ctx, busy, onClose, onSave }) {
   const [f, setF] = useState(() => ({
     name: sponsor?.name || '', tier: sponsor?.tier || 'Bronze',
     monthlyFee: sponsor?.monthlyFee ?? '', status: sponsor?.status || 'ok',
+    contactEmail: sponsor?.contactEmail || '',
   }));
   const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
 
@@ -31,6 +32,10 @@ export function SponsorForm({ sponsor, ctx, busy, onClose, onSave }) {
             onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()}
             onChange={(e) => set('monthlyFee')(e.target.value)}
           />
+        </Field>
+        <Field wide label={L('sp_contact')}>
+          <input type="email" inputMode="email" placeholder="marketing@empresa.cl" value={f.contactEmail}
+            onChange={(e) => set('contactEmail')(e.target.value)} />
         </Field>
         {sponsor && (
           <Field label={L('sp_status')}>

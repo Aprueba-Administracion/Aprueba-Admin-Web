@@ -8,6 +8,8 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
 
   const [form, setForm] = useState(() => ({
     name: benefit?.name || '',
+    description: benefit?.description || '',
+    icon: benefit?.icon || '',
     costPlatinum: benefit?.costPlatinum ?? '',
     stock: benefit?.stock ?? '',
     expiresAt: benefit?.expiresAt || '',
@@ -19,6 +21,8 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
   const handleSubmit = () => {
     onSave(sponsor, {
       name: form.name,
+      description: form.description.trim() || null,
+      icon: form.icon.trim() || null,
       costPlatinum: Number(form.costPlatinum || 0),
       stock: Number(form.stock || 0),
       expiresAt: form.noLimit ? null : (form.expiresAt || null),
@@ -50,6 +54,15 @@ export function BenefitItemForm({ sponsor, benefit, index, ctx, busy, onClose, o
             value={form.name}
             onChange={(e) => set('name')(e.target.value)}
           />
+        </Field>
+        <Field wide label={isEn ? 'Description' : 'Descripción'}
+          hint={`${form.description.length}/500`}>
+          <textarea rows={3} maxLength={500} value={form.description}
+            placeholder={isEn ? 'What the student gets (optional)' : 'Qué recibe el alumno (opcional)'}
+            onChange={(e) => set('description')(e.target.value)} />
+        </Field>
+        <Field label={isEn ? 'Icon' : 'Ícono'} hint={isEn ? 'Emoji shown in the student app (optional).' : 'Emoji que ve el alumno en la app (opcional).'}>
+          <input maxLength={8} value={form.icon} placeholder="🎁" onChange={(e) => set('icon')(e.target.value)} />
         </Field>
         <Field label={isEn ? 'Cost (platinum)' : 'Costo (platino)'}>
           <input

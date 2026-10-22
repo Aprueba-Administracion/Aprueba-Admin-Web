@@ -738,10 +738,10 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 .correction-dialog-layout-7.correction-dialog-layout-7.correction-dialog-layout-7{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:18px;font-size:12.5px;font-weight:var(--correction-dialog-layout-7-font-weight);background:var(--correction-dialog-layout-7-background);color:var(--correction-dialog-layout-7-color);border:var(--correction-dialog-layout-7-border)}
 .correction-dialog-layout-8.correction-dialog-layout-8.correction-dialog-layout-8{font-weight:800}
 .correction-dialog-layout-9.correction-dialog-layout-9.correction-dialog-layout-9{font-size:12px;color:var(--muted);margin-bottom:6px}
-.correction-dialog-layout-10.correction-dialog-layout-10.correction-dialog-layout-10{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:space-between}
+.correction-dialog-layout-10.correction-dialog-layout-10.correction-dialog-layout-10{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:space-between}
 .correction-dialog-layout-11.correction-dialog-layout-11.correction-dialog-layout-11{background:#dbeafe;color:#1e40af;font-size:11px}
 .correction-dialog-layout-12.correction-dialog-layout-12.correction-dialog-layout-12{font-size:12px;color:var(--muted);margin-bottom:6px}
-.correction-dialog-layout-13.correction-dialog-layout-13.correction-dialog-layout-13{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--ink);min-height:64px;white-space:pre-wrap}
+.correction-dialog-layout-13.correction-dialog-layout-13.correction-dialog-layout-13{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--ink);min-height:64px;white-space:pre-wrap}
 .correction-dialog-layout-14.correction-dialog-layout-14.correction-dialog-layout-14{display:flex;flex-direction:column;gap:16px}
 .correction-dialog-layout-15.correction-dialog-layout-15.correction-dialog-layout-15{letter-spacing:0.05em;color:var(--muted);font-size:11px;font-weight:700}
 .correction-dialog-layout-16.correction-dialog-layout-16.correction-dialog-layout-16{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -1179,3 +1179,100 @@ input[type=color]{padding:2px;height:34px;width:52px;cursor:pointer}
 @media(max-width:480px){
   .u-stats{grid-template-columns:1fr}
 }
+
+/* tablas -> tarjetas en pantallas chicas (Operativa, Auditoría, Contenido) */
+@media(max-width:900px){
+  .tbl-wrap.cards-m{overflow:visible}
+  .cards-m table,.cards-m tbody{display:block;width:100%}
+  .cards-m thead{display:none}
+  .cards-m tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .cards-m tbody tr:nth-child(even),.cards-m tbody tr:hover{background:var(--panel)}
+  .cards-m tbody tr.au-row-highlight{background:var(--chip)}
+  .cards-m td{display:block;padding:0;border:0;width:auto;max-width:none;min-width:0;text-align:left;white-space:normal}
+  .cards-m td[data-label]::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .cards-m td.cell-main,.cards-m td.cell-id,.cards-m td.cell-actions,.cards-m td.cell-full{grid-column:1/-1}
+  .cards-m td.cell-id{font-size:11.5px}
+  .cards-m td.cell-actions .btn{width:100%}
+  .cards-m .row-acts{justify-content:stretch}
+  .cards-m .row-acts .btn{flex:1}
+  .cards-m .clamp{max-width:none;white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  .cards-m .au-table-detail{display:block}
+}
+
+/* Sponsors: KPIs como en Usuarios y soporte (2 columnas; la tercera ocupa todo el ancho) */
+@media(max-width:620px){
+  .u-kpis.sp-kpis .kpi-tile{min-height:100px}
+  .u-kpis.sp-kpis .kpi-delta{font-size:.64rem;margin-top:4px}
+  .u-kpis.sp-kpis>:nth-child(3){grid-column:1/-1}
+}
+
+/* Diálogo de recorrecciones en modo oscuro: textos de Confirmar/Rechazar y chip de respuesta legibles */
+.dark .correction-dialog-layout-11.correction-dialog-layout-11.correction-dialog-layout-11{background:var(--chip);color:#93c5fd}
+.dark .correction-dialog-layout-20.correction-dialog-layout-20.correction-dialog-layout-20{color:#34d399}
+.dark .correction-dialog-layout-21.correction-dialog-layout-21.correction-dialog-layout-21{color:#6ee7b7}
+.dark .correction-dialog-layout-25.correction-dialog-layout-25.correction-dialog-layout-25{color:#f87171}
+.dark .correction-dialog-layout-26.correction-dialog-layout-26.correction-dialog-layout-26{color:#fca5a5}
+
+/* Diálogo de recorrecciones en teléfono: una sola columna (antes se cortaba a la derecha) */
+@media(max-width:620px){
+  .correction-dialog-layout-1.correction-dialog-layout-1.correction-dialog-layout-1{grid-template-columns:minmax(0,1fr);gap:18px}
+  .correction-dialog-layout-2.correction-dialog-layout-2.correction-dialog-layout-2{border-right:0;padding-right:0;border-bottom:1px solid var(--line);padding-bottom:18px}
+  .correction-dialog-layout-16.correction-dialog-layout-16.correction-dialog-layout-16{grid-template-columns:1fr 1fr}
+  .correction-dialog-layout-36.correction-dialog-layout-36.correction-dialog-layout-36{flex-wrap:wrap}
+}
+
+/* Diálogo de canje de beneficios (RedeemBenefitForm) */
+.rd-users{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rd-user{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);cursor:pointer;font:inherit}
+.rd-user:hover{background:var(--soft)}
+.rd-picked{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.rd-bal{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.rd-hint{margin-top:6px}
+.rd-manual{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rd-total{display:flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft);color:var(--ink)}
+.rd-err{color:var(--danger);font-size:13px;font-weight:600;margin:10px 0 0}
+.rd-ok{color:var(--accent);font-weight:700;margin:0 0 12px}
+.rd-sum{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.rd-sum dt{color:var(--muted);font-size:12.5px}
+.rd-sum dd{margin:0;font-weight:600;text-align:right;color:var(--ink)}
+.rd-mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;word-break:break-all}
+@media(max-width:620px){.rd-picked{flex-wrap:wrap}}
+
+/* Sponsors: tablas a tarjetas en pantallas chicas. Los .sponsors-layout-N usan triple clase,
+   así que estas reglas igualan esa especificidad para ganar. */
+@media(max-width:900px){
+  .cards-m td.sponsors-layout-33.sponsors-layout-33.sponsors-layout-33{display:block}
+  .cards-m td.sponsors-layout-33 svg{vertical-align:-2px;margin-right:4px}
+  .cards-m .sponsors-layout-34.sponsors-layout-34.sponsors-layout-34{justify-content:stretch;flex-wrap:wrap;white-space:normal}
+  .cards-m .sponsors-layout-34 .btn{flex:1}
+  .cards-m .sponsors-layout-12.sponsors-layout-12.sponsors-layout-12{justify-content:stretch}
+  .cards-m .sponsors-layout-12 .btn{flex:1}
+  .cards-m .sponsors-layout-32{display:grid}
+}
+
+/* ── Ajustes de teléfono (segunda ronda) ── */
+@media(max-width:620px){
+  /* Sponsors: cabecera del acordeón de beneficios en varias líneas en vez de cortar el botón */
+  .sponsors-layout-16.sponsors-layout-16.sponsors-layout-16{flex-wrap:wrap;gap:10px}
+  .sponsors-layout-17.sponsors-layout-17.sponsors-layout-17{flex-wrap:wrap}
+  .sponsors-layout-20.sponsors-layout-20.sponsors-layout-20{width:100%;justify-content:space-between}
+  /* Sponsors: el delta ya no se monta sobre el ícono grande de la tarjeta */
+  .u-kpis.sp-kpis .kpi-delta{padding-right:44px}
+  /* Usuarios: el nombre ocupa toda la fila; país, estado y botón van debajo */
+  .u-row.u-row-g{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"who who who" "country state btn";row-gap:10px}
+  .u-row-g .u-state{justify-self:end}
+  .u-row-g .u-btn{min-width:0;padding-left:14px;padding-right:14px}
+  /* Pestañas de Usuarios y soporte: caben las tres sin deslizar */
+  .users-layout-1 .tab{padding:10px 9px;gap:5px;font-size:12px}
+  .users-layout-1 .tab svg{display:none}
+  /* Diálogos de tutor: pestañas en una sola fila deslizable */
+  .tu-detail-content .tabs,.tu-form .tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:2px}
+  .tu-detail-content .tab,.tu-form .tab{flex:0 0 auto;white-space:nowrap}
+}
+@media(max-width:430px){
+  /* Tutores: filtros de a uno por fila para que se lea el texto completo */
+  .tu-directory .filters{grid-template-columns:minmax(0,1fr)}
+}
+/* Selector de archivo (Importar JSON) con el estilo de los botones */
+input[type=file]{color:var(--muted);font-size:13px}
+input[type=file]::file-selector-button{margin-right:10px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink);font-weight:700;font-family:inherit;cursor:pointer}
