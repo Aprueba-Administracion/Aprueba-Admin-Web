@@ -59,11 +59,13 @@ try {
   const sTok = sLogin.data.accessToken;
   const sRef = sLogin.data.refreshToken;
   check('login crea sesión: el access token funciona', (await call('GET', '/tickets', { token: sTok })).status === 200);
+  check('GET /session con sesión viva → 204', (await call('GET', '/session', { token: sTok })).status === 204);
   const sessSnap = await db.collection('adminSessions').where('adminId', '==', 'adm_4').where('revokedAt', '==', null).get();
   check('adminSessions registra la sesión con adminId y expiresAt', !sessSnap.empty && !!sessSnap.docs[0].data().expiresAt);
   const lo = await call('POST', '/auth/logout', { body: { refreshToken: sRef } });
   check('logout → 204', lo.status === 204);
   check('tras logout el access token deja de servir → 401 AUTH_SESSION_INVALID', (await call('GET', '/tickets', { token: sTok })).error?.code === 'AUTH_SESSION_INVALID');
+  check('GET /session tras logout → 401', (await call('GET', '/session', { token: sTok })).status === 401);
   check('tras logout el refresh token no renueva → 401', (await call('POST', '/auth/refresh', { body: { refreshToken: sRef } })).status === 401);
   const lo2 = await call('POST', '/auth/logout', { body: { refreshToken: sRef } });
   check('repetir el logout es idempotente → 204', lo2.status === 204);

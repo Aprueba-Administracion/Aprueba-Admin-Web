@@ -109,6 +109,40 @@ export function AuthProvider({ children }) {
     };
   }, [clearLocalSession]);
 
+  // Mientras haya sesión, pregunta al servidor si sigue viva. Así, si se cierra
+  // desde otro equipo ("cerrar todas") o desactivan la cuenta, esta pantalla
+  // vuelve al login sin que el usuario tenga que navegar.
+  useEffect(() => {
+    if (!user) return undefined;
+
+    let stopped = false;
+
+    const check = async () => {
+      try {
+        await api.get('/session');
+      } catch (error) {
+        // 401: el cliente ya intentó renovar y limpió la sesión (onAuthFail).
+        // 403 cuenta deshabilitada: se cierra aquí. Errores de red: se ignoran.
+        if (!stopped && error.status === 403) clearLocalSession();
+      }
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') check();
+    };
+
+    const timer = setInterval(check, 30000);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', check);
+
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', check);
+    };
+  }, [user, clearLocalSession]);
+
   // Persiste los tokens renovados por el refresh automático.
   useEffect(() => {
     setTokensChangedHandler((accessToken, refreshToken) => {

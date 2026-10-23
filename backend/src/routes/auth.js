@@ -400,6 +400,10 @@ r.post('/auth/logout', wrap(async (req, res) => {
   return res.status(204).end();
 }));
 
+// Comprobación liviana de que la sesión sigue viva (la usa el front cada
+// ~30 s para cerrar la pantalla si la sesión fue revocada en otro equipo).
+r.get('/session', authRequired, (req, res) => res.status(204).end());
+
 // Cierra TODAS las sesiones activas del admin autenticado
 // (por ejemplo si perdió un dispositivo o sospecha de un robo de token).
 r.post('/auth/logout-all', authRequired, wrap(async (req, res) => {
