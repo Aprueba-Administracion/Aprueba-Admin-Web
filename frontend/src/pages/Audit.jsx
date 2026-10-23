@@ -4,7 +4,7 @@ import { Card, Loading, ErrorBox, EmptyState, Select, IconTool, IconCalendar } f
 
 const ACTIONS = [
   'view', 'create', 'update', 'delete', 'restart',
-  'confirmed', 'rejected', 'verify', 'unverify', 'pause', 'redeem', 'import',
+  'confirmed', 'rejected', 'verify', 'unverify', 'pause', 'redeem', 'import', 'logout',
 ];
 
 // Diccionario de acciones
@@ -21,6 +21,7 @@ const ACTION_LABELS = {
   pause: { es: 'Pausar', en: 'Pause' },
   redeem: { es: 'Canjear', en: 'Redeem' },
   import: { es: 'Importar', en: 'Import' },
+  logout: { es: 'Cierre de sesión', en: 'Sign out' },
 };
 
 // Diccionario de roles

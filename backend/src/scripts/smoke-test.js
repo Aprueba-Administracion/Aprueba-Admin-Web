@@ -46,13 +46,36 @@ try {
   const noOtp = await call('POST', '/auth/login', { body: { email: 'admin@aprueba.cl', password: 'admin123' } });
   check('admin sin OTP → 401 AUTH_MFA_REQUIRED', noOtp.status === 401 && noOtp.error?.code === 'AUTH_MFA_REQUIRED');
   const admin = await login('admin@aprueba.cl', 'admin123', '123456');
-  const finance = await login('finance@aprueba.cl', 'finance123', '123456');
+  let finance = await login('finance@aprueba.cl', 'finance123', '123456');
   const ops = await login('ops@aprueba.cl', 'ops123');
   const support = await login('support@aprueba.cl', 'support123');
   check('los 4 roles obtienen token', !!(admin && finance && ops && support));
   check('sin token → 401', (await call('GET', '/users')).status === 401);
   check('ops no puede ver usuarios → 403', (await call('GET', '/users', { token: ops })).status === 403);
   check('support no puede ver sponsors → 403', (await call('GET', '/sponsors', { token: support })).status === 403);
+
+  section('Sesiones y logout real (adminSessions)');
+  const sLogin = await call('POST', '/auth/login', { body: { email: 'support@aprueba.cl', password: 'support123' } });
+  const sTok = sLogin.data.accessToken;
+  const sRef = sLogin.data.refreshToken;
+  check('login crea sesión: el access token funciona', (await call('GET', '/tickets', { token: sTok })).status === 200);
+  const sessSnap = await db.collection('adminSessions').where('adminId', '==', 'adm_4').where('revokedAt', '==', null).get();
+  check('adminSessions registra la sesión con adminId y expiresAt', !sessSnap.empty && !!sessSnap.docs[0].data().expiresAt);
+  const lo = await call('POST', '/auth/logout', { body: { refreshToken: sRef } });
+  check('logout → 204', lo.status === 204);
+  check('tras logout el access token deja de servir → 401 AUTH_SESSION_INVALID', (await call('GET', '/tickets', { token: sTok })).error?.code === 'AUTH_SESSION_INVALID');
+  check('tras logout el refresh token no renueva → 401', (await call('POST', '/auth/refresh', { body: { refreshToken: sRef } })).status === 401);
+  const lo2 = await call('POST', '/auth/logout', { body: { refreshToken: sRef } });
+  check('repetir el logout es idempotente → 204', lo2.status === 204);
+  const aud = await db.collection('auditLog').where('action', '==', 'logout').get();
+  check('el logout queda en la auditoría (action=logout)', !aud.empty);
+  const fin = { email: 'finance@aprueba.cl', password: 'finance123', otp: '123456' };
+  const l1 = await call('POST', '/auth/login', { body: fin });
+  const l2 = await call('POST', '/auth/login', { body: fin });
+  const all = await call('POST', '/auth/logout-all', { token: l1.data.accessToken, body: {} });
+  check('logout-all → 204', all.status === 204);
+  check('logout-all invalida también las demás sesiones', (await call('GET', '/tickets', { token: l2.data.accessToken })).status === 401);
+  finance = await login('finance@aprueba.cl', 'finance123', '123456');
 
   section('Usuarios admin (#7: active, emailLower, bloqueo)');
   const adm = (id) => db.collection('adminUsers').doc(id);

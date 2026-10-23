@@ -14,7 +14,7 @@ const Logo = () => (
 
 export default function Layout({ ctx, children }) {
   const { L, lang, setLang, dark, setDark } = ctx;
-  const { user, logout, canAccess } = useAuth();
+  const { user, logout, loggingOut, canAccess } = useAuth();
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const current = VIEWS.find((v) => v.path === loc.pathname) || VIEWS[0];
@@ -49,7 +49,7 @@ export default function Layout({ ctx, children }) {
             <div className="side-avatar">{initials}</div>
             <div><div className="nm">{user.name}</div><div className="rl">{L('role_' + user.role)}</div></div>
           </div>
-          <button className="side-logout" onClick={logout}><IconLogOutFilled size={14} />{L('logout')}</button>
+          <button type="button" className="side-logout" onClick={logout} disabled={loggingOut} aria-busy={loggingOut}><IconLogOutFilled size={14} />{loggingOut ? L('logging_out') : L('logout')}</button>
         </div>
       </aside>
       <div className={`scrim ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />

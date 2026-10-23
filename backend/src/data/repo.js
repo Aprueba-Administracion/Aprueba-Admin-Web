@@ -4,6 +4,7 @@ import { db, FieldValue } from '../config/firebase.js';
 
 export const COL = {
   adminUsers: 'adminUsers',
+  adminSessions: 'adminSessions',
   features: 'features',
   plans: 'plans',
   sponsors: 'sponsors',
