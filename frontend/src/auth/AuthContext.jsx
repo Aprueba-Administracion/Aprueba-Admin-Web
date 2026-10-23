@@ -80,6 +80,25 @@ export function AuthProvider({ children }) {
     return pending;
   }, [clearLocalSession]);
 
+  // Cierra TODAS las sesiones del usuario (otros dispositivos incluidos).
+  const logoutAll = useCallback(async () => {
+    setLoggingOut(true);
+
+    try {
+      await Promise.race([
+        api.logoutAll(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 4000)
+        ),
+      ]);
+    } catch {
+      // Best effort, igual que el logout normal.
+    } finally {
+      clearLocalSession();
+      setLoggingOut(false);
+    }
+  }, [clearLocalSession]);
+
   // Un fallo de autenticación limpia la sesión local.
   // No intenta llamar al logout con credenciales inválidas.
   useEffect(() => {
@@ -156,6 +175,7 @@ export function AuthProvider({ children }) {
         user,
         login,
         logout,
+        logoutAll,
         loggingOut,
         canAccess,
         hasRole,

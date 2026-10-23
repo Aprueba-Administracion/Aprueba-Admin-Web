@@ -8,6 +8,7 @@ import { logAudit } from '../lib/audit.js';
 import {
   signAccess,
   signRefresh,
+  newJti,
   verify,
   REFRESH_TTL,
 } from '../lib/jwt.js';
@@ -20,6 +21,9 @@ import {
 } from '../data/repo.js';
 
 const r = Router();
+
+// Ventana en que el refresh token anterior aún se acepta (peticiones paralelas).
+const ROTATION_GRACE_MS = 15 * 1000;
 
 const MAX_FAILED = 10;
 const LOCK_MINUTES = 15;
@@ -155,8 +159,9 @@ r.post('/auth/login', wrap(async (req, res) => {
     now.toMillis() + REFRESH_TTL * 1000
   );
 
+  const jti = newJti();
   const accessToken = signAccess(pub, sessionRef.id);
-  const refreshToken = signRefresh(pub, sessionRef.id);
+  const refreshToken = signRefresh(pub, sessionRef.id, jti);
 
   // Crea la sesión y actualiza el administrador atómicamente.
   const batch = db.batch();
@@ -167,6 +172,9 @@ r.post('/auth/login', wrap(async (req, res) => {
     expiresAt,
     revokedAt: null,
     revokedBy: null,
+    refreshJti: jti,
+    prevRefreshJti: null,
+    rotatedAt: now,
   });
 
   batch.set(
@@ -222,25 +230,7 @@ r.post('/auth/refresh', wrap(async (req, res) => {
     );
   }
 
-  const sessionSnap = await db.collection(COL.adminSessions)
-    .doc(payload.sid)
-    .get();
-
-  const session = sessionSnap.exists
-    ? sessionSnap.data()
-    : null;
-
-  if (
-    !session ||
-    (session.adminId ?? session.userId) !== payload.sub ||
-    session.revokedAt != null ||
-    toMillis(session.expiresAt) <= Date.now()
-  ) {
-    return fail(
-      res, 401, 'AUTH_SESSION_INVALID',
-      'La sesión expiró o fue cerrada. Inicia sesión nuevamente.'
-    );
-  }
+  const sessionRef = db.collection(COL.adminSessions).doc(payload.sid);
 
   const user = await getDoc(COL.adminUsers, payload.sub);
 
@@ -259,11 +249,74 @@ r.post('/auth/refresh', wrap(async (req, res) => {
   }
 
   const pub = pubOf({ ...user, id: payload.sub });
+  const nextJti = newJti();
 
-  // Renueva tokens, pero conserva la fecha límite de la sesión.
+  // Rotación: cada refresh token sirve UNA vez. Si llega uno ya usado
+  // (robo o copia), se revoca toda la sesión. Se tolera el token inmediato
+  // anterior durante unos segundos por si el navegador manda dos refresh
+  // casi a la vez (pestañas o peticiones paralelas).
+  const outcome = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(sessionRef);
+    const session = snap.exists ? snap.data() : null;
+
+    if (
+      !session ||
+      (session.adminId ?? session.userId) !== payload.sub ||
+      session.revokedAt != null ||
+      toMillis(session.expiresAt) <= Date.now()
+    ) {
+      return { status: 'invalid' };
+    }
+
+    // Sesiones creadas antes de la rotación: no tienen jti.
+    const legacy = session.refreshJti === undefined && !payload.jti;
+    const current = !legacy && payload.jti === session.refreshJti;
+    const recentPrev =
+      !legacy &&
+      !current &&
+      !!payload.jti &&
+      payload.jti === session.prevRefreshJti &&
+      Date.now() - toMillis(session.rotatedAt) <= ROTATION_GRACE_MS;
+
+    if (!legacy && !current && !recentPrev) {
+      tx.update(sessionRef, {
+        revokedAt: Timestamp.now(),
+        revokedBy: 'refresh-reuse',
+      });
+      return { status: 'reuse' };
+    }
+
+    // Petición paralela con el token anterior: no se rota otra vez; se
+    // entrega un token con el mismo jti vigente para no invalidar al otro.
+    if (recentPrev) return { status: 'ok', jti: session.refreshJti };
+
+    tx.update(sessionRef, {
+      refreshJti: nextJti,
+      prevRefreshJti: current ? session.refreshJti : null,
+      rotatedAt: Timestamp.now(),
+    });
+
+    return { status: 'ok', jti: nextJti };
+  });
+
+  if (outcome.status !== 'ok') {
+    if (outcome.status === 'reuse') {
+      await logAudit(
+        { user: { id: payload.sub, name: user.name, role: user.role } },
+        'logout', `adminSessions/${payload.sid}`,
+        { reason: 'refresh-token-reuse' }
+      );
+    }
+
+    return fail(
+      res, 401, 'AUTH_SESSION_INVALID',
+      'La sesión expiró o fue cerrada. Inicia sesión nuevamente.'
+    );
+  }
+
   return ok(res, {
     accessToken: signAccess(pub, payload.sid),
-    refreshToken: signRefresh(pub, payload.sid),
+    refreshToken: signRefresh(pub, payload.sid, outcome.jti),
   });
 }));
 

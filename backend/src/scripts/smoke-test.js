@@ -69,6 +69,23 @@ try {
   check('repetir el logout es idempotente → 204', lo2.status === 204);
   const aud = await db.collection('auditLog').where('action', '==', 'logout').get();
   check('el logout queda en la auditoría (action=logout)', !aud.empty);
+  // Rotación del refresh token
+  const rl = await call('POST', '/auth/login', { body: { email: 'support@aprueba.cl', password: 'support123' } });
+  const rt0 = rl.data.refreshToken;
+  const rr1 = await call('POST', '/auth/refresh', { body: { refreshToken: rt0 } });
+  check('refresh devuelve un refresh token NUEVO (rotación)', rr1.status === 200 && !!rr1.data.refreshToken && rr1.data.refreshToken !== rt0);
+  const rr1b = await call('POST', '/auth/refresh', { body: { refreshToken: rt0 } });
+  check('el token anterior se tolera unos segundos (peticiones paralelas)', rr1b.status === 200);
+  const rr2 = await call('POST', '/auth/refresh', { body: { refreshToken: rr1.data.refreshToken } });
+  check('el token vigente sigue sirviendo tras la tolerancia', rr2.status === 200);
+  const rsid = JSON.parse(Buffer.from(rt0.split('.')[1], 'base64url').toString()).sid;
+  await db.collection('adminSessions').doc(rsid).update({ rotatedAt: new Date(Date.now() - 60000) });
+  const reuse = await call('POST', '/auth/refresh', { body: { refreshToken: rt0 } });
+  check('reusar un refresh viejo fuera de la tolerancia → 401 AUTH_SESSION_INVALID', reuse.status === 401 && reuse.error?.code === 'AUTH_SESSION_INVALID');
+  const afterReuse = await call('POST', '/auth/refresh', { body: { refreshToken: rr2.data.refreshToken } });
+  check('detectado el reuso, TAMBIÉN se invalida el token vigente (sesión revocada)', afterReuse.status === 401);
+  check('el reuso queda auditado como logout', !(await db.collection('auditLog').where('action', '==', 'logout').get()).empty);
+
   const fin = { email: 'finance@aprueba.cl', password: 'finance123', otp: '123456' };
   const l1 = await call('POST', '/auth/login', { body: fin });
   const l2 = await call('POST', '/auth/login', { body: fin });

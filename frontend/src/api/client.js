@@ -74,7 +74,18 @@ async function raw(method, path, body, retry = true) {
   return json;
 }
 
-async function tryRefresh() {
+// Evita varios refresh simultáneos: con rotación, el segundo token usado
+// invalidaría la sesión.
+let refreshing = null;
+
+function tryRefresh() {
+  if (!refreshing) {
+    refreshing = doRefresh().finally(() => { refreshing = null; });
+  }
+  return refreshing;
+}
+
+async function doRefresh() {
   try {
     const res = await fetch(`${BASE}/admin/auth/refresh`, {
       method: 'POST',

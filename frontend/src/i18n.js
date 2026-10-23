@@ -154,7 +154,7 @@ export const T = {
 
     // ── login ──
     login_title:'Consola de administración', login_email:'Correo', login_pass:'Contraseña', login_otp:'Código MFA (si aplica)', login_btn:'Ingresar',
-    logout:'Cerrar sesión', logging_out:'Cerrando sesión…', loading:'Cargando…', no_access:'No tienes permiso para esta vista (rol insuficiente).', restarted:'Reinicio programado',
+    logout:'Cerrar sesión', logging_out:'Cerrando sesión…', logout_all:'Cerrar todas mis sesiones', logout_all_confirm:'Se cerrará tu sesión en todos los dispositivos. ¿Continuar?', loading:'Cargando…', no_access:'No tienes permiso para esta vista (rol insuficiente).', restarted:'Reinicio programado',
 
     // ── auditoría ──
     au_intro:'Registro de acciones administrativas sensibles: quién hizo qué, sobre qué recurso y cuándo.',
@@ -350,7 +350,7 @@ export const T = {
     p_deleted:'Plan deleted',
 
     login_title:'Admin console', login_email:'Email', login_pass:'Password', login_otp:'MFA code (if required)', login_btn:'Sign in',
-    logout:'Sign out', logging_out:'Signing out…', loading:'Loading…', no_access:'You do not have permission for this view (insufficient role).', restarted:'Restart scheduled',
+    logout:'Sign out', logging_out:'Signing out…', logout_all:'Sign out of all sessions', logout_all_confirm:'You will be signed out on all devices. Continue?', loading:'Loading…', no_access:'You do not have permission for this view (insufficient role).', restarted:'Restart scheduled',
 
     // ── audit log ──
     au_intro:'Log of sensitive administrative actions: who did what, on which resource, and when.',

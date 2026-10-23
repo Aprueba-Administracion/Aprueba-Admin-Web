@@ -1,10 +1,14 @@
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'node:crypto';
+
+// Identificador único de cada refresh token (para rotación).
+export const newJti = () => randomUUID();
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 const ACCESS_TTL = Number(process.env.JWT_ACCESS_TTL || 900);
 
 export const REFRESH_TTL = Number(
-  process.env.JWT_REFRESH_TTL || 2592000
+  process.env.JWT_REFRESH_TTL || 604800
 );
 
 export function signAccess(user, sessionId) {
@@ -21,7 +25,7 @@ export function signAccess(user, sessionId) {
   );
 }
 
-export function signRefresh(user, sessionId) {
+export function signRefresh(user, sessionId, jti) {
   return jwt.sign(
     {
       sub: user.id,
@@ -29,7 +33,7 @@ export function signRefresh(user, sessionId) {
       typ: 'refresh',
     },
     SECRET,
-    { expiresIn: REFRESH_TTL }
+    { expiresIn: REFRESH_TTL, ...(jti ? { jwtid: jti } : {}) }
   );
 }
 
